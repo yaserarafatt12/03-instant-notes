@@ -11,7 +11,7 @@ import { SettingsModal, DEFAULT_SETTINGS } from './components/SettingsModal';
 import type { AppSettings } from './components/SettingsModal';
 import {
   Undo2,
-  PanelLeftOpen,
+  Columns2,
   Search,
   X,
   SlidersHorizontal,
@@ -355,7 +355,7 @@ export function App() {
                 className="p-2 text-zinc-200 hover:text-white rounded-xl hover:bg-[#28282e] transition-colors border border-white/10"
                 title="Buka Sidebar"
               >
-                <PanelLeftOpen className="w-4 h-4" />
+                <Columns2 className="w-4 h-4" />
               </button>
             )}
 

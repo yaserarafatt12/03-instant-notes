@@ -7,7 +7,7 @@ import {
   Folder as FolderIcon,
   History,
   Settings,
-  PanelLeftClose,
+  Columns2,
   ChevronDown,
   ChevronRight,
   Check,
@@ -279,7 +279,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       <div className="space-y-4 overflow-y-auto flex-1 pr-1">
         {/* 1. Clean Top Brand Header & Sidebar Close Button */}
         <div className="flex items-center justify-between px-1 pt-0.5">
-          <h1 className="tracking-tight text-sm font-extrabold text-white px-1 py-1">
+          <h1 className="tracking-tight text-base sm:text-lg font-black text-white px-1 py-1">
             SeeNote
           </h1>
 
@@ -289,7 +289,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-[#202024] transition-colors"
               title="Sembunyikan Sidebar"
             >
-              <PanelLeftClose className="w-4 h-4" />
+              <Columns2 className="w-4 h-4" />
             </button>
           )}
         </div>
