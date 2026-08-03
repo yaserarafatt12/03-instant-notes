@@ -338,6 +338,9 @@ export function App() {
           filteredNotes={searchResults.map((sr) => sr.note)}
           onToggleSidebar={() => setIsSidebarOpen(false)}
           onOpenBackup={() => setIsBackupModalOpen(true)}
+          onAddFolder={(folderName) => {
+            setSelectedSubject(folderName);
+          }}
         />
       )}
 
