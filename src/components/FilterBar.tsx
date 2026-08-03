@@ -10,8 +10,9 @@ import {
   Settings,
   Search,
   X,
+  ChevronRight,
 } from 'lucide-react';
-import type { FilterCategory } from '../types/note';
+import type { FilterCategory, Note } from '../types/note';
 
 interface FilterBarProps {
   activeFilter: FilterCategory;
@@ -29,6 +30,10 @@ interface FilterBarProps {
   onOpenSettings: () => void;
   searchQuery: string;
   onSearchQueryChange: (q: string) => void;
+  notes: Note[];
+  selectedNoteId: string | null;
+  onSelectNote: (id: string) => void;
+  filteredNotes: Note[];
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -47,11 +52,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   onOpenSettings,
   searchQuery,
   onSearchQueryChange,
+  selectedNoteId,
+  onSelectNote,
+  filteredNotes,
 }) => {
   return (
-    <aside className="w-full lg:w-64 shrink-0 bg-[#13141b]/95 border-r border-[#1f212c] p-3 flex flex-col justify-between h-full select-none font-sans">
-      <div className="space-y-4 overflow-y-auto">
-        {/* 1. Search Bar at the VERY TOP of Left Sidebar */}
+    <aside className="w-full lg:w-72 shrink-0 bg-[#13141b] border-r border-[#1f212c] p-3 flex flex-col justify-between h-full select-none font-sans overflow-hidden">
+      <div className="space-y-4 overflow-y-auto flex-1 pr-1">
+        {/* 1. Search Bar at the VERY TOP */}
         <div className="relative flex items-center">
           <Search className="absolute left-3 w-4 h-4 text-zinc-400 pointer-events-none" />
           <input
@@ -73,7 +81,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           )}
         </div>
 
-        {/* 2. Single "+ Catatan Baru" Button right under Search Bar */}
+        {/* 2. Single "+ Catatan Baru" Button */}
         <button
           onClick={onNewNote}
           className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-semibold text-xs rounded-xl transition-all shadow-sm"
@@ -82,7 +90,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           <span>Catatan Baru</span>
         </button>
 
-        {/* 3. Main Navigation */}
+        {/* 3. Main Navigation Categories */}
         <div className="space-y-0.5 pt-1">
           <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">
             Navigasi
@@ -94,7 +102,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               onSubjectChange(null);
               onTagChange(null);
             }}
-            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
               activeFilter === 'all' && !selectedSubject && !selectedTag
                 ? 'bg-indigo-500/15 text-indigo-400 font-semibold border border-indigo-500/20'
                 : 'text-zinc-400 hover:bg-[#1b1d28] hover:text-zinc-200'
@@ -113,7 +121,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               onSubjectChange(null);
               onTagChange(null);
             }}
-            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
               activeFilter === 'recent'
                 ? 'bg-indigo-500/15 text-indigo-400 font-semibold border border-indigo-500/20'
                 : 'text-zinc-400 hover:bg-[#1b1d28] hover:text-zinc-200'
@@ -131,7 +139,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               onSubjectChange(null);
               onTagChange(null);
             }}
-            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
               activeFilter === 'favorites'
                 ? 'bg-indigo-500/15 text-indigo-400 font-semibold border border-indigo-500/20'
                 : 'text-zinc-400 hover:bg-[#1b1d28] hover:text-zinc-200'
@@ -150,7 +158,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               onSubjectChange(null);
               onTagChange(null);
             }}
-            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
               activeFilter === 'trash'
                 ? 'bg-rose-500/15 text-rose-400 font-semibold border border-rose-500/20'
                 : 'text-zinc-400 hover:bg-[#1b1d28] hover:text-zinc-200'
@@ -164,9 +172,46 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </button>
         </div>
 
-        {/* 4. Filter by Subjects */}
+        {/* 4. Notes List directly inside Sidebar */}
+        <div className="space-y-1 pt-2 border-t border-[#1f212c]">
+          <div className="flex items-center justify-between px-2 mb-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+              Daftar Catatan ({filteredNotes.length})
+            </p>
+          </div>
+
+          {filteredNotes.length === 0 ? (
+            <p className="px-2 py-2 text-xs text-zinc-500 italic">Tidak ada catatan</p>
+          ) : (
+            <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+              {filteredNotes.map((n) => (
+                <button
+                  key={n.id}
+                  onClick={() => onSelectNote(n.id)}
+                  className={`w-full text-left px-2.5 py-2 rounded-xl text-xs transition-all flex items-center justify-between group ${
+                    selectedNoteId === n.id
+                      ? 'bg-indigo-600 text-white font-semibold shadow-xs'
+                      : 'text-zinc-300 hover:bg-[#1b1d28] hover:text-white'
+                  }`}
+                >
+                  <div className="overflow-hidden pr-1">
+                    <p className="truncate font-semibold text-xs leading-tight">
+                      {n.title || 'Catatan Tanpa Judul'}
+                    </p>
+                    <p className={`text-[10px] truncate mt-0.5 ${selectedNoteId === n.id ? 'text-indigo-200' : 'text-zinc-500'}`}>
+                      {n.subject || 'Umum'}
+                    </p>
+                  </div>
+                  <ChevronRight className={`w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity ${selectedNoteId === n.id ? 'opacity-100 text-white' : 'text-zinc-400'}`} />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 5. Filter by Subjects */}
         {subjects.length > 0 && (
-          <div className="space-y-0.5 pt-1">
+          <div className="space-y-0.5 pt-2 border-t border-[#1f212c]">
             <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">
               Subjek
             </p>
@@ -177,7 +222,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   onFilterChange('all');
                   onSubjectChange(selectedSubject === name ? null : name);
                 }}
-                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
                   selectedSubject === name
                     ? 'bg-[#212433] text-indigo-300 font-semibold border border-indigo-500/30'
                     : 'text-zinc-400 hover:bg-[#1b1d28] hover:text-zinc-200'
@@ -185,7 +230,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               >
                 <div className="flex items-center gap-2 overflow-hidden">
                   <BookOpen className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                  <span className="truncate max-w-[120px]">{name}</span>
+                  <span className="truncate max-w-[130px]">{name}</span>
                 </div>
                 <span className="text-[10px] font-medium opacity-60">({count})</span>
               </button>
@@ -193,9 +238,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </div>
         )}
 
-        {/* 5. Filter by Tags */}
+        {/* 6. Filter by Tags */}
         {tags.length > 0 && (
-          <div className="space-y-1 pt-1">
+          <div className="space-y-1 pt-2 border-t border-[#1f212c]">
             <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">
               Tag
             </p>
@@ -223,8 +268,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         )}
       </div>
 
-      {/* 6. Settings Moved to Bottom Left Footer */}
-      <div className="pt-2 border-t border-[#1f212c]">
+      {/* 7. Settings at Bottom Footer */}
+      <div className="pt-2 border-t border-[#1f212c] shrink-0">
         <button
           onClick={onOpenSettings}
           className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-[#1b1d28] rounded-xl transition-all"

@@ -1,16 +1,13 @@
 import { useEffect, useState, useMemo } from 'react';
 import type { FilterCategory, Note } from './types/note';
-import { getAllNotes, saveNote, deleteNotePermanently } from './lib/storage/db';
+import { getAllNotes, saveNote } from './lib/storage/db';
 import { searchNotes } from './lib/search/searchEngine';
 import { FilterBar } from './components/FilterBar';
-import { NoteCard } from './components/NoteCard';
 import { NoteEditor } from './components/NoteEditor';
-import { EmptyState } from './components/EmptyState';
 import { ExportImportModal } from './components/ExportImportModal';
 import { SettingsModal, DEFAULT_SETTINGS } from './components/SettingsModal';
 import type { AppSettings } from './components/SettingsModal';
-import { Undo2, Trash2, PanelLeftOpen, Columns2, SlidersHorizontal } from 'lucide-react';
-import type { SortOption } from './types/note';
+import { Undo2, PanelLeftOpen } from 'lucide-react';
 
 const SETTINGS_KEY = 'instant_notes_app_settings';
 
@@ -24,11 +21,10 @@ export function App() {
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [undoNote, setUndoNote] = useState<Note | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [_isLoading, setIsLoading] = useState<boolean>(true);
 
   // Panel Collapse States
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
-  const [isNoteListOpen, setIsNoteListOpen] = useState<boolean>(true);
   const [isFocusMode, setIsFocusMode] = useState<boolean>(false);
 
   // Settings State with LocalStorage Persistence
@@ -174,21 +170,6 @@ export function App() {
     setUndoNote(null);
   };
 
-  const handleEmptyTrash = async () => {
-    const trashNotes = notes.filter((n) => n.isTrash);
-    if (trashNotes.length === 0) return;
-
-    if (window.confirm(`Hapus permanen seluruh ${trashNotes.length} catatan di tempat sampah?`)) {
-      for (const note of trashNotes) {
-        await deleteNotePermanently(note.id);
-      }
-      setNotes((prev) => prev.filter((n) => !n.isTrash));
-      if (selectedNote?.isTrash) {
-        setSelectedNoteId(null);
-      }
-    }
-  };
-
   const subjects = useMemo(() => {
     const map = new Map<string, number>();
     notes.filter((n) => !n.isTrash && n.subject).forEach((n) => {
@@ -262,11 +243,10 @@ export function App() {
   }, [settings.fontSize]);
 
   const showSidebar = isSidebarOpen && !isFocusMode;
-  const showNoteList = isNoteListOpen && !isFocusMode;
 
   return (
     <div className={`flex h-screen w-screen overflow-hidden bg-[#0b0c10] text-zinc-100 font-sans ${fontSizeClass}`}>
-      {/* 1. Left Sidebar FilterBar */}
+      {/* 1. Left Sidebar (Panel 1) */}
       {showSidebar && (
         <FilterBar
           activeFilter={activeFilter}
@@ -284,103 +264,25 @@ export function App() {
           onOpenSettings={() => setIsSettingsModalOpen(true)}
           searchQuery={searchQuery}
           onSearchQueryChange={setSearchQuery}
+          notes={notes}
+          selectedNoteId={selectedNoteId}
+          onSelectNote={handleSelectNote}
+          filteredNotes={searchResults.map((sr) => sr.note)}
         />
       )}
 
-      {/* 2. Middle Panel: Note List Only */}
-      {showNoteList && (
-        <main className="w-full lg:w-72 shrink-0 border-r border-[#1f212c] flex flex-col h-full bg-[#0f1015]/60">
-          {/* Header Row: Result Counter & Sort Control */}
-          <div className="p-3 border-b border-[#1f212c] bg-[#111219]/80 backdrop-blur-sm flex items-center justify-between text-xs text-zinc-400">
-            <span className="font-semibold text-zinc-300">
-              {searchResults.length} Catatan
-            </span>
-
-            <div className="flex items-center gap-1.5">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-400" />
-              <select
-                value={settings.defaultSort}
-                onChange={(e) => handleUpdateSettings({ ...settings, defaultSort: e.target.value as SortOption })}
-                className="bg-transparent text-[11px] font-semibold text-zinc-300 focus:outline-none cursor-pointer"
-              >
-                <option value="updated">Terakhir Diubah</option>
-                <option value="newest">Terbaru</option>
-                <option value="oldest">Terlama</option>
-                <option value="a-z">Judul A-Z</option>
-                <option value="z-a">Judul Z-A</option>
-              </select>
-            </div>
-          </div>
-
-          {activeFilter === 'trash' && trashCount > 0 && (
-            <div className="flex items-center justify-between px-3 py-2 bg-rose-500/10 border-b border-rose-500/20 text-xs">
-              <span className="text-rose-400 font-semibold">{trashCount} di Tempat Sampah</span>
-              <button
-                onClick={handleEmptyTrash}
-                className="flex items-center gap-1 font-bold text-rose-400 hover:underline"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Kosongkan</span>
-              </button>
-            </div>
-          )}
-
-          {/* Clean Note Cards List */}
-          <div className="flex-1 overflow-y-auto p-2.5 space-y-2">
-            {isLoading ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="p-3.5 rounded-xl border border-[#1f212c] bg-[#13141b]/40 animate-pulse space-y-2">
-                    <div className="h-4 bg-[#1f212c] rounded w-3/4" />
-                    <div className="h-3 bg-[#1f212c] rounded w-full" />
-                    <div className="h-3 bg-[#1f212c] rounded w-1/2" />
-                  </div>
-                ))}
-              </div>
-            ) : searchResults.length === 0 ? (
-              <EmptyState
-                type={searchQuery ? 'search' : activeFilter}
-                onNewNote={handleCreateNewNote}
-              />
-            ) : (
-              searchResults.map(({ note, snippet }) => (
-                <NoteCard
-                  key={note.id}
-                  note={note}
-                  snippet={snippet}
-                  searchQuery={searchQuery}
-                  isSelected={selectedNoteId === note.id}
-                  onSelect={() => handleSelectNote(note.id)}
-                />
-              ))
-            )}
-          </div>
-        </main>
-      )}
-
-      {/* 3. Instant Note Editor Panel (Expanded to fill remaining width) */}
-      <div className="flex-1 flex flex-col h-full relative">
-        {/* Floating Toggle Header when Panels are Collapsed */}
-        {(!isSidebarOpen || !isNoteListOpen || isFocusMode) && (
-          <div className="absolute top-2.5 left-3 z-20 flex items-center gap-1 bg-[#13141b]/90 backdrop-blur-md p-1 rounded-lg border border-[#1f212c] shadow-xs">
-            {!isSidebarOpen && !isFocusMode && (
-              <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="p-1.5 text-zinc-400 hover:text-zinc-200 rounded-md hover:bg-[#1b1d28] transition-colors"
-                title="Buka Sidebar"
-              >
-                <PanelLeftOpen className="w-4 h-4" />
-              </button>
-            )}
-            {!isNoteListOpen && !isFocusMode && (
-              <button
-                onClick={() => setIsNoteListOpen(true)}
-                className="p-1.5 text-zinc-400 hover:text-zinc-200 rounded-md hover:bg-[#1b1d28] transition-colors"
-                title="Tampilkan Daftar Catatan"
-              >
-                <Columns2 className="w-4 h-4" />
-              </button>
-            )}
+      {/* 2. Full-Width Note Editor / Dashboard (Panel 2) */}
+      <div className="flex-1 flex flex-col h-full relative overflow-hidden">
+        {/* Floating Sidebar Open Trigger when Sidebar is Collapsed */}
+        {!isSidebarOpen && !isFocusMode && (
+          <div className="absolute top-3 left-3 z-20">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 bg-[#13141b]/90 backdrop-blur-md text-zinc-400 hover:text-white rounded-xl border border-[#1f212c] shadow-md transition-colors"
+              title="Buka Sidebar"
+            >
+              <PanelLeftOpen className="w-4 h-4" />
+            </button>
           </div>
         )}
 
