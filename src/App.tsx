@@ -172,17 +172,22 @@ export function App() {
     }
   };
 
-  // Compute Subjects & Tags for filter sidebar
+  // Compute Subjects & Statistics (FR-308)
   const subjects = useMemo(() => {
-    const set = new Set<string>();
-    notes.filter((n) => !n.isTrash && n.subject).forEach((n) => set.add(n.subject));
-    return Array.from(set);
+    const map = new Map<string, number>();
+    notes.filter((n) => !n.isTrash && n.subject).forEach((n) => {
+      map.set(n.subject, (map.get(n.subject) || 0) + 1);
+    });
+    return Array.from(map.entries()).map(([name, count]) => ({ name, count }));
   }, [notes]);
 
+  // Compute Tags & Statistics
   const tags = useMemo(() => {
-    const set = new Set<string>();
-    notes.filter((n) => !n.isTrash).flatMap((n) => n.tags).forEach((t) => set.add(t));
-    return Array.from(set);
+    const map = new Map<string, number>();
+    notes.filter((n) => !n.isTrash).flatMap((n) => n.tags).forEach((t) => {
+      map.set(t, (map.get(t) || 0) + 1);
+    });
+    return Array.from(map.entries()).map(([name, count]) => ({ name, count }));
   }, [notes]);
 
   // Compute counts

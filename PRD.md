@@ -45,11 +45,6 @@ Bukan pengganti Notion, Obsidian, ataupun Evernote, melainkan:
 
 ## BAB 5 — Functional Requirements Specification (FRS)
 
-### Requirement Priority
-- **P0 (Critical)**: Wajib tersedia pada versi pertama (MVP).
-- **P1 (Important)**: Penting, dapat dikembangkan setelah MVP stabil.
-- **P2 (Future)**: Fitur tambahan opsional.
-
 ### 5.2 FR-100 — Note Management (Complete Matrix: FR-101 s/d FR-110)
 
 | ID | Requirement Name | Priority | Status | Description |
@@ -64,3 +59,20 @@ Bukan pengganti Notion, Obsidian, ataupun Evernote, melainkan:
 | **FR-108** | Note Metadata | P1 | ✅ Live | Format relatif tanggal (`Baru saja`, `2 menit lalu`, `Kemarin`). |
 | **FR-109** | Pin Note | P2 | ⏳ Future | Menyematkan catatan di posisi paling atas (Masa Depan). |
 | **FR-110** | Recent Notes | P1 | ✅ Live | Menyimpan & menyaring 10 catatan yang terakhir dibuka (`lastOpenedAt`). |
+
+---
+
+### 5.3 FR-200 — Search Engine (Complete Matrix: FR-201 s/d FR-210)
+
+| ID | Requirement Name | Priority | Status | Description |
+|---|---|---|---|---|
+| **FR-201** | Instant Search | P0 | ✅ Live | Hasil pencarian real-time berkecepatan tinggi tanpa tombol Enter/Search (<100ms). |
+| **FR-202** | Search by Title | P0 | ✅ Live | Case-insensitive searching pada judul catatan. |
+| **FR-203** | Search by Content | P0 | ✅ Live | Case-insensitive tokenization searching pada seluruh isi catatan. |
+| **FR-204** | Search by Subject | P0 | ✅ Live | Penyaringan & pencarian catatan berdasarkan subjek/topik. |
+| **FR-205** | Search by Tag | P0 | ✅ Live | Pencarian & penyaringan catatan berdasarkan tag (`#tag`). |
+| **FR-206** | Search Ranking | P1 | ✅ Live | Algoritma relevansi: Title match (50) > Subject (30) > Tag (30) > Content (10). |
+| **FR-207** | Highlight Matching Text | P1 | ✅ Live | Penyorotan visual kata kunci dengan `<HighlightText />`. |
+| **FR-208** | Empty Search State | P0 | ✅ Live | Zero state saat pencarian kosong dengan tombol "Clear Search". |
+| **FR-209** | Fuzzy Search | P2 | ✅ Live | Algoritma Levenshtein distance untuk toleransi typo (misal: 'fisik' -> 'fisika'). |
+| **FR-210** | Search History | P2 | ✅ Live | Menyimpan riwayat pencarian lokal di peramban. |
