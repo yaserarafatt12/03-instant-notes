@@ -204,17 +204,19 @@ Bukan pengganti Notion, Obsidian, ataupun Evernote, melainkan:
 
 ---
 
-## BAB 7 — UI/UX Specification (UX-1000 Matrix)
+## BAB 7 — UI/UX Specification (UX-1000 & UX-1100 Matrix)
 
 | Module ID | Module Title | Status | Core Specification |
 |---|---|---|---|
 | **UX-1000** | UI & Design Philosophy | ✅ Live | Modern Minimalism, 3-panel layout, *Content First*, *One Click Rule*, *Instant Feedback*. |
-| **UX-1100** | Design Tokens | ✅ Live | Slate dark/light scale, Amber/Emerald accents, Tailwind v4 design tokens. |
-| **UX-1200** | Typography System | ✅ Live | Inter/Sans font stack, strict line height & font size scale (`sm`, `base`, `lg`). |
-| **UX-1300** | Color Palette System | ✅ Live | WCAG AA compliant slate neutrals with warm amber/emerald highlights. |
-| **UX-1400** | Layout & Grid | ✅ Live | Fixed 3-panel layout with collapsible sidebar for smaller screens. |
-| **UX-1500** | Component Specification | ✅ Live | Atomic React components (`NoteCard`, `NoteEditor`, `SearchBar`, `FilterBar`, `SettingsModal`, `ExportImportModal`). |
-| **UX-1600** | Responsive Design | ✅ Live | Fluid layout scaling seamlessly from 360px mobile to 1440px+ ultra-wide. |
-| **UX-1700** | Accessibility System | ✅ Live | Keyboard focus rings, screen-reader ARIA tags, zero mouse dependency. |
-| **UX-1800** | Motion & Animation | ✅ Live | Subtle micro-interactions (150-200ms ease-in-out), non-distracting toasts. |
-| **UX-1900** | UX Guidelines | ✅ Live | Anti-bloat rules (zero nested folders, zero popup ads, zero delayed loaders). |
+| **UX-1100** | Design Tokens Specification | ✅ Live | Centralized design tokens: Color, Typography, Spacing (4-point), Border Radius, Shadow, Motion, Z-Index. |
+| **UX-1101** | Color Tokens | ✅ Live | Amber-500 primary, Slate-50..950 neutrals, Emerald success, Rose danger, Sky info. |
+| **UX-1102** | Typography Tokens | ✅ Live | Inter sans-serif stack, JetBrains Mono code font, 1.5 line height, max 70 char width. |
+| **UX-1103** | Spacing Tokens | ✅ Live | Strict 4-point grid scale (4, 8, 12, 16, 20, 24, 32, 40, 48, 64px). |
+| **UX-1104** | Border Radius Tokens | ✅ Live | Small (`rounded-md` 6px), Medium (`rounded-xl` 12px), Large (`rounded-2xl` 16px). |
+| **UX-1105** | Shadow Tokens | ✅ Live | Small (`shadow-sm` buttons), Medium (`shadow-md` cards), Large (`shadow-2xl` modals). |
+| **UX-1106** | Border Tokens | ✅ Live | 1px border (`border-slate-200` / `border-slate-800`), 2px focus ring (`focus:ring-2`). |
+| **UX-1107** | Animation Tokens | ✅ Live | Fast (150ms hover), Normal (200ms sidebar), Slow (300ms modal) with `ease-in-out`. |
+| **UX-1108** | Breakpoints | ✅ Live | Mobile (360px), Tablet (768px), Laptop (1024px), Desktop (1280px), Large (1536px). |
+| **UX-1109** | Z-Index Tokens | ✅ Live | Dropdown (100), Modal (200), Toast (300), Overlay (400), Tooltip (500). |
+| **UX-1110** | Icon Tokens | ✅ Live | Lucide React icons (`stroke-2`, 16px, 20px, 24px standardized sizing). |
