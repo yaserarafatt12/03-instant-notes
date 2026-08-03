@@ -10,7 +10,6 @@ import {
   PanelLeftClose,
   ChevronDown,
   ChevronRight,
-  Sparkles,
   Check,
 } from 'lucide-react';
 import type { FilterCategory, Note } from '../types/note';
@@ -278,15 +277,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   return (
     <aside className="w-full lg:w-60 shrink-0 bg-[#141416] border-r border-white/5 p-3 flex flex-col justify-between h-full select-none font-sans overflow-hidden">
       <div className="space-y-4 overflow-y-auto flex-1 pr-1">
-        {/* 1. Craft Top Workspace Header & Sidebar Close Button */}
+        {/* 1. Clean Top Brand Header & Sidebar Close Button */}
         <div className="flex items-center justify-between px-1 pt-0.5">
-          <button className="flex items-center gap-1.5 text-xs font-bold text-white hover:bg-[#202024] px-2 py-1.5 rounded-lg transition-colors">
-            <div className="w-4.5 h-4.5 rounded-md bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] text-white font-bold shadow-sm">
-              ⚡
-            </div>
-            <span className="tracking-tight text-sm font-extrabold text-white">SeeNote</span>
-            <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
-          </button>
+          <h1 className="tracking-tight text-sm font-extrabold text-white px-1 py-1">
+            SeeNote
+          </h1>
 
           {onToggleSidebar && (
             <button
@@ -523,10 +518,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           <Settings className="w-4 h-4 text-zinc-400" />
           <span>Pengaturan</span>
         </button>
-
-        <div className="p-1.5 text-indigo-400" title="InstantNotes Local Engine">
-          <Sparkles className="w-4 h-4" />
-        </div>
       </div>
     </aside>
   );
