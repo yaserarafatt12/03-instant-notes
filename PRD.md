@@ -204,7 +204,7 @@ Bukan pengganti Notion, Obsidian, ataupun Evernote, melainkan:
 
 ---
 
-## BAB 7 — UI/UX Specification (UX-1000 s/d UX-1700 Matrix)
+## BAB 7 — UI/UX Specification (Complete Series: UX-1000 s/d UX-1900 Matrix)
 
 | Module ID | Module Title | Status | Core Specification |
 |---|---|---|---|
@@ -216,3 +216,5 @@ Bukan pengganti Notion, Obsidian, ataupun Evernote, melainkan:
 | **UX-1500** | Component Library Specification | ✅ Live | 17 Atomic components (Button `CMP-1501`, Input `CMP-1502`, SearchBar `CMP-1503`, Textarea `CMP-1504`, Sidebar `CMP-1505`, NavItem `CMP-1506`, NoteCard `CMP-1507`, SubjectBadge `CMP-1508`, TagChip `CMP-1509`, Dropdown `CMP-1510`, Modal `CMP-1511`, Dialog `CMP-1512`, Toast `CMP-1513`, Tooltip `CMP-1514`, EmptyState `CMP-1515`, Skeleton `CMP-1516`, Spinner `CMP-1517`). |
 | **UX-1600** | Responsive Behavior | ✅ Live | Mobile-first strategy, touch targets >= 44x44px, drawer navigation for mobile (<640px), collapsible tablet sidebar, zero horizontal overflow. |
 | **UX-1700** | Accessibility (A11Y) | ✅ Live | WCAG 2.2 Level AA compliant, keyboard-first navigation (Tab/Esc/Enter), ARIA labels on icon buttons, visible 2px focus rings, `prefers-reduced-motion` support. |
+| **UX-1800** | Motion & Micro Interactions | ✅ Live | Expressive micro-interactions: Hover (100ms), Active Press (`scale-[0.98]` 120ms), Fade (150ms), Drawer/Modal (250ms), Toast slide up (200ms), Card elevation (`translateY(-2px)`), `prefers-reduced-motion` fallback. |
+| **UX-1900** | UX Guidelines (Final Rulebook) | ✅ Live | 10 Core UX Principles: *Simplicity First*, *Search Before Navigation*, *Never Lose User Data*, *Instant Feedback*, *Consistency*, *Offline First*, *Privacy First*, *Accessibility by Default*, *Performance Matters*, *Progressive Enhancement*. |
