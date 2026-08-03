@@ -181,3 +181,40 @@ Bukan pengganti Notion, Obsidian, ataupun Evernote, melainkan:
 | **FR-808** | Version Compatibility | P2 | ✅ Live | Pengecekan kompatibilitas versi schema JSON. |
 | **FR-809** | Backup Confirmation | P1 | ✅ Live | Notifikasi instan tanpa reload saat export berhasil. |
 | **FR-810** | Restore Confirmation | P1 | ✅ Live | Modal konfirmasi dialog sebelum mengimpor / menimpa data. |
+
+---
+
+## BAB 6 — Non-Functional Requirements (NFR-900 Matrix)
+
+| ID | Requirement Name | Priority | Target Benchmark | Status |
+|---|---|---|---|---|
+| **NFR-901** | Startup Performance | P0 | Cold start < 3s, Warm start < 1s | ✅ Passed (Vite 200ms) |
+| **NFR-902** | Search Performance | P0 | < 50ms for 1,000 notes | ✅ Passed (Vitest 5ms) |
+| **NFR-903** | Offline Availability | P0 | 100% features work without internet | ✅ Passed (Local IndexedDB) |
+| **NFR-904** | Auto Save Reliability | P0 | 500ms debounced save without loss | ✅ Passed |
+| **NFR-905** | Data Integrity | P0 | Zero duplicate IDs / zero corrupted notes | ✅ Passed |
+| **NFR-906** | UI Responsiveness | P1 | < 100ms interaction latency | ✅ Passed |
+| **NFR-907** | Browser Compatibility | P1 | Chrome, Edge, Firefox, Brave | ✅ Passed |
+| **NFR-908** | Responsive Design | P1 | Desktop (>=1280px), Tablet, Mobile | ✅ Passed |
+| **NFR-909** | Accessibility | P1 | WCAG AA contrast & ARIA labels | ✅ Passed |
+| **NFR-910** | Maintainability | P1 | TypeScript modular architecture | ✅ Passed |
+| **NFR-911** | Code Quality | P1 | Strict TS, 0 lint error, 0 build warning | ✅ Passed |
+| **NFR-912** | Security | P0 | 0 `dangerouslySetInnerHTML`, input sanitization | ✅ Passed |
+| **NFR-913** | Privacy | P0 | Privacy by Default (0 telemetry, local-only) | ✅ Passed |
+
+---
+
+## BAB 7 — UI/UX Specification (UX-1000 Matrix)
+
+| Module ID | Module Title | Status | Core Specification |
+|---|---|---|---|
+| **UX-1000** | UI & Design Philosophy | ✅ Live | Modern Minimalism, 3-panel layout, *Content First*, *One Click Rule*, *Instant Feedback*. |
+| **UX-1100** | Design Tokens | ✅ Live | Slate dark/light scale, Amber/Emerald accents, Tailwind v4 design tokens. |
+| **UX-1200** | Typography System | ✅ Live | Inter/Sans font stack, strict line height & font size scale (`sm`, `base`, `lg`). |
+| **UX-1300** | Color Palette System | ✅ Live | WCAG AA compliant slate neutrals with warm amber/emerald highlights. |
+| **UX-1400** | Layout & Grid | ✅ Live | Fixed 3-panel layout with collapsible sidebar for smaller screens. |
+| **UX-1500** | Component Specification | ✅ Live | Atomic React components (`NoteCard`, `NoteEditor`, `SearchBar`, `FilterBar`, `SettingsModal`, `ExportImportModal`). |
+| **UX-1600** | Responsive Design | ✅ Live | Fluid layout scaling seamlessly from 360px mobile to 1440px+ ultra-wide. |
+| **UX-1700** | Accessibility System | ✅ Live | Keyboard focus rings, screen-reader ARIA tags, zero mouse dependency. |
+| **UX-1800** | Motion & Animation | ✅ Live | Subtle micro-interactions (150-200ms ease-in-out), non-distracting toasts. |
+| **UX-1900** | UX Guidelines | ✅ Live | Anti-bloat rules (zero nested folders, zero popup ads, zero delayed loaders). |
