@@ -36,24 +36,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm select-none">
-      <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm select-none font-sans">
+      <div className="w-full max-w-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-2">
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-              Pengaturan &amp; Preferensi
-            </h2>
-          </div>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+        <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+          <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+            Pengaturan &amp; Preferensi
+          </h2>
+          <button onClick={onClose} className="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* 1. Theme Preference (FR-701) */}
+        {/* 1. Theme Preference */}
         <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-            <Sun className="w-4 h-4 text-amber-500" />
+          <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
+            <Sun className="w-4 h-4 text-indigo-500" />
             <span>Tema Tampilan</span>
           </label>
           <div className="grid grid-cols-3 gap-2">
@@ -63,8 +61,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onClick={() => onUpdateSettings({ ...settings, theme: t })}
                 className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl border text-xs font-medium capitalize transition-all ${
                   settings.theme === t
-                    ? 'bg-amber-500 text-slate-950 border-amber-500 font-bold shadow-sm'
-                    : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                    ? 'bg-indigo-600 text-white border-indigo-600 font-bold shadow-xs'
+                    : 'bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700/80 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                 }`}
               >
                 {t === 'light' && <Sun className="w-3.5 h-3.5" />}
@@ -76,10 +74,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* 2. Font Size (FR-702) */}
+        {/* 2. Font Size */}
         <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-            <Type className="w-4 h-4 text-amber-500" />
+          <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
+            <Type className="w-4 h-4 text-indigo-500" />
             <span>Ukuran Font Teks</span>
           </label>
           <div className="grid grid-cols-3 gap-2">
@@ -89,8 +87,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onClick={() => onUpdateSettings({ ...settings, fontSize: size })}
                 className={`py-2 px-3 rounded-xl border text-xs font-medium transition-all ${
                   settings.fontSize === size
-                    ? 'bg-amber-500 text-slate-950 border-amber-500 font-bold shadow-sm'
-                    : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                    ? 'bg-indigo-600 text-white border-indigo-600 font-bold shadow-xs'
+                    : 'bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700/80 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                 }`}
               >
                 {size === 'sm' ? 'Kecil (14px)' : size === 'base' ? 'Sedang (16px)' : 'Besar (18px)'}
@@ -99,38 +97,38 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* 3. Default Sort (FR-703) */}
+        {/* 3. Default Sort */}
         <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-            <ArrowUpDown className="w-4 h-4 text-amber-500" />
+          <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
+            <ArrowUpDown className="w-4 h-4 text-indigo-500" />
             <span>Urutan Catatan Default</span>
           </label>
           <select
             value={settings.defaultSort}
             onChange={(e) => onUpdateSettings({ ...settings, defaultSort: e.target.value as SortOption })}
-            className="w-full py-2 px-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="w-full py-2 px-3 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-medium text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
-            <option value="updated">Terakhir Diubah (Recently Edited)</option>
-            <option value="newest">Terbaru (Newest)</option>
-            <option value="oldest">Terlama (Oldest)</option>
+            <option value="updated">Terakhir Diubah</option>
+            <option value="newest">Terbaru</option>
+            <option value="oldest">Terlama</option>
             <option value="a-z">Judul (A-Z)</option>
             <option value="z-a">Judul (Z-A)</option>
           </select>
         </div>
 
-        {/* 4. Keyboard Shortcuts Toggle (FR-705) */}
-        <div className="flex items-center justify-between py-2 border-y border-slate-200 dark:border-slate-800">
+        {/* 4. Keyboard Shortcuts Toggle */}
+        <div className="flex items-center justify-between py-2 border-y border-zinc-200 dark:border-zinc-800">
           <div className="flex items-center gap-2">
-            <Keyboard className="w-4 h-4 text-amber-500" />
+            <Keyboard className="w-4 h-4 text-indigo-500" />
             <div>
-              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Pintasan Keyboard</p>
-              <p className="text-[10px] text-slate-400">Ctrl+N, Ctrl+K, Alt+F, Esc</p>
+              <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Pintasan Keyboard</p>
+              <p className="text-[10px] text-zinc-400">Ctrl+N, Ctrl+K, Alt+F, Esc</p>
             </div>
           </div>
           <button
             onClick={() => onUpdateSettings({ ...settings, keyboardShortcuts: !settings.keyboardShortcuts })}
             className={`w-10 h-6 rounded-full p-1 transition-colors ${
-              settings.keyboardShortcuts ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-700'
+              settings.keyboardShortcuts ? 'bg-indigo-600' : 'bg-zinc-300 dark:bg-zinc-700'
             }`}
           >
             <div
@@ -141,33 +139,33 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </button>
         </div>
 
-        {/* 5. Reset & Clear History (FR-704 & FR-706) */}
+        {/* 5. Reset & Clear History */}
         <div className="flex items-center gap-2">
           <button
             onClick={onClearSearchHistory}
-            className="flex-1 py-2 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl transition-colors"
+            className="flex-1 py-2 px-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300 text-xs font-semibold rounded-xl transition-colors"
           >
             Hapus Riwayat Cari
           </button>
           <button
             onClick={onResetSettings}
-            className="flex-1 flex items-center justify-center gap-1 py-2 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 hover:text-rose-600 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl transition-colors"
+            className="flex-1 flex items-center justify-center gap-1 py-2 px-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-rose-50 hover:text-rose-600 text-zinc-700 dark:text-zinc-300 text-xs font-semibold rounded-xl transition-colors"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset Preferensi</span>
           </button>
         </div>
 
-        {/* About App (FR-707) */}
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-2 select-text">
-          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-xs">
+        {/* About App */}
+        <div className="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 space-y-2 select-text">
+          <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
             <Info className="w-4 h-4" />
-            <span>Tentang InstantNotes v1.0</span>
+            <span>InstantNotes v1.0</span>
           </div>
-          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-            InstantNotes — The Fastest Personal Note Finder. 100% Local-First &amp; Offline-by-Default.
+          <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+            Personal Note Finder. Local-First &amp; Offline.
           </p>
-          <div className="flex items-center justify-between pt-2 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+          <div className="flex items-center justify-between pt-2 text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
             <div className="flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
               <span>Privasi: Local Only</span>
@@ -176,7 +174,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               href="https://github.com/yaserarafatt12/03-instant-notes"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1 text-amber-600 dark:text-amber-400 hover:underline font-bold"
+              className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:underline font-bold"
             >
               <span>GitHub Repo</span>
             </a>

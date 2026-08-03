@@ -286,7 +286,7 @@ export function App() {
   const showNoteList = isNoteListOpen && !isFocusMode;
 
   return (
-    <div className={`flex h-screen w-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans ${fontSizeClass}`}>
+    <div className={`flex h-screen w-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans ${fontSizeClass}`}>
       {/* 1. Sidebar FilterBar */}
       {showSidebar && (
         <FilterBar
@@ -318,15 +318,15 @@ export function App() {
 
       {/* 2. Note List & Search Panel */}
       {showNoteList && (
-        <main className="w-full lg:w-80 shrink-0 border-r border-slate-200 dark:border-slate-800/80 flex flex-col h-full bg-slate-50/50 dark:bg-slate-950/50">
-          <div className="p-3.5 border-b border-slate-200 dark:border-slate-800/80 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm flex flex-col gap-2">
-            {/* Top Toolbar Trigger Controls when Panels are Collapsed */}
+        <main className="w-full lg:w-80 shrink-0 border-r border-zinc-200 dark:border-zinc-800/60 flex flex-col h-full bg-zinc-50/50 dark:bg-zinc-950/40">
+          <div className="p-3 border-b border-zinc-200 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm flex flex-col gap-2">
+            {/* Top Toolbar Trigger Controls */}
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5">
                 {!isSidebarOpen && (
                   <button
                     onClick={() => setIsSidebarOpen(true)}
-                    className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                     title="Buka Sidebar"
                   >
                     <PanelLeftOpen className="w-4 h-4" />
@@ -334,7 +334,7 @@ export function App() {
                 )}
                 <button
                   onClick={() => setIsNoteListOpen(!isNoteListOpen)}
-                  className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                   title="Sembunyikan Daftar Catatan"
                 >
                   <Columns2 className="w-4 h-4" />
@@ -343,9 +343,9 @@ export function App() {
 
               <button
                 onClick={handleCreateNewNote}
-                className="flex items-center gap-1 px-2.5 py-1 bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-slate-950 font-bold text-xs rounded-lg transition-all"
+                className="flex items-center gap-1 px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-semibold text-xs rounded-md transition-all shadow-xs"
               >
-                <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Baru</span>
               </button>
             </div>
@@ -362,8 +362,8 @@ export function App() {
           </div>
 
           {activeFilter === 'trash' && trashCount > 0 && (
-            <div className="flex items-center justify-between px-4 py-2 bg-rose-50 dark:bg-rose-950/50 border-b border-rose-200 dark:border-rose-900/50 text-xs">
-              <span className="text-rose-700 dark:text-rose-300 font-semibold">{trashCount} di Tempat Sampah</span>
+            <div className="flex items-center justify-between px-3.5 py-2 bg-rose-500/10 border-b border-rose-500/20 text-xs">
+              <span className="text-rose-600 dark:text-rose-400 font-semibold">{trashCount} di Tempat Sampah</span>
               <button
                 onClick={handleEmptyTrash}
                 className="flex items-center gap-1 font-bold text-rose-600 dark:text-rose-400 hover:underline"
@@ -374,14 +374,14 @@ export function App() {
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {isLoading ? (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="p-4 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/40 animate-pulse space-y-2">
-                    <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4" />
-                    <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-full" />
-                    <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/2" />
+                  <div key={i} className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800/60 bg-white/40 dark:bg-zinc-900/40 animate-pulse space-y-2">
+                    <div className="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4" />
+                    <div className="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-full" />
+                    <div className="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-1/2" />
                   </div>
                 ))}
               </div>
@@ -414,11 +414,11 @@ export function App() {
       <div className="flex-1 flex flex-col h-full relative">
         {/* Floating Toggle Header when Panels are Collapsed */}
         {(!isSidebarOpen || !isNoteListOpen || isFocusMode) && (
-          <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="absolute top-2.5 left-3 z-20 flex items-center gap-1 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md p-1 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-xs">
             {!isSidebarOpen && !isFocusMode && (
               <button
                 onClick={() => setIsSidebarOpen(true)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                 title="Buka Sidebar"
               >
                 <PanelLeftOpen className="w-4 h-4" />
@@ -427,7 +427,7 @@ export function App() {
             {!isNoteListOpen && !isFocusMode && (
               <button
                 onClick={() => setIsNoteListOpen(true)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                 title="Tampilkan Daftar Catatan"
               >
                 <Columns2 className="w-4 h-4" />
@@ -451,14 +451,14 @@ export function App() {
 
       {/* Toast Notification */}
       {undoNote && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-950 text-xs font-bold rounded-2xl shadow-xl animate-bounce font-sans">
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 text-xs font-semibold rounded-xl shadow-xl border border-zinc-800 dark:border-zinc-200 font-sans">
           <span>Catatan dipindahkan ke tempat sampah.</span>
           <button
             onClick={handleUndoTrash}
             className="flex items-center gap-1 text-amber-400 dark:text-amber-600 hover:underline font-bold"
           >
             <Undo2 className="w-3.5 h-3.5" />
-            <span>Batalkan (Undo)</span>
+            <span>Batalkan</span>
           </button>
         </div>
       )}
@@ -484,4 +484,3 @@ export function App() {
     </div>
   );
 }
-

@@ -55,10 +55,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
   if (!note) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-400 dark:text-slate-600 select-none font-sans">
-        <Sparkles className="w-10 h-10 mb-3 stroke-[1.5] opacity-40 text-amber-500" />
-        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Pilih catatan atau buat catatan baru</p>
-        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Pintasan: Ctrl+N</p>
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-zinc-400 dark:text-zinc-600 select-none font-sans">
+        <Sparkles className="w-8 h-8 mb-2.5 stroke-[1.5] opacity-40 text-indigo-500" />
+        <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Pilih catatan atau buat catatan baru</p>
+        <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Pintasan: Ctrl+N</p>
       </div>
     );
   }
@@ -123,27 +123,27 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800/80 overflow-hidden font-sans">
+    <div className="flex-1 flex flex-col h-full bg-white dark:bg-zinc-950 border-l border-zinc-200 dark:border-zinc-800/60 overflow-hidden font-sans">
       {/* Top Toolbar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-slate-200 dark:border-slate-800/80 select-none">
+      <div className="flex items-center justify-between px-6 py-2.5 border-b border-zinc-200/80 dark:border-zinc-800/60 select-none">
         <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-900/60">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-500/20">
             <Save className="w-3.5 h-3.5" />
             <span>{savedStatus}</span>
           </span>
 
-          <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-            <Clock className="w-3.5 h-3.5 text-slate-400" />
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500 font-medium">
+            <Clock className="w-3.5 h-3.5" />
             <span>Diedit {formatRelativeTime(note.updatedAt)}</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           {onToggleFocusMode && (
             <button
               onClick={onToggleFocusMode}
               aria-label={isFocusMode ? 'Keluar Mode Fokus' : 'Mode Fokus'}
-              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
               title={isFocusMode ? 'Tampilkan Panel' : 'Mode Fokus (Full Screen)'}
             >
               {isFocusMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -153,7 +153,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           <button
             onClick={() => exportNoteAsTXT(note)}
             aria-label="Ekspor catatan ke file teks"
-            className="p-1.5 text-slate-400 hover:text-emerald-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            className="p-1.5 text-zinc-400 hover:text-emerald-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
             title="Ekspor sebagai TXT"
           >
             <FileDown className="w-4 h-4" />
@@ -163,7 +163,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             <button
               onClick={() => onDuplicate(note)}
               aria-label="Duplikat catatan"
-              className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              className="p-1.5 text-zinc-400 hover:text-indigo-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
               title="Duplikat catatan"
             >
               <CopyPlus className="w-4 h-4" />
@@ -173,20 +173,20 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           <button
             onClick={() => onToggleFavorite(note.id)}
             aria-label={note.isFavorite ? 'Hapus dari favorit' : 'Tambah ke favorit'}
-            className={`p-1.5 rounded-lg transition-colors ${
+            className={`p-1.5 rounded-md transition-colors ${
               note.isFavorite
-                ? 'text-amber-500 hover:text-amber-600 bg-amber-50 dark:bg-amber-950/50'
-                : 'text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'text-amber-400 hover:text-amber-500 bg-amber-500/10'
+                : 'text-zinc-400 hover:text-amber-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
             }`}
             title={note.isFavorite ? 'Favorit' : 'Tambah ke Favorit'}
           >
-            <Star className={`w-4 h-4 ${note.isFavorite ? 'fill-amber-500' : ''}`} />
+            <Star className={`w-4 h-4 ${note.isFavorite ? 'fill-amber-400' : ''}`} />
           </button>
 
           <button
             onClick={() => onToggleTrash(note.id)}
             aria-label="Pindahkan ke tempat sampah"
-            className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg transition-colors"
+            className="p-1.5 text-zinc-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-md transition-colors"
             title="Hapus"
           >
             <Trash2 className="w-4 h-4" />
@@ -195,7 +195,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           <button
             onClick={onClose}
             aria-label="Tutup editor"
-            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
             title="Tutup editor"
           >
             <X className="w-4 h-4" />
@@ -203,7 +203,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         </div>
       </div>
 
-      {/* Editor Body */}
+      {/* Editor Body Container */}
       <div className="flex-1 flex flex-col p-6 sm:p-10 overflow-y-auto space-y-4 max-w-[760px] w-full mx-auto">
         {/* Title Input */}
         <input
@@ -214,14 +214,14 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           onChange={(e) => handleTitleChange(e.target.value)}
           placeholder="Judul catatan..."
           aria-label="Judul catatan"
-          className="w-full text-2xl sm:text-3xl font-bold bg-transparent text-slate-900 dark:text-slate-100 placeholder:text-slate-300 dark:placeholder:text-slate-700 border-none focus:outline-none tracking-tight leading-tight"
+          className="w-full text-2xl sm:text-3xl font-bold bg-transparent text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-300 dark:placeholder:text-zinc-700 border-none focus:outline-none tracking-tight leading-tight"
         />
 
-        {/* Subject & Tags Controls */}
-        <div className="flex flex-wrap items-center gap-3 py-2 border-y border-slate-100 dark:border-slate-800/80 text-xs font-medium">
-          {/* Subject Picker */}
-          <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-            <BookOpen className="w-3.5 h-3.5 text-amber-500" />
+        {/* Subject & Tags Bar */}
+        <div className="flex flex-wrap items-center gap-3 py-2 border-y border-zinc-100 dark:border-zinc-800/60 text-xs font-medium">
+          {/* Subject Input */}
+          <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
+            <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
             <input
               type="text"
               maxLength={40}
@@ -229,17 +229,17 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               onChange={(e) => handleSubjectChange(e.target.value)}
               placeholder="Tambah Subjek..."
               aria-label="Subjek catatan"
-              className="bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-amber-500/50 placeholder:text-slate-400"
+              className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-2.5 py-1 rounded-md text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
             />
           </div>
 
-          {/* Tags List & Autocomplete Add Input */}
+          {/* Tags List */}
           <div className="relative flex flex-wrap items-center gap-1.5">
-            <TagIcon className="w-3.5 h-3.5 text-slate-400" />
+            <TagIcon className="w-3.5 h-3.5 text-zinc-400" />
             {tags.map((t) => (
               <span
                 key={t}
-                className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 font-semibold rounded-md"
+                className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 font-semibold rounded"
               >
                 #{t}
                 <button
@@ -265,18 +265,18 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                 onKeyDown={handleTagInputKeyDown}
                 placeholder="+ Tag (Enter)..."
                 aria-label="Tambah tag baru"
-                className="bg-transparent text-slate-600 dark:text-slate-400 focus:outline-none placeholder:text-slate-400 text-xs font-medium"
+                className="bg-transparent text-zinc-600 dark:text-zinc-400 focus:outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600 text-xs font-medium"
               />
 
-              {/* Tag Autocomplete Dropdown */}
+              {/* Tag Suggestions Dropdown */}
               {showTagSuggestions && tagInput.trim() && tagSuggestions.length > 0 && (
-                <div className="absolute left-0 top-full mt-1 z-30 w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-1 max-h-36 overflow-y-auto">
+                <div className="absolute left-0 top-full mt-1 z-30 w-44 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl p-1 max-h-36 overflow-y-auto">
                   {tagSuggestions.map((sug) => (
                     <button
                       key={sug}
                       onClick={() => handleAddTag(sug)}
                       aria-label={`Pilih saran tag ${sug}`}
-                      className="w-full text-left px-2.5 py-1 text-xs text-slate-700 dark:text-slate-300 hover:bg-amber-500/10 hover:text-amber-500 rounded-lg transition-colors"
+                      className="w-full text-left px-2 py-1 text-xs text-zinc-700 dark:text-zinc-300 hover:bg-indigo-500/10 hover:text-indigo-500 rounded transition-colors"
                     >
                       #{sug}
                     </button>
@@ -293,10 +293,9 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           onChange={(e) => handleContentChange(e.target.value)}
           placeholder="Mulai ketik catatan di sini..."
           aria-label="Isi catatan"
-          className="flex-1 w-full min-h-[350px] bg-transparent text-slate-800 dark:text-slate-200 placeholder:text-slate-300 dark:placeholder:text-slate-700 border-none focus:outline-none resize-none leading-relaxed text-sm font-normal"
+          className="flex-1 w-full min-h-[400px] bg-transparent text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-300 dark:placeholder:text-zinc-700 border-none focus:outline-none resize-none leading-relaxed text-sm font-normal"
         />
       </div>
     </div>
   );
 };
-
