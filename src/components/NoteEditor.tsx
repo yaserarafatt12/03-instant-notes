@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Star, Trash2, X, Tag as TagIcon, BookOpen, Save, Sparkles, CopyPlus, Clock } from 'lucide-react';
+import { Star, Trash2, X, Tag as TagIcon, BookOpen, Save, Sparkles, CopyPlus, Clock, FileDown } from 'lucide-react';
 import type { Note } from '../types/note';
 import { formatRelativeTime } from '../lib/dateUtils';
+import { exportNoteAsTXT } from '../lib/storage/db';
 
 interface NoteEditorProps {
   note: Note | null;
@@ -136,6 +137,15 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* FR-803 Export as Plain Text (.txt) */}
+          <button
+            onClick={() => exportNoteAsTXT(note)}
+            className="p-2 text-slate-400 hover:text-emerald-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+            title="Ekspor catatan ke file teks .txt (FR-803)"
+          >
+            <FileDown className="w-4 h-4" />
+          </button>
+
           {onDuplicate && !note.isTrash && (
             <button
               onClick={() => onDuplicate(note)}

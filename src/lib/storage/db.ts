@@ -86,7 +86,6 @@ export async function getAllNotes(): Promise<Note[]> {
     return notes.sort((a, b) => b.updatedAt - a.updatedAt);
   } catch (error) {
     console.error('Failed to read notes from IndexedDB:', error);
-    // Fallback to localStorage
     const local = localStorage.getItem('instant_notes_fallback');
     if (local) {
       return JSON.parse(local);
@@ -122,25 +121,67 @@ export async function deleteNotePermanently(id: string): Promise<void> {
   }
 }
 
+// FR-801 & FR-807 Backup Metadata Exporter
 export async function exportBackupJSON(notes: Note[]): Promise<string> {
+  const subjectsSet = new Set(notes.map((n) => n.subject).filter(Boolean));
+  const tagsSet = new Set(notes.flatMap((n) => n.tags));
+
   return JSON.stringify(
     {
       app: 'InstantNotes',
-      version: '1.0',
+      version: '1.0.0',
+      schemaVersion: 1,
       exportedAt: new Date().toISOString(),
-      totalNotes: notes.length,
+      metadata: {
+        totalNotes: notes.length,
+        totalSubjects: subjectsSet.size,
+        totalTags: tagsSet.size,
+      },
       notes,
+      subjects: Array.from(subjectsSet),
+      tags: Array.from(tagsSet),
     },
     null,
     2
   );
 }
 
+// FR-803 Single Note Plain Text (.txt) Exporter
+export function exportNoteAsTXT(note: Note): void {
+  const fileContent = `=========================================
+${note.title || 'Catatan Tanpa Judul'}
+=========================================
+Subjek: ${note.subject || 'Tidak Ada'}
+Tag: ${note.tags.length > 0 ? note.tags.join(', ') : 'Tidak Ada'}
+Tanggal Diubah: ${new Date(note.updatedAt).toLocaleString('id-ID')}
+=========================================
+
+${note.content}
+`;
+  const blob = new Blob([fileContent], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const fileName = (note.title || 'catatan').replace(/[^a-zA-Z0-9_-]/g, '_') + '.txt';
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// FR-804 & FR-805 Import Validation
 export async function importBackupJSON(jsonString: string): Promise<Note[]> {
   const parsed = JSON.parse(jsonString);
   if (!parsed.notes || !Array.isArray(parsed.notes)) {
-    throw new Error('Invalid InstantNotes backup file format');
+    throw new Error('Berkas cadangan tidak valid. Pastikan memilih file JSON cadangan InstantNotes.');
   }
+
+  // Basic validation of required note fields
+  for (const n of parsed.notes) {
+    if (!n.id || typeof n.title !== 'string' || typeof n.content !== 'string') {
+      throw new Error('Berkas cadangan korup atau berisi struktur catatan tidak valid.');
+    }
+  }
+
   const db = await getDB();
   const tx = db.transaction('notes', 'readwrite');
   for (const note of parsed.notes) {

@@ -148,3 +148,19 @@ Bukan pengganti Notion, Obsidian, ataupun Evernote, melainkan:
 | **FR-608** | Trash Counter | P1 | ✅ Live | Hitungan otomatis jumlah catatan di tempat sampah pada sidebar (contoh: `Trash (12)`). |
 | **FR-609** | Delete Protection | P1 | ✅ Live | Modal dialog konfirmasi untuk mencegah salah klik penghapusan permanen. |
 | **FR-610** | Auto Cleanup | P3 | ⏳ Future | Retensi penghapusan otomatis 30/90 hari (Masa Depan). |
+
+---
+
+### 5.8 FR-700 — Settings & Preferences (Complete Matrix: FR-701 s/d FR-710)
+
+| ID | Requirement Name | Priority | Status | Description |
+|---|---|---|---|---|
+| **FR-701** | Theme Preference | P0 | ✅ Live | Mode Light, Dark, dan System (auto-sync `prefers-color-scheme`). |
+| **FR-702** | Font Size | P1 | ✅ Live | Ukuran teks realtime: Small (14px), Medium (16px), Large (18px). |
+| **FR-703** | Default Sorting | P1 | ✅ Live | Urutan default otomatis diingat (Recently Edited, Newest, Oldest, A-Z, Z-A). |
+| **FR-704** | Search History | P2 | ✅ Live | Tombol pembersihan riwayat pencarian lokal. |
+| **FR-705** | Keyboard Shortcut Toggle | P2 | ✅ Live | Toggle mengaktifkan/menonaktifkan seluruh pintasan papan ketik (`Ctrl+N`, `Ctrl+K`, `Alt+F`, `Esc`). |
+| **FR-706** | Reset Settings | P2 | ✅ Live | Mengembalikan preferensi ke konfigurasi bawaan aplikasi. |
+| **FR-707** | About InstantNotes | P3 | ✅ Live | Informasi modal offline: Versi 1.0, Developer, Link GitHub Repo, & Pernyataan Privasi. |
+| **FR-709** | Settings Persistence | P0 | ✅ Live | Menyimpan preferensi di `localStorage` agar tidak hilang saat browser ditutup. |
+| **FR-710** | Default Settings Fallback | P0 | ✅ Live | Fallback otomatis ke default (`theme: system, font: 16, sort: updated, shortcuts: true`) jika data belum ada. |
