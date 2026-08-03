@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import type { FilterCategory, Note, SortOption, FontSizeOption } from './types/note';
+import type { FilterCategory, Note } from './types/note';
 import { getAllNotes, saveNote, deleteNotePermanently } from './lib/storage/db';
 import { searchNotes } from './lib/search/searchEngine';
 import { FilterBar } from './components/FilterBar';
@@ -8,7 +8,11 @@ import { NoteCard } from './components/NoteCard';
 import { NoteEditor } from './components/NoteEditor';
 import { EmptyState } from './components/EmptyState';
 import { ExportImportModal } from './components/ExportImportModal';
+import { SettingsModal, DEFAULT_SETTINGS } from './components/SettingsModal';
+import type { AppSettings } from './components/SettingsModal';
 import { Undo2, Trash2 } from 'lucide-react';
+
+const SETTINGS_KEY = 'instant_notes_app_settings';
 
 export function App() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -17,14 +21,32 @@ export function App() {
   const [activeFilter, setActiveFilter] = useState<FilterCategory>('all');
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [sortOption, setSortOption] = useState<SortOption>('updated');
-  const [fontSize, setFontSize] = useState<FontSizeOption>('base');
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [undoNote, setUndoNote] = useState<Note | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  // Settings State with LocalStorage Persistence (FR-709 & FR-710)
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    try {
+      const saved = localStorage.getItem(SETTINGS_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Failed to load settings:', e);
+    }
+    return DEFAULT_SETTINGS;
   });
+
+  // Save settings to LocalStorage on update
+  const handleUpdateSettings = (newSettings: AppSettings) => {
+    setSettings(newSettings);
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings));
+  };
+
+  const handleResetSettings = () => {
+    setSettings(DEFAULT_SETTINGS);
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(DEFAULT_SETTINGS));
+  };
 
   // Load initial notes from IndexedDB
   useEffect(() => {
@@ -38,7 +60,13 @@ export function App() {
     });
   }, []);
 
-  // Sync dark mode class with body element
+  // Sync dark mode class with body element (FR-701)
+  const isDarkMode = useMemo(() => {
+    if (settings.theme === 'dark') return true;
+    if (settings.theme === 'light') return false;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }, [settings.theme]);
+
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -47,8 +75,10 @@ export function App() {
     }
   }, [isDarkMode]);
 
-  // Global Keyboard Shortcuts (Ctrl+N, Alt+F, Esc, etc.)
+  // Global Keyboard Shortcuts (FR-705)
   useEffect(() => {
+    if (!settings.keyboardShortcuts) return;
+
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key.toLowerCase() === 'n') {
         e.preventDefault();
@@ -65,7 +95,7 @@ export function App() {
     };
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [notes]);
+  }, [notes, settings.keyboardShortcuts]);
 
   const handleSelectNote = async (id: string) => {
     setSelectedNoteId(id);
@@ -195,12 +225,12 @@ export function App() {
     });
     return Array.from(map.entries())
       .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count); // Popular tags first
+      .sort((a, b) => b.count - a.count);
   }, [notes]);
 
   const allTagNames = useMemo(() => tags.map((t) => t.name), [tags]);
 
-  // Compute counts (FR-509 Favorite Statistics)
+  // Compute counts
   const totalActiveNotes = useMemo(() => notes.filter((n) => !n.isTrash).length, [notes]);
   const favoriteCount = useMemo(() => notes.filter((n) => !n.isTrash && n.isFavorite).length, [notes]);
   const trashCount = useMemo(() => notes.filter((n) => n.isTrash).length, [notes]);
@@ -230,16 +260,16 @@ export function App() {
       result = result.filter((n) => n.tags.some((t) => t.toLowerCase() === selectedTag.toLowerCase()));
     }
 
-    // Apply Sorting Options (FR-024 & FR-504)
+    // Apply Sorting Options (FR-024 & FR-703)
     return [...result].sort((a, b) => {
-      if (sortOption === 'newest') return b.createdAt - a.createdAt;
-      if (sortOption === 'oldest') return a.createdAt - b.createdAt;
-      if (sortOption === 'recent') return (b.lastOpenedAt || 0) - (a.lastOpenedAt || 0);
-      if (sortOption === 'a-z') return a.title.localeCompare(b.title);
-      if (sortOption === 'z-a') return b.title.localeCompare(a.title);
+      if (settings.defaultSort === 'newest') return b.createdAt - a.createdAt;
+      if (settings.defaultSort === 'oldest') return a.createdAt - b.createdAt;
+      if (settings.defaultSort === 'recent') return (b.lastOpenedAt || 0) - (a.lastOpenedAt || 0);
+      if (settings.defaultSort === 'a-z') return a.title.localeCompare(b.title);
+      if (settings.defaultSort === 'z-a') return b.title.localeCompare(a.title);
       return b.updatedAt - a.updatedAt; // default 'updated'
     });
-  }, [notes, activeFilter, selectedSubject, selectedTag, sortOption]);
+  }, [notes, activeFilter, selectedSubject, selectedTag, settings.defaultSort]);
 
   // Apply instant search engine
   const searchResults = useMemo(() => {
@@ -250,12 +280,12 @@ export function App() {
     return notes.find((n) => n.id === selectedNoteId) || null;
   }, [notes, selectedNoteId]);
 
-  // Compute Font Size Class (FR-023)
+  // Compute Font Size Class (FR-702)
   const fontSizeClass = useMemo(() => {
-    if (fontSize === 'sm') return 'text-xs';
-    if (fontSize === 'lg') return 'text-base';
+    if (settings.fontSize === 'sm') return 'text-xs';
+    if (settings.fontSize === 'lg') return 'text-base';
     return 'text-sm';
-  }, [fontSize]);
+  }, [settings.fontSize]);
 
   return (
     <div className={`flex h-screen w-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans ${fontSizeClass}`}>
@@ -276,7 +306,13 @@ export function App() {
         onExport={() => setIsBackupModalOpen(true)}
         onImport={() => setIsBackupModalOpen(true)}
         isDarkMode={isDarkMode}
-        onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+        onToggleDarkMode={() =>
+          handleUpdateSettings({
+            ...settings,
+            theme: isDarkMode ? 'light' : 'dark',
+          })
+        }
+        onOpenSettings={() => setIsSettingsModalOpen(true)}
       />
 
       {/* 3-Panel Layout: 2. Note List & Search Panel */}
@@ -286,10 +322,10 @@ export function App() {
             query={searchQuery}
             onQueryChange={setSearchQuery}
             resultCount={searchResults.length}
-            sortOption={sortOption}
-            onSortChange={setSortOption}
-            fontSize={fontSize}
-            onFontSizeChange={setFontSize}
+            sortOption={settings.defaultSort}
+            onSortChange={(sort) => handleUpdateSettings({ ...settings, defaultSort: sort })}
+            fontSize={settings.fontSize}
+            onFontSizeChange={(size) => handleUpdateSettings({ ...settings, fontSize: size })}
           />
         </div>
 
@@ -380,6 +416,16 @@ export function App() {
           setNotes(imported);
           if (imported.length > 0) setSelectedNoteId(imported[0].id);
         }}
+      />
+
+      {/* Settings & Preferences Modal (FR-700) */}
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        settings={settings}
+        onUpdateSettings={handleUpdateSettings}
+        onClearSearchHistory={() => setSearchQuery('')}
+        onResetSettings={handleResetSettings}
       />
     </div>
   );

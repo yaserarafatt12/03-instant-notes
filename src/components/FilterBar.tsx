@@ -12,6 +12,7 @@ import {
   Moon,
   Sun,
   History,
+  Settings,
 } from 'lucide-react';
 import type { FilterCategory } from '../types/note';
 
@@ -32,6 +33,7 @@ interface FilterBarProps {
   onImport: () => void;
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
+  onOpenSettings: () => void;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -51,6 +53,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   onImport,
   isDarkMode,
   onToggleDarkMode,
+  onOpenSettings,
 }) => {
   return (
     <aside className="w-full lg:w-64 shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-4 flex flex-col justify-between h-full select-none">
@@ -71,13 +74,22 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             </div>
           </div>
 
-          <button
-            onClick={onToggleDarkMode}
-            className="p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            title={isDarkMode ? 'Mode Terang' : 'Mode Gelap'}
-          >
-            {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onOpenSettings}
+              className="p-1.5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title="Pengaturan & Preferensi (FR-700)"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onToggleDarkMode}
+              className="p-1.5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title={isDarkMode ? 'Mode Terang' : 'Mode Gelap'}
+            >
+              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
         {/* New Note Action */}
@@ -172,7 +184,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </button>
         </div>
 
-        {/* Filter by Subjects (FR-308: Subject Statistics) */}
+        {/* Filter by Subjects */}
         {subjects.length > 0 && (
           <div className="space-y-1">
             <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
