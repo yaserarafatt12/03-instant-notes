@@ -253,3 +253,21 @@ Bukan pengganti Notion, Obsidian, ataupun Evernote, melainkan:
 | **TEST-2100** | Bug Classification | Zero Critical & Zero High bugs requirement before production release | ✅ Passed (0 Errors) |
 | **TEST-2200** | Definition of Done (DoD) | Strict DoD criteria for feature completion & code review | ✅ Passed |
 | **TEST-2300** | Release Checklist | Lighthouse score >= 90 (Performance & Accessibility target) | ✅ Passed |
+
+---
+
+## BAB 10 — Security & Privacy (SEC-1000 s/d SEC-2500 Matrix)
+
+| Module ID | Security Specification | Target Benchmark | Status |
+|---|---|---|---|
+| **SEC-1000** | Security Strategy | Defense in Depth: Validation -> Sanitization -> Business Rules -> Storage -> Rendering Protection | ✅ Passed |
+| **SEC-1100** | Threat Modeling | Mitigates XSS, Data Corruption, Accidental Deletion, Malformed Import, Local Storage Failures | ✅ Passed |
+| **SEC-1200** | Input Validation | Title max 200 chars, Subject max 50 chars, Tag max 30 chars (trimmed, case-insensitive) | ✅ Passed |
+| **SEC-1300** | Output Sanitization | Plain text node rendering preventing script execution | ✅ Passed |
+| **SEC-1400** | XSS Prevention | Zero `dangerouslySetInnerHTML` usage across all React components | ✅ Passed |
+| **SEC-1600** | Data Storage Security | 100% Local-First IndexedDB storage with zero cloud dependencies | ✅ Passed |
+| **SEC-1700** | Privacy Policy | Privacy by Default: Zero telemetry, zero analytics, zero user tracking | ✅ Passed |
+| **SEC-1800** | Import Security | Integrity schema validation before writing JSON to IndexedDB | ✅ Passed |
+| **SEC-2100** | Error Handling Security | Clean user-facing error messages without exposing raw internal stack traces | ✅ Passed |
+| **SEC-2200** | Dependency Security | Regular `npm audit` checks, zero critical/high vulnerabilities | ✅ Passed |
+| **SEC-2500** | Privacy by Design | Data Minimization, Local Processing, Explicit Export & Deletion control | ✅ Passed |
