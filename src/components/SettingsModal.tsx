@@ -41,8 +41,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-              Pengaturan &amp; Preferensi (FR-700)
+            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+              Pengaturan &amp; Preferensi
             </h2>
           </div>
           <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
