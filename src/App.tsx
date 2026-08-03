@@ -1,16 +1,16 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import type { FilterCategory, Note } from './types/note';
 import { getAllNotes, saveNote, deleteNotePermanently } from './lib/storage/db';
 import { searchNotes } from './lib/search/searchEngine';
 import { FilterBar } from './components/FilterBar';
-import { SearchBar } from './components/SearchBar';
 import { NoteCard } from './components/NoteCard';
 import { NoteEditor } from './components/NoteEditor';
 import { EmptyState } from './components/EmptyState';
 import { ExportImportModal } from './components/ExportImportModal';
 import { SettingsModal, DEFAULT_SETTINGS } from './components/SettingsModal';
 import type { AppSettings } from './components/SettingsModal';
-import { Undo2, Trash2, PanelLeftOpen, Columns2, Plus } from 'lucide-react';
+import { Undo2, Trash2, PanelLeftOpen, Columns2, SlidersHorizontal } from 'lucide-react';
+import type { SortOption } from './types/note';
 
 const SETTINGS_KEY = 'instant_notes_app_settings';
 
@@ -63,19 +63,10 @@ export function App() {
     });
   }, []);
 
-  const isDarkMode = useMemo(() => {
-    if (settings.theme === 'dark') return true;
-    if (settings.theme === 'light') return false;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  }, [settings.theme]);
-
+  // Sync dark mode class
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
+    document.documentElement.classList.add('dark');
+  }, []);
 
   // Global Keyboard Shortcuts
   useEffect(() => {
@@ -129,8 +120,7 @@ export function App() {
     setSelectedNoteId(newNote.id);
   };
 
-  const handleDuplicateNote = async (sourceNote: Note, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
+  const handleDuplicateNote = async (sourceNote: Note) => {
     if (sourceNote.isTrash) return;
 
     const duplicated: Note = {
@@ -156,8 +146,7 @@ export function App() {
     setNotes((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
   };
 
-  const handleToggleFavorite = async (id: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
+  const handleToggleFavorite = async (id: string) => {
     const target = notes.find((n) => n.id === id);
     if (!target) return;
 
@@ -165,8 +154,7 @@ export function App() {
     await handleSaveNote(updated);
   };
 
-  const handleToggleTrash = async (id: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
+  const handleToggleTrash = async (id: string) => {
     const target = notes.find((n) => n.id === id);
     if (!target) return;
 
@@ -184,15 +172,6 @@ export function App() {
     const restored = { ...undoNote, isTrash: false, updatedAt: Date.now() };
     await handleSaveNote(restored);
     setUndoNote(null);
-  };
-
-  const handleDeletePermanently = async (id: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    await deleteNotePermanently(id);
-    setNotes((prev) => prev.filter((n) => n.id !== id));
-    if (selectedNoteId === id) {
-      setSelectedNoteId(null);
-    }
   };
 
   const handleEmptyTrash = async () => {
@@ -286,8 +265,8 @@ export function App() {
   const showNoteList = isNoteListOpen && !isFocusMode;
 
   return (
-    <div className={`flex h-screen w-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans ${fontSizeClass}`}>
-      {/* 1. Sidebar FilterBar */}
+    <div className={`flex h-screen w-screen overflow-hidden bg-[#0b0c10] text-zinc-100 font-sans ${fontSizeClass}`}>
+      {/* 1. Left Sidebar FilterBar */}
       {showSidebar && (
         <FilterBar
           activeFilter={activeFilter}
@@ -302,71 +281,43 @@ export function App() {
           favoriteCount={favoriteCount}
           trashCount={trashCount}
           onNewNote={handleCreateNewNote}
-          onExport={() => setIsBackupModalOpen(true)}
-          onImport={() => setIsBackupModalOpen(true)}
-          isDarkMode={isDarkMode}
-          onToggleDarkMode={() =>
-            handleUpdateSettings({
-              ...settings,
-              theme: isDarkMode ? 'light' : 'dark',
-            })
-          }
           onOpenSettings={() => setIsSettingsModalOpen(true)}
-          onToggleSidebar={() => setIsSidebarOpen(false)}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
         />
       )}
 
-      {/* 2. Note List & Search Panel */}
+      {/* 2. Middle Panel: Note List Only */}
       {showNoteList && (
-        <main className="w-full lg:w-80 shrink-0 border-r border-zinc-200 dark:border-zinc-800/60 flex flex-col h-full bg-zinc-50/50 dark:bg-zinc-950/40">
-          <div className="p-3 border-b border-zinc-200 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm flex flex-col gap-2">
-            {/* Top Toolbar Trigger Controls */}
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-0.5">
-                {!isSidebarOpen && (
-                  <button
-                    onClick={() => setIsSidebarOpen(true)}
-                    className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                    title="Buka Sidebar"
-                  >
-                    <PanelLeftOpen className="w-4 h-4" />
-                  </button>
-                )}
-                <button
-                  onClick={() => setIsNoteListOpen(!isNoteListOpen)}
-                  className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                  title="Sembunyikan Daftar Catatan"
-                >
-                  <Columns2 className="w-4 h-4" />
-                </button>
-              </div>
+        <main className="w-full lg:w-72 shrink-0 border-r border-[#1f212c] flex flex-col h-full bg-[#0f1015]/60">
+          {/* Header Row: Result Counter & Sort Control */}
+          <div className="p-3 border-b border-[#1f212c] bg-[#111219]/80 backdrop-blur-sm flex items-center justify-between text-xs text-zinc-400">
+            <span className="font-semibold text-zinc-300">
+              {searchResults.length} Catatan
+            </span>
 
-              <button
-                onClick={handleCreateNewNote}
-                className="flex items-center gap-1 px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-semibold text-xs rounded-md transition-all shadow-xs"
+            <div className="flex items-center gap-1.5">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-400" />
+              <select
+                value={settings.defaultSort}
+                onChange={(e) => handleUpdateSettings({ ...settings, defaultSort: e.target.value as SortOption })}
+                className="bg-transparent text-[11px] font-semibold text-zinc-300 focus:outline-none cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Baru</span>
-              </button>
+                <option value="updated">Terakhir Diubah</option>
+                <option value="newest">Terbaru</option>
+                <option value="oldest">Terlama</option>
+                <option value="a-z">Judul A-Z</option>
+                <option value="z-a">Judul Z-A</option>
+              </select>
             </div>
-
-            <SearchBar
-              query={searchQuery}
-              onQueryChange={setSearchQuery}
-              resultCount={searchResults.length}
-              sortOption={settings.defaultSort}
-              onSortChange={(sort) => handleUpdateSettings({ ...settings, defaultSort: sort })}
-              fontSize={settings.fontSize}
-              onFontSizeChange={(size) => handleUpdateSettings({ ...settings, fontSize: size })}
-            />
           </div>
 
           {activeFilter === 'trash' && trashCount > 0 && (
-            <div className="flex items-center justify-between px-3.5 py-2 bg-rose-500/10 border-b border-rose-500/20 text-xs">
-              <span className="text-rose-600 dark:text-rose-400 font-semibold">{trashCount} di Tempat Sampah</span>
+            <div className="flex items-center justify-between px-3 py-2 bg-rose-500/10 border-b border-rose-500/20 text-xs">
+              <span className="text-rose-400 font-semibold">{trashCount} di Tempat Sampah</span>
               <button
                 onClick={handleEmptyTrash}
-                className="flex items-center gap-1 font-bold text-rose-600 dark:text-rose-400 hover:underline"
+                className="flex items-center gap-1 font-bold text-rose-400 hover:underline"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Kosongkan</span>
@@ -374,14 +325,15 @@ export function App() {
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          {/* Clean Note Cards List */}
+          <div className="flex-1 overflow-y-auto p-2.5 space-y-2">
             {isLoading ? (
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800/60 bg-white/40 dark:bg-zinc-900/40 animate-pulse space-y-2">
-                    <div className="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4" />
-                    <div className="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-full" />
-                    <div className="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-1/2" />
+                  <div key={i} className="p-3.5 rounded-xl border border-[#1f212c] bg-[#13141b]/40 animate-pulse space-y-2">
+                    <div className="h-4 bg-[#1f212c] rounded w-3/4" />
+                    <div className="h-3 bg-[#1f212c] rounded w-full" />
+                    <div className="h-3 bg-[#1f212c] rounded w-1/2" />
                   </div>
                 ))}
               </div>
@@ -399,10 +351,6 @@ export function App() {
                   searchQuery={searchQuery}
                   isSelected={selectedNoteId === note.id}
                   onSelect={() => handleSelectNote(note.id)}
-                  onToggleFavorite={(e) => handleToggleFavorite(note.id, e)}
-                  onToggleTrash={(e) => handleToggleTrash(note.id, e)}
-                  onDuplicateNote={(e) => handleDuplicateNote(note, e)}
-                  onDeletePermanently={(e) => handleDeletePermanently(note.id, e)}
                 />
               ))
             )}
@@ -410,15 +358,15 @@ export function App() {
         </main>
       )}
 
-      {/* 3. Instant Note Editor */}
+      {/* 3. Instant Note Editor Panel (Expanded to fill remaining width) */}
       <div className="flex-1 flex flex-col h-full relative">
         {/* Floating Toggle Header when Panels are Collapsed */}
         {(!isSidebarOpen || !isNoteListOpen || isFocusMode) && (
-          <div className="absolute top-2.5 left-3 z-20 flex items-center gap-1 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md p-1 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-xs">
+          <div className="absolute top-2.5 left-3 z-20 flex items-center gap-1 bg-[#13141b]/90 backdrop-blur-md p-1 rounded-lg border border-[#1f212c] shadow-xs">
             {!isSidebarOpen && !isFocusMode && (
               <button
                 onClick={() => setIsSidebarOpen(true)}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                className="p-1.5 text-zinc-400 hover:text-zinc-200 rounded-md hover:bg-[#1b1d28] transition-colors"
                 title="Buka Sidebar"
               >
                 <PanelLeftOpen className="w-4 h-4" />
@@ -427,7 +375,7 @@ export function App() {
             {!isNoteListOpen && !isFocusMode && (
               <button
                 onClick={() => setIsNoteListOpen(true)}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                className="p-1.5 text-zinc-400 hover:text-zinc-200 rounded-md hover:bg-[#1b1d28] transition-colors"
                 title="Tampilkan Daftar Catatan"
               >
                 <Columns2 className="w-4 h-4" />
@@ -446,16 +394,17 @@ export function App() {
           onDuplicate={(n) => handleDuplicateNote(n)}
           isFocusMode={isFocusMode}
           onToggleFocusMode={() => setIsFocusMode(!isFocusMode)}
+          onNewNote={handleCreateNewNote}
         />
       </div>
 
       {/* Toast Notification */}
       {undoNote && (
-        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 text-xs font-semibold rounded-xl shadow-xl border border-zinc-800 dark:border-zinc-200 font-sans">
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-2.5 bg-[#171822] text-white text-xs font-semibold rounded-xl shadow-2xl border border-[#272938] font-sans">
           <span>Catatan dipindahkan ke tempat sampah.</span>
           <button
             onClick={handleUndoTrash}
-            className="flex items-center gap-1 text-amber-400 dark:text-amber-600 hover:underline font-bold"
+            className="flex items-center gap-1 text-amber-400 hover:underline font-bold"
           >
             <Undo2 className="w-3.5 h-3.5" />
             <span>Batalkan</span>
@@ -480,6 +429,7 @@ export function App() {
         onUpdateSettings={handleUpdateSettings}
         onClearSearchHistory={() => setSearchQuery('')}
         onResetSettings={handleResetSettings}
+        onOpenBackup={() => setIsBackupModalOpen(true)}
       />
     </div>
   );
