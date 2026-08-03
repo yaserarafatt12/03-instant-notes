@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Star, Trash2, X, Tag as TagIcon, BookOpen, Save, CopyPlus, Clock, FileDown, Maximize2, Minimize2 } from 'lucide-react';
+import { Star, Trash2, X, Tag as TagIcon, Save, CopyPlus, Clock, FileDown, Maximize2, Minimize2, Folder } from 'lucide-react';
 import type { Note } from '../types/note';
 import { formatRelativeTime } from '../lib/dateUtils';
 import { exportNoteAsTXT } from '../lib/storage/db';
@@ -216,17 +216,15 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
         {/* Subject & Tags Bar */}
         <div className="flex flex-wrap items-center gap-3 py-2 border-y border-[#1f212c] text-xs font-medium">
-          {/* Subject Input */}
-          <div className="flex items-center gap-1.5 text-zinc-400">
-            <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+          {/* Folder Select Dropdown */}
+          <div className="flex items-center gap-1 bg-[#18181c] border border-white/10 rounded-xl px-2.5 py-1 text-xs font-semibold text-zinc-300">
+            <Folder className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
             <input
               type="text"
-              maxLength={40}
               value={subject}
               onChange={(e) => handleSubjectChange(e.target.value)}
-              placeholder="Tambah Subjek..."
-              aria-label="Subjek catatan"
-              className="bg-[#171822] border border-[#26293a] px-2.5 py-1 rounded-lg text-zinc-200 focus:outline-none focus:border-indigo-500/60 placeholder:text-zinc-500"
+              placeholder="Nama Folder..."
+              className="bg-transparent text-xs font-medium text-white focus:outline-none w-24 sm:w-32"
             />
           </div>
 
