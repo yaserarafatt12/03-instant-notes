@@ -280,11 +280,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       <div className="space-y-4 overflow-y-auto flex-1 pr-1">
         {/* 1. Craft Top Workspace Header & Sidebar Close Button */}
         <div className="flex items-center justify-between px-1 pt-0.5">
-          <button className="flex items-center gap-1.5 text-xs font-semibold text-white hover:bg-[#202024] px-2 py-1.5 rounded-lg transition-colors">
-            <div className="w-4 h-4 rounded bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] text-white font-bold">
+          <button className="flex items-center gap-1.5 text-xs font-bold text-white hover:bg-[#202024] px-2 py-1.5 rounded-lg transition-colors">
+            <div className="w-4.5 h-4.5 rounded-md bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] text-white font-bold shadow-sm">
               ⚡
             </div>
-            <span>My Space</span>
+            <span className="tracking-tight text-sm font-extrabold text-white">SeeNote</span>
             <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
           </button>
 

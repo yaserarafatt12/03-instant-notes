@@ -176,7 +176,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           <div className="pt-2 border-t border-white/5 px-2 text-[10px] text-zinc-500 flex items-center justify-between font-mono">
-            <span>InstantNotes v1.0</span>
+            <span>SeeNote v1.0</span>
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
           </div>
         </div>

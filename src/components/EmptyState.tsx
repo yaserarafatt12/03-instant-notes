@@ -42,7 +42,7 @@ export const DashboardEmptyEditor: React.FC<{ onNewNote: () => void }> = ({ onNe
         <div className="space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-indigo-300 text-xs font-semibold shadow-xs">
             <Zap className="w-3.5 h-3.5 text-indigo-400" />
-            <span>InstantNotes — Next-Gen Knowledge Base</span>
+            <span>SeeNote — Next-Gen Knowledge Base</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
             Apa yang ingin kamu <br />
