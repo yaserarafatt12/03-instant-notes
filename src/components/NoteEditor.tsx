@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Star, Trash2, X, Tag, BookOpen, Save, Sparkles, CopyPlus, Clock } from 'lucide-react';
+import { Star, Trash2, X, Tag as TagIcon, BookOpen, Save, Sparkles, CopyPlus, Clock } from 'lucide-react';
 import type { Note } from '../types/note';
 import { formatRelativeTime } from '../lib/dateUtils';
 
 interface NoteEditorProps {
   note: Note | null;
+  allExistingTags?: string[];
   onSave: (updated: Note) => void;
   onClose: () => void;
   onToggleFavorite: (id: string) => void;
@@ -14,6 +15,7 @@ interface NoteEditorProps {
 
 export const NoteEditor: React.FC<NoteEditorProps> = ({
   note,
+  allExistingTags = [],
   onSave,
   onClose,
   onToggleFavorite,
@@ -26,6 +28,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [savedStatus, setSavedStatus] = useState<string>('Tersimpan');
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
 
   const titleRef = useRef<HTMLInputElement>(null);
 
@@ -55,6 +58,13 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     );
   }
 
+  // Filter autocomplete tag suggestions (FR-406)
+  const tagSuggestions = allExistingTags.filter(
+    (t) =>
+      t.toLowerCase().includes(tagInput.trim().toLowerCase()) &&
+      !tags.some((existing) => existing.toLowerCase() === t.toLowerCase())
+  );
+
   const handleTitleChange = (val: string) => {
     setTitle(val);
     triggerAutoSave(val, content, subject, tags);
@@ -70,21 +80,26 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     triggerAutoSave(title, content, val, tags);
   };
 
-  const handleAddTag = (e: React.KeyboardEvent) => {
+  const handleAddTag = (tagToAdd: string) => {
+    const cleaned = tagToAdd.trim().slice(0, 25);
+    if (cleaned && !tags.some((t) => t.toLowerCase() === cleaned.toLowerCase())) {
+      const updatedTags = [...tags, cleaned];
+      setTags(updatedTags);
+      triggerAutoSave(title, content, subject, updatedTags);
+    }
+    setTagInput('');
+    setShowTagSuggestions(false);
+  };
+
+  const handleTagInputKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && tagInput.trim()) {
       e.preventDefault();
-      const newTag = tagInput.trim();
-      if (!tags.includes(newTag)) {
-        const updatedTags = [...tags, newTag];
-        setTags(updatedTags);
-        triggerAutoSave(title, content, subject, updatedTags);
-      }
-      setTagInput('');
+      handleAddTag(tagInput);
     }
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    const updatedTags = tags.filter((t) => t !== tagToRemove);
+    const updatedTags = tags.filter((t) => t.toLowerCase() !== tagToRemove.toLowerCase());
     setTags(updatedTags);
     triggerAutoSave(title, content, subject, updatedTags);
   };
@@ -167,6 +182,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         <input
           ref={titleRef}
           type="text"
+          maxLength={150}
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
           placeholder="Judul catatan..."
@@ -180,6 +196,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             <BookOpen className="w-3.5 h-3.5 text-amber-500" />
             <input
               type="text"
+              maxLength={40}
               value={subject}
               onChange={(e) => handleSubjectChange(e.target.value)}
               placeholder="Tambah Subjek (misal: Fisika)..."
@@ -187,9 +204,9 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             />
           </div>
 
-          {/* Tags List & Add Input */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            <Tag className="w-3.5 h-3.5 text-slate-400" />
+          {/* Tags List & Autocomplete Add Input (FR-406) */}
+          <div className="relative flex flex-wrap items-center gap-1.5">
+            <TagIcon className="w-3.5 h-3.5 text-slate-400" />
             {tags.map((t) => (
               <span
                 key={t}
@@ -202,14 +219,36 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               </span>
             ))}
 
-            <input
-              type="text"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={handleAddTag}
-              placeholder="+ Tag (Tekan Enter)..."
-              className="bg-transparent text-slate-600 dark:text-slate-400 focus:outline-none placeholder:text-slate-400 text-xs"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                maxLength={25}
+                value={tagInput}
+                onChange={(e) => {
+                  setTagInput(e.target.value);
+                  setShowTagSuggestions(true);
+                }}
+                onFocus={() => setShowTagSuggestions(true)}
+                onKeyDown={handleTagInputKeyDown}
+                placeholder="+ Tag (Enter)..."
+                className="bg-transparent text-slate-600 dark:text-slate-400 focus:outline-none placeholder:text-slate-400 text-xs"
+              />
+
+              {/* Tag Autocomplete Dropdown (FR-406) */}
+              {showTagSuggestions && tagInput.trim() && tagSuggestions.length > 0 && (
+                <div className="absolute left-0 top-full mt-1 z-30 w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-1 max-h-36 overflow-y-auto">
+                  {tagSuggestions.map((sug) => (
+                    <button
+                      key={sug}
+                      onClick={() => handleAddTag(sug)}
+                      className="w-full text-left px-2.5 py-1 text-xs text-slate-700 dark:text-slate-300 hover:bg-amber-500/10 hover:text-amber-500 rounded-lg transition-colors"
+                    >
+                      #{sug}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

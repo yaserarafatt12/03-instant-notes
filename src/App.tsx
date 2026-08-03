@@ -181,14 +181,18 @@ export function App() {
     return Array.from(map.entries()).map(([name, count]) => ({ name, count }));
   }, [notes]);
 
-  // Compute Tags & Statistics
+  // Compute Tags & Statistics (FR-409 Popular Tags)
   const tags = useMemo(() => {
     const map = new Map<string, number>();
     notes.filter((n) => !n.isTrash).flatMap((n) => n.tags).forEach((t) => {
       map.set(t, (map.get(t) || 0) + 1);
     });
-    return Array.from(map.entries()).map(([name, count]) => ({ name, count }));
+    return Array.from(map.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count); // Popular tags first
   }, [notes]);
+
+  const allTagNames = useMemo(() => tags.map((t) => t.name), [tags]);
 
   // Compute counts
   const totalActiveNotes = useMemo(() => notes.filter((n) => !n.isTrash).length, [notes]);
@@ -338,6 +342,7 @@ export function App() {
       <div className="hidden md:flex flex-1 h-full">
         <NoteEditor
           note={selectedNote}
+          allExistingTags={allTagNames}
           onSave={handleSaveNote}
           onClose={() => setSelectedNoteId(null)}
           onToggleFavorite={handleToggleFavorite}

@@ -76,3 +76,22 @@ Bukan pengganti Notion, Obsidian, ataupun Evernote, melainkan:
 | **FR-208** | Empty Search State | P0 | ✅ Live | Zero state saat pencarian kosong dengan tombol "Clear Search". |
 | **FR-209** | Fuzzy Search | P2 | ✅ Live | Algoritma Levenshtein distance untuk toleransi typo (misal: 'fisik' -> 'fisika'). |
 | **FR-210** | Search History | P2 | ✅ Live | Menyimpan riwayat pencarian lokal di peramban. |
+
+---
+
+### 5.4 FR-300 — Subject Management (Complete Matrix: FR-301 s/d FR-312)
+
+| ID | Requirement Name | Priority | Status | Description |
+|---|---|---|---|---|
+| **FR-301** | Create Subject | P0 | ✅ Live | Pengelompokan catatan berdasarkan topik utama (maks 40 karakter). |
+| **FR-302** | Rename Subject | P1 | ✅ Live | Mengubah nama subjek tanpa merusak atau mengubah isi catatan. |
+| **FR-303** | Delete Subject | P1 | ✅ Live | Menghapus subjek (catatan otomatis fallback ke `Umum` / `No Subject`). |
+| **FR-304** | Prevent Duplicate | P0 | ✅ Live | Pencegahan nama subjek ganda (case-insensitive check). |
+| **FR-305** | Assign Subject | P0 | ✅ Live | Prinsip 1 catatan = 1 subjek utama. |
+| **FR-306** | Remove Subject | P1 | ✅ Live | Menghapus keterkaitan subjek dari catatan. |
+| **FR-307** | Subject Color | P2 | ✅ Live | Identitas warna visual fixed palette pada badge subjek. |
+| **FR-308** | Subject Statistics | P2 | ✅ Live | Hitungan jumlah catatan otomatis per subjek pada sidebar (contoh: `Fisika (12)`). |
+| **FR-309** | Subject Filter | P0 | ✅ Live | Penyaringan 1-klik catatan berdasarkan subjek. |
+| **FR-310** | Empty Subject State | P1 | ✅ Live | Zero state saat subjek belum memiliki catatan. |
+| **FR-311** | Default Subject | P1 | ✅ Live | Default ke `Umum` / `No Subject` saat pembuatan tanpa kategori. |
+| **FR-312** | Subject Validation | P0 | ✅ Live | Validasi UTF-8, unik, maks 40 karakter, non-spasi kosong. |
