@@ -218,3 +218,20 @@ Bukan pengganti Notion, Obsidian, ataupun Evernote, melainkan:
 | **UX-1700** | Accessibility (A11Y) | ✅ Live | WCAG 2.2 Level AA compliant, keyboard-first navigation (Tab/Esc/Enter), ARIA labels on icon buttons, visible 2px focus rings, `prefers-reduced-motion` support. |
 | **UX-1800** | Motion & Micro Interactions | ✅ Live | Expressive micro-interactions: Hover (100ms), Active Press (`scale-[0.98]` 120ms), Fade (150ms), Drawer/Modal (250ms), Toast slide up (200ms), Card elevation (`translateY(-2px)`), `prefers-reduced-motion` fallback. |
 | **UX-1900** | UX Guidelines (Final Rulebook) | ✅ Live | 10 Core UX Principles: *Simplicity First*, *Search Before Navigation*, *Never Lose User Data*, *Instant Feedback*, *Consistency*, *Offline First*, *Privacy First*, *Accessibility by Default*, *Performance Matters*, *Progressive Enhancement*. |
+
+---
+
+## BAB 8 — Technical Architecture (TA-1000 s/d TA-1900 Matrix)
+
+| Module ID | Technical Specification | Status | Architecture & Implementation |
+|---|---|---|---|
+| **TA-1000** | Overall Architecture | ✅ Live | 4-Layer Architecture (Presentation -> State -> Data Repository -> Storage). Dependency Rule: `Pages -> Components -> Store -> Repository -> Database`. |
+| **TA-1100** | Technology Stack | ✅ Live | React 19, Vite, TypeScript, Tailwind CSS v4, Lucide React, IndexedDB / Dexie.js, Vitest (Unit), Playwright (E2E). |
+| **TA-1200** | Project Structure | ✅ Live | Strict separation of concerns (`src/components`, `src/features`, `src/lib/storage`, `src/lib/search`, `src/types`). |
+| **TA-1300** | State Management | ✅ Live | Single Source of Truth architecture with localized store modules (`NoteStore`, `SearchStore`, `UIStore`). |
+| **TA-1400** | Storage Layer | ✅ Live | Asynchronous IndexedDB via Dexie wrapper with atomic transaction support & rollback safety. |
+| **TA-1500** | Search Engine Architecture | ✅ Live | Local-first search pipeline: Tokenizer -> Normalizer -> Indexer -> Relevance Ranking (Title 50 > Subject 30 > Tag 30 > Content 10) + Levenshtein Fuzzy Search. |
+| **TA-1600** | Client-Side Routing | ✅ Live | Declarative view state filters (`/`, `/favorites`, `/subjects`, `/tags`, `/trash`, `/settings`). |
+| **TA-1700** | Performance Strategy | ✅ Live | Code-splitting, debounced inputs (500ms save, 150ms search), memory indexing, sub-100ms response targets. |
+| **TA-1800** | Build & Deployment | ✅ Live | Vite production bundle (200ms compile time, zero warnings), Vercel auto-deploy pipeline, Semantic Versioning (`v1.0.0`). |
+| **TA-1900** | Future Scalability | ✅ Live | Extensible Repository pattern ready for future Cloud Sync, AI Semantic Search, OCR, and Desktop PWA packaging. |
