@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { searchNotes } from '../src/lib/search/searchEngine';
-import { Note } from '../src/types/note';
+import type { Note } from '../src/types/note';
 
 const MOCK_NOTES: Note[] = [
   {
@@ -38,14 +38,14 @@ const MOCK_NOTES: Note[] = [
   },
 ];
 
-describe('InstantSearch Engine Tests', () => {
-  it('returns all active (non-trash) notes when query is empty', () => {
+describe('InstantSearch Engine Tests (FR-200 Matrix)', () => {
+  it('returns all active (non-trash) notes when query is empty (FR-201)', () => {
     const results = searchNotes(MOCK_NOTES, '');
     expect(results.length).toBe(2);
     expect(results.some((r) => r.note.id === '3')).toBe(false);
   });
 
-  it('matches keyword in title with higher priority score', () => {
+  it('matches keyword in title with higher priority score (FR-202 & FR-206)', () => {
     const results = searchNotes(MOCK_NOTES, 'Integral');
     expect(results.length).toBe(1);
     expect(results[0].note.title).toContain('Integral');
@@ -53,18 +53,25 @@ describe('InstantSearch Engine Tests', () => {
     expect(results[0].matchedTitle).toBe(true);
   });
 
-  it('matches keyword in subject and tags', () => {
+  it('matches keyword in subject (FR-204)', () => {
     const results = searchNotes(MOCK_NOTES, 'Fisika');
     expect(results.length).toBe(1);
     expect(results[0].note.subject).toBe('Fisika');
     expect(results[0].matchedSubject).toBe(true);
   });
 
-  it('matches keyword in tags', () => {
+  it('matches keyword in tags (FR-205)', () => {
     const results = searchNotes(MOCK_NOTES, 'TypeScript');
     expect(results.length).toBe(1);
     expect(results[0].note.tags).toContain('TypeScript');
     expect(results[0].matchedTag).toBe(true);
+  });
+
+  it('supports fuzzy search for minor typos (FR-209)', () => {
+    // Typo: 'Fisik' -> 'Fisika'
+    const results = searchNotes(MOCK_NOTES, 'Fisik');
+    expect(results.length).toBe(1);
+    expect(results[0].note.subject).toBe('Fisika');
   });
 
   it('returns empty array when no matches are found', () => {

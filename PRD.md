@@ -50,47 +50,17 @@ Bukan pengganti Notion, Obsidian, ataupun Evernote, melainkan:
 - **P1 (Important)**: Penting, dapat dikembangkan setelah MVP stabil.
 - **P2 (Future)**: Fitur tambahan opsional.
 
-### Functional Modules Matrix
-- **FR-100**: Note Management (Create, Edit, Auto Save, Soft Delete, Restore, Permanent Delete)
-- **FR-200**: Search Engine (Real-time Keyword Search, Snippet Match, Highlight)
-- **FR-300**: Subject Management (Single Subject Assignment & Filtering)
-- **FR-400**: Tag Management (Multi-tag Assignment & Filtering)
-- **FR-500**: Favorites Management (Star Toggle & Favorite View)
-- **FR-600**: Trash Management (Trash View & Empty Trash Confirmation)
-- **FR-700**: Application Settings (Dark/Light Theme, Font Size, Sort Options)
-- **FR-800**: Import & Export (JSON Backup & Recovery)
-- **FR-900**: Error Handling & Validation (Skeleton Loading, Zero States, Local Fallback)
+### 5.2 FR-100 — Note Management (Complete Matrix: FR-101 s/d FR-110)
 
----
-
-### 5.2 FR-100 — Note Management
-
-#### FR-101 — Create Note [P0]
-- **Description**: Pengguna dapat membuat catatan baru kapan saja melalui tombol **New Note** (`Ctrl+N`).
-- **Acceptance Criteria**:
-  - Tombol **New Note** selalu terlihat pada halaman utama.
-  - Sistem membuat Note baru dengan UUID unik.
-  - Editor otomatis terbuka dan terfokus setelah Note dibuat.
-- **Validation Rules**: Judul maks 150 karakter. Isi, subject, dan tag opsional.
-- **Edge Cases**: Default judul `Untitled Note` jika kosong.
-- **Dependencies**: IndexedDB / LocalStorage, UUID generator.
-
-#### FR-102 — Edit Note & Auto Save [P0]
-- **Description**: Pengguna dapat mengubah isi catatan kapan saja. Perubahan tersimpan otomatis tanpa tombol Save.
-- **Acceptance Criteria**:
-  - Perubahan isi disimpan secara otomatis (< 500ms debounce).
-  - Field `updatedAt` diperbarui otomatis.
-  - Refresh halaman tidak menyebabkan kehilangan data.
-- **Dependencies**: IndexedDB, Debounce Utility.
-
-#### FR-103 — Delete Note (Soft Delete) [P0]
-- **Description**: Penghapusan dari daftar utama memindahkan catatan ke Trash (`isTrash: true`).
-- **Acceptance Criteria**: Catatan menghilang dari daftar utama dan muncul di halaman Trash.
-
-#### FR-104 — Restore Note [P0]
-- **Description**: Catatan di Trash dapat dipulihkan kembali ke daftar utama.
-- **Acceptance Criteria**: `isTrash: false`, catatan muncul kembali di daftar utama dengan data utuh.
-
-#### FR-105 — Permanently Delete Note [P1]
-- **Description**: Penghapusan permanen dari halaman Trash.
-- **Acceptance Criteria**: Konfirmasi dialog sebelum data benar-benar dihapus dari IndexedDB.
+| ID | Requirement Name | Priority | Status | Description |
+|---|---|---|---|---|
+| **FR-101** | Create Note | P0 | ✅ Live | Membuat catatan baru via `New Note` / `Ctrl+N` dengan UUID unik. |
+| **FR-102** | Edit Note | P0 | ✅ Live | Mengubah isi & judul catatan kapan saja. |
+| **FR-103** | Soft Delete Note | P0 | ✅ Live | Pindahkan catatan ke tempat sampah (`isTrash: true`). |
+| **FR-104** | Restore Note | P0 | ✅ Live | Memulihkan catatan dari tempat sampah kembali ke daftar utama. |
+| **FR-105** | Permanent Delete | P1 | ✅ Live | Hapus permanen catatan dari tempat sampah via IndexedDB. |
+| **FR-106** | Duplicate Note | P1 | ✅ Live | Membuat salinan catatan baru dengan UUID & timestamp baru. |
+| **FR-107** | Auto Save | P0 | ✅ Live | Penyimpanan otomatis tanpa tombol Save (< 500ms debounce). |
+| **FR-108** | Note Metadata | P1 | ✅ Live | Format relatif tanggal (`Baru saja`, `2 menit lalu`, `Kemarin`). |
+| **FR-109** | Pin Note | P2 | ⏳ Future | Menyematkan catatan di posisi paling atas (Masa Depan). |
+| **FR-110** | Recent Notes | P1 | ✅ Live | Menyimpan & menyaring 10 catatan yang terakhir dibuka (`lastOpenedAt`). |
