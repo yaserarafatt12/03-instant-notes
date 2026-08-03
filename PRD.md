@@ -164,3 +164,20 @@ Bukan pengganti Notion, Obsidian, ataupun Evernote, melainkan:
 | **FR-707** | About InstantNotes | P3 | ✅ Live | Informasi modal offline: Versi 1.0, Developer, Link GitHub Repo, & Pernyataan Privasi. |
 | **FR-709** | Settings Persistence | P0 | ✅ Live | Menyimpan preferensi di `localStorage` agar tidak hilang saat browser ditutup. |
 | **FR-710** | Default Settings Fallback | P0 | ✅ Live | Fallback otomatis ke default (`theme: system, font: 16, sort: updated, shortcuts: true`) jika data belum ada. |
+
+---
+
+### 5.9 FR-800 — Import & Export (Complete Matrix: FR-801 s/d FR-810)
+
+| ID | Requirement Name | Priority | Status | Description |
+|---|---|---|---|---|
+| **FR-801** | Export All Notes | P0 | ✅ Live | Unduh cadangan JSON penuh (`instantnotes-backup.json`) berisi seluruh catatan, subjek, tag, dan metadata. |
+| **FR-802** | Export Selected Notes | P1 | ✅ Live | Ekspor sebagian catatan terpilih ke dalam file backup JSON. |
+| **FR-803** | Export as Plain Text | P2 | ✅ Live | Ekspor 1 catatan langsung ke file teks `.txt` (`FileDown` icon di toolbar editor). |
+| **FR-804** | Import Backup | P0 | ✅ Live | Pemulihan catatan dari file backup JSON tanpa server/internet. |
+| **FR-805** | Import Validation | P0 | ✅ Live | Validasi integritas format JSON & skema sebelum penulisan ke IndexedDB. |
+| **FR-806** | Conflict Resolution | P2 | ✅ Live | Penanganan aman konflik ID saat import (Replace/Duplicate). |
+| **FR-807** | Backup Metadata | P1 | ✅ Live | Metadata lengkap di dalam backup JSON (`version: 1.0.0`, `exportedAt`, `totalNotes`, `totalSubjects`, `totalTags`). |
+| **FR-808** | Version Compatibility | P2 | ✅ Live | Pengecekan kompatibilitas versi schema JSON. |
+| **FR-809** | Backup Confirmation | P1 | ✅ Live | Notifikasi instan tanpa reload saat export berhasil. |
+| **FR-810** | Restore Confirmation | P1 | ✅ Live | Modal konfirmasi dialog sebelum mengimpor / menimpa data. |
