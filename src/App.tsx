@@ -1,13 +1,27 @@
 import { useEffect, useState, useMemo } from 'react';
 import type { FilterCategory, Note } from './types/note';
-import { getAllNotes, saveNote } from './lib/storage/db';
+import { getAllNotes, saveNote, deleteNotePermanently } from './lib/storage/db';
 import { searchNotes } from './lib/search/searchEngine';
 import { FilterBar } from './components/FilterBar';
+import { NoteCard } from './components/NoteCard';
 import { NoteEditor } from './components/NoteEditor';
+import { EmptyState } from './components/EmptyState';
 import { ExportImportModal } from './components/ExportImportModal';
 import { SettingsModal, DEFAULT_SETTINGS } from './components/SettingsModal';
 import type { AppSettings } from './components/SettingsModal';
-import { Undo2, PanelLeftOpen } from 'lucide-react';
+import {
+  Undo2,
+  PanelLeftOpen,
+  Search,
+  X,
+  SlidersHorizontal,
+  Plus,
+  ArrowLeft,
+  LayoutGrid,
+  List,
+  Trash2,
+} from 'lucide-react';
+import type { SortOption } from './types/note';
 
 const SETTINGS_KEY = 'instant_notes_app_settings';
 
@@ -21,13 +35,14 @@ export function App() {
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [undoNote, setUndoNote] = useState<Note | null>(null);
-  const [_isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Panel Collapse States
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [isFocusMode, setIsFocusMode] = useState<boolean>(false);
 
-  // Settings State with LocalStorage Persistence
+  // Settings State
   const [settings, setSettings] = useState<AppSettings>(() => {
     try {
       const saved = localStorage.getItem(SETTINGS_KEY);
@@ -52,9 +67,6 @@ export function App() {
     setIsLoading(true);
     getAllNotes().then((loaded) => {
       setNotes(loaded);
-      if (loaded.length > 0) {
-        setSelectedNoteId(loaded[0].id);
-      }
       setIsLoading(false);
     });
   }, []);
@@ -78,14 +90,16 @@ export function App() {
         setSelectedSubject(null);
         setSelectedTag(null);
       } else if (e.key === 'Escape') {
-        if (isFocusMode) {
+        if (selectedNoteId) {
+          setSelectedNoteId(null);
+        } else if (isFocusMode) {
           setIsFocusMode(false);
         }
       }
     };
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [notes, settings.keyboardShortcuts, isFocusMode]);
+  }, [notes, settings.keyboardShortcuts, isFocusMode, selectedNoteId]);
 
   const handleSelectNote = async (id: string) => {
     setSelectedNoteId(id);
@@ -170,6 +184,21 @@ export function App() {
     setUndoNote(null);
   };
 
+  const handleEmptyTrash = async () => {
+    const trashNotes = notes.filter((n) => n.isTrash);
+    if (trashNotes.length === 0) return;
+
+    if (window.confirm(`Hapus permanen seluruh ${trashNotes.length} catatan di tempat sampah?`)) {
+      for (const note of trashNotes) {
+        await deleteNotePermanently(note.id);
+      }
+      setNotes((prev) => prev.filter((n) => !n.isTrash));
+      if (selectedNote?.isTrash) {
+        setSelectedNoteId(null);
+      }
+    }
+  };
+
   const subjects = useMemo(() => {
     const map = new Map<string, number>();
     notes.filter((n) => !n.isTrash && n.subject).forEach((n) => {
@@ -245,16 +274,25 @@ export function App() {
   const showSidebar = isSidebarOpen && !isFocusMode;
 
   return (
-    <div className={`flex h-screen w-screen overflow-hidden bg-[#0b0c10] text-zinc-100 font-sans ${fontSizeClass}`}>
-      {/* 1. Left Sidebar (Panel 1) */}
+    <div className={`flex h-screen w-screen overflow-hidden bg-[#171719] text-zinc-100 font-sans ${fontSizeClass}`}>
+      {/* 1. Craft Left Sidebar */}
       {showSidebar && (
         <FilterBar
           activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
+          onFilterChange={(f) => {
+            setActiveFilter(f);
+            setSelectedNoteId(null);
+          }}
           selectedSubject={selectedSubject}
-          onSubjectChange={setSelectedSubject}
+          onSubjectChange={(s) => {
+            setSelectedSubject(s);
+            setSelectedNoteId(null);
+          }}
           selectedTag={selectedTag}
-          onTagChange={setSelectedTag}
+          onTagChange={(t) => {
+            setSelectedTag(t);
+            setSelectedNoteId(null);
+          }}
           subjects={subjects}
           tags={tags}
           totalNotes={totalActiveNotes}
@@ -269,41 +307,189 @@ export function App() {
           onSelectNote={handleSelectNote}
           filteredNotes={searchResults.map((sr) => sr.note)}
           onToggleSidebar={() => setIsSidebarOpen(false)}
+          onOpenBackup={() => setIsBackupModalOpen(true)}
         />
       )}
 
-      {/* 2. Full-Width Note Editor / Dashboard (Panel 2) */}
-      <div className="flex-1 flex flex-col h-full relative overflow-hidden">
-        {/* Floating Sidebar Open Trigger when Sidebar is Collapsed */}
-        {!isSidebarOpen && !isFocusMode && (
-          <div className="absolute top-3 left-3 z-20">
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="p-2 bg-[#13141b]/90 backdrop-blur-md text-zinc-400 hover:text-white rounded-xl border border-[#1f212c] shadow-md transition-colors"
-              title="Buka Sidebar"
-            >
-              <PanelLeftOpen className="w-4 h-4" />
-            </button>
+      {/* 2. Main Content View Area (Craft Top Header Bar + All Docs View or Editor) */}
+      <div className="flex-1 flex flex-col h-full relative overflow-hidden bg-[#171719]">
+        {/* Craft Global Top Header Bar */}
+        <header className="h-12 border-b border-white/5 bg-[#141416]/90 backdrop-blur-md px-4 flex items-center justify-between z-10 shrink-0">
+          <div className="flex items-center gap-2">
+            {!isSidebarOpen && !isFocusMode && (
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-[#202024] transition-colors"
+                title="Buka Sidebar"
+              >
+                <PanelLeftOpen className="w-4 h-4" />
+              </button>
+            )}
+
+            {selectedNoteId && (
+              <button
+                onClick={() => setSelectedNoteId(null)}
+                className="flex items-center gap-1 text-xs text-zinc-400 hover:text-white px-2 py-1 rounded-lg hover:bg-[#202024] transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Kembali ke Dokumentasi</span>
+              </button>
+            )}
+          </div>
+
+          {/* Center Floating Pill Search Bar (Craft "Q Open" Style) */}
+          <div className="flex-1 max-w-md mx-4 relative hidden sm:block">
+            <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Open or search documents... (Ctrl+K)"
+              className="w-full pl-9 pr-8 py-1.5 bg-[#202024] border border-white/5 rounded-full text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/20 transition-all text-center focus:text-left"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-2 p-0.5 text-zinc-400 hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Right Header Actions: Sorting & View Controls */}
+          <div className="flex items-center gap-1.5 text-xs text-zinc-400">
+            <div className="flex items-center gap-1 bg-[#202024] border border-white/5 rounded-lg px-2 py-1">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-400" />
+              <select
+                value={settings.defaultSort}
+                onChange={(e) => handleUpdateSettings({ ...settings, defaultSort: e.target.value as SortOption })}
+                className="bg-transparent text-[11px] font-medium text-zinc-300 focus:outline-none cursor-pointer"
+              >
+                <option value="updated">Date Updated</option>
+                <option value="newest">Date Created</option>
+                <option value="a-z">Name (A-Z)</option>
+              </select>
+            </div>
+
+            <div className="hidden md:flex items-center border border-white/5 bg-[#202024] rounded-lg p-0.5">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-1 rounded ${viewMode === 'grid' ? 'bg-[#2b2b32] text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                title="Grid View"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-1 rounded ${viewMode === 'list' ? 'bg-[#2b2b32] text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                title="List View"
+              >
+                <List className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Body: Show Note Editor if Selected, Else Show All Docs Grid/List View */}
+        {selectedNoteId ? (
+          <NoteEditor
+            note={selectedNote}
+            allExistingTags={allTagNames}
+            onSave={handleSaveNote}
+            onClose={() => setSelectedNoteId(null)}
+            onToggleFavorite={handleToggleFavorite}
+            onToggleTrash={handleToggleTrash}
+            onDuplicate={(n) => handleDuplicateNote(n)}
+            isFocusMode={isFocusMode}
+            onToggleFocusMode={() => setIsFocusMode(!isFocusMode)}
+            onNewNote={handleCreateNewNote}
+          />
+        ) : (
+          <div className="flex-1 overflow-y-auto p-6 sm:p-10 space-y-6">
+            {/* View Header */}
+            <div className="flex items-center justify-between pb-2 border-b border-white/5">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleCreateNewNote}
+                  className="w-8 h-8 rounded-full bg-white text-zinc-950 flex items-center justify-center hover:bg-zinc-200 transition-colors shadow-md"
+                  title="Catatan Baru"
+                >
+                  <Plus className="w-5 h-5 stroke-[2.5]" />
+                </button>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                  {selectedSubject
+                    ? selectedSubject
+                    : selectedTag
+                    ? `#${selectedTag}`
+                    : activeFilter === 'favorites'
+                    ? 'Favorit'
+                    : activeFilter === 'trash'
+                    ? 'Tempat Sampah'
+                    : 'All Docs'}
+                </h1>
+              </div>
+
+              {activeFilter === 'trash' && trashCount > 0 && (
+                <button
+                  onClick={handleEmptyTrash}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-rose-500/20 text-rose-300 font-semibold text-xs rounded-xl hover:bg-rose-500/30 transition-all border border-rose-500/30"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Kosongkan Sampah ({trashCount})</span>
+                </button>
+              )}
+            </div>
+
+            {/* Content Cards Grid / List */}
+            {isLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-64 rounded-2xl bg-[#202024] border border-white/5 animate-pulse" />
+                ))}
+              </div>
+            ) : searchResults.length === 0 ? (
+              <EmptyState
+                type={searchQuery ? 'search' : activeFilter}
+                onNewNote={handleCreateNewNote}
+              />
+            ) : viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {searchResults.map(({ note, snippet }) => (
+                  <NoteCard
+                    key={note.id}
+                    note={note}
+                    snippet={snippet}
+                    searchQuery={searchQuery}
+                    isSelected={selectedNoteId === note.id}
+                    onSelect={() => handleSelectNote(note.id)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-2 max-w-3xl">
+                {searchResults.map(({ note, snippet }) => (
+                  <div
+                    key={note.id}
+                    onClick={() => handleSelectNote(note.id)}
+                    className="p-4 rounded-xl bg-[#202024] hover:bg-[#27272c] border border-white/5 cursor-pointer flex items-center justify-between transition-all"
+                  >
+                    <div className="overflow-hidden pr-4">
+                      <h3 className="font-bold text-sm text-white truncate">{note.title || 'Catatan Tanpa Judul'}</h3>
+                      <p className="text-xs text-zinc-400 truncate mt-0.5">{snippet}</p>
+                    </div>
+                    <span className="text-[10px] text-zinc-500 shrink-0">{note.subject || 'Umum'}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
-
-        <NoteEditor
-          note={selectedNote}
-          allExistingTags={allTagNames}
-          onSave={handleSaveNote}
-          onClose={() => setSelectedNoteId(null)}
-          onToggleFavorite={handleToggleFavorite}
-          onToggleTrash={handleToggleTrash}
-          onDuplicate={(n) => handleDuplicateNote(n)}
-          isFocusMode={isFocusMode}
-          onToggleFocusMode={() => setIsFocusMode(!isFocusMode)}
-          onNewNote={handleCreateNewNote}
-        />
       </div>
 
       {/* Toast Notification */}
       {undoNote && (
-        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-2.5 bg-[#171822] text-white text-xs font-semibold rounded-xl shadow-2xl border border-[#272938] font-sans">
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-2.5 bg-[#25252b] text-white text-xs font-semibold rounded-xl shadow-2xl border border-white/10 font-sans">
           <span>Catatan dipindahkan ke tempat sampah.</span>
           <button
             onClick={handleUndoTrash}

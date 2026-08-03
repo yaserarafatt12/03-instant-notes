@@ -3,35 +3,40 @@
 
 @layer base {
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
-    background-color: #0c0d12;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, Roboto, sans-serif;
+    background-color: #171719;
     color: #f4f4f6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Craft.do Glassmorphism & Depth Tokens */
-.craft-glass {
-  background: rgba(19, 20, 28, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* Craft.do Exact Color & Surface Tokens */
+.craft-bg-base {
+  background-color: #171719;
 }
 
-.craft-card {
-  background: #171822;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+.craft-bg-sidebar {
+  background-color: #131315;
 }
 
-.craft-card:hover {
-  background: #1e1f2d;
-  border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+.craft-bg-card {
+  background-color: #202024;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-/* Custom Craft minimal scrollbar */
+.craft-bg-card:hover {
+  background-color: #27272c;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.craft-pill-active {
+  background-color: #27272b;
+  color: #ffffff;
+}
+
+/* Minimal Craft scrollbar */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;

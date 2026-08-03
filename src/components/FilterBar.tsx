@@ -8,11 +8,10 @@ import {
   Tag,
   History,
   Settings,
-  Search,
-  X,
-  ChevronRight,
+  Download,
   PanelLeftClose,
-  NotebookPen,
+  ChevronDown,
+  Sparkles,
 } from 'lucide-react';
 import type { FilterCategory, Note } from '../types/note';
 
@@ -30,13 +29,14 @@ interface FilterBarProps {
   trashCount: number;
   onNewNote: () => void;
   onOpenSettings: () => void;
-  searchQuery: string;
-  onSearchQueryChange: (q: string) => void;
-  notes: Note[];
-  selectedNoteId: string | null;
-  onSelectNote: (id: string) => void;
-  filteredNotes: Note[];
   onToggleSidebar?: () => void;
+  onOpenBackup?: () => void;
+  searchQuery?: string;
+  onSearchQueryChange?: (q: string) => void;
+  notes?: Note[];
+  selectedNoteId?: string | null;
+  onSelectNote?: (id: string) => void;
+  filteredNotes?: Note[];
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -53,92 +53,61 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   trashCount,
   onNewNote,
   onOpenSettings,
-  searchQuery,
-  onSearchQueryChange,
-  selectedNoteId,
-  onSelectNote,
-  filteredNotes,
   onToggleSidebar,
+  onOpenBackup,
 }) => {
   return (
-    <aside className="w-full lg:w-72 shrink-0 bg-[#111218] border-r border-[#1d1e2a] p-3.5 flex flex-col justify-between h-full select-none font-sans overflow-hidden">
+    <aside className="w-full lg:w-60 shrink-0 bg-[#131315] border-r border-white/5 p-3 flex flex-col justify-between h-full select-none font-sans overflow-hidden">
       <div className="space-y-4 overflow-y-auto flex-1 pr-1">
-        {/* 1. Header: Craft-style Brand Title + Sidebar Collapse Toggle */}
-        <div className="flex items-center justify-between px-1 pt-0.5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold shadow-md shadow-indigo-500/20">
-              <NotebookPen className="w-4 h-4" />
+        {/* 1. Craft Top Workspace Header & Sidebar Close Button */}
+        <div className="flex items-center justify-between px-1 pt-1">
+          <button className="flex items-center gap-1.5 text-xs font-semibold text-white hover:bg-[#202024] px-2 py-1 rounded-lg transition-colors">
+            <div className="w-4 h-4 rounded bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] text-white font-bold">
+              ⚡
             </div>
-            <h1 className="font-bold text-sm text-white tracking-tight">
-              Instant<span className="text-indigo-400">Notes</span>
-            </h1>
-          </div>
+            <span>My Space</span>
+            <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+          </button>
 
           {onToggleSidebar && (
             <button
               onClick={onToggleSidebar}
-              className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-[#1b1c26] transition-colors"
-              title="Tutup Sidebar"
+              className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-[#202024] transition-colors"
+              title="Sembunyikan Sidebar"
             >
               <PanelLeftClose className="w-4 h-4" />
             </button>
           )}
         </div>
 
-        {/* 2. Craft Search Input */}
-        <div className="relative flex items-center">
-          <Search className="absolute left-3 w-4 h-4 text-zinc-400 pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => onSearchQueryChange(e.target.value)}
-            placeholder="Cari catatan instan..."
-            aria-label="Cari catatan"
-            className="w-full pl-9 pr-8 py-2 bg-[#171822] border border-[#232536] rounded-xl text-xs font-medium text-white placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/20 transition-all"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => onSearchQueryChange('')}
-              className="absolute right-2.5 p-0.5 text-zinc-400 hover:text-white rounded"
-              title="Hapus pencarian"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-
-        {/* 3. Primary New Note Action Button */}
+        {/* 2. New Document Action Link (Craft Style) */}
         <button
           onClick={onNewNote}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-3 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 active:scale-[0.98] text-white font-semibold text-xs rounded-xl transition-all shadow-md shadow-indigo-600/20"
+          className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-zinc-300 hover:text-white hover:bg-[#202024] rounded-lg transition-colors group"
         >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          <span>Catatan Baru</span>
+          <Plus className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
+          <span>New Document</span>
         </button>
 
-        {/* 4. Navigation Menu */}
+        {/* 3. Craft Main Nav Menu */}
         <div className="space-y-0.5 pt-1">
-          <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">
-            Navigasi
-          </p>
-
           <button
             onClick={() => {
               onFilterChange('all');
               onSubjectChange(null);
               onTagChange(null);
             }}
-            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all ${
+            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               activeFilter === 'all' && !selectedSubject && !selectedTag
-                ? 'bg-indigo-500/15 text-indigo-300 font-semibold border border-indigo-500/30 shadow-xs'
-                : 'text-zinc-400 hover:bg-[#171822] hover:text-zinc-200'
+                ? 'bg-[#27272b] text-white font-semibold'
+                : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
             }`}
           >
             <div className="flex items-center gap-2.5">
-              <FileText className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Semua Catatan</span>
+              <FileText className="w-3.5 h-3.5 opacity-80" />
+              <span>All Docs</span>
             </div>
-            <span className="text-[11px] font-medium opacity-60 bg-[#1e202e] px-1.5 py-0.5 rounded-md">{totalNotes}</span>
+            <span className="text-[11px] font-medium opacity-50">{totalNotes}</span>
           </button>
 
           <button
@@ -147,10 +116,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               onSubjectChange(null);
               onTagChange(null);
             }}
-            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all ${
+            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               activeFilter === 'recent'
-                ? 'bg-indigo-500/15 text-indigo-300 font-semibold border border-indigo-500/30 shadow-xs'
-                : 'text-zinc-400 hover:bg-[#171822] hover:text-zinc-200'
+                ? 'bg-[#27272b] text-white font-semibold'
+                : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
             }`}
           >
             <div className="flex items-center gap-2.5">
@@ -165,17 +134,17 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               onSubjectChange(null);
               onTagChange(null);
             }}
-            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all ${
+            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               activeFilter === 'favorites'
-                ? 'bg-indigo-500/15 text-indigo-300 font-semibold border border-indigo-500/30 shadow-xs'
-                : 'text-zinc-400 hover:bg-[#171822] hover:text-zinc-200'
+                ? 'bg-[#27272b] text-white font-semibold'
+                : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
             }`}
           >
             <div className="flex items-center gap-2.5">
               <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400/20" />
               <span>Favorit</span>
             </div>
-            <span className="text-[11px] font-medium opacity-60 bg-[#1e202e] px-1.5 py-0.5 rounded-md">{favoriteCount}</span>
+            <span className="text-[11px] font-medium opacity-50">{favoriteCount}</span>
           </button>
 
           <button
@@ -184,92 +153,59 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               onSubjectChange(null);
               onTagChange(null);
             }}
-            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all ${
+            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               activeFilter === 'trash'
-                ? 'bg-rose-500/15 text-rose-300 font-semibold border border-rose-500/30 shadow-xs'
-                : 'text-zinc-400 hover:bg-[#171822] hover:text-zinc-200'
+                ? 'bg-[#27272b] text-white font-semibold'
+                : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
             }`}
           >
             <div className="flex items-center gap-2.5">
               <Trash2 className="w-3.5 h-3.5 text-rose-400" />
               <span>Tempat Sampah</span>
             </div>
-            <span className="text-[11px] font-medium opacity-60 bg-[#1e202e] px-1.5 py-0.5 rounded-md">{trashCount}</span>
+            <span className="text-[11px] font-medium opacity-50">{trashCount}</span>
           </button>
         </div>
 
-        {/* 5. Craft Notes List Tiles inside Sidebar */}
-        <div className="space-y-1 pt-2.5 border-t border-[#1d1e2a]">
-          <div className="flex items-center justify-between px-2 mb-1.5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-              Daftar Catatan ({filteredNotes.length})
-            </p>
-          </div>
-
-          {filteredNotes.length === 0 ? (
-            <p className="px-2 py-3 text-xs text-zinc-500 italic text-center">Belum ada catatan</p>
+        {/* 4. Folders / Subjek Section */}
+        <div className="space-y-0.5 pt-3">
+          <p className="px-2 text-[11px] font-semibold text-zinc-400 mb-1">
+            Subjek
+          </p>
+          {subjects.length === 0 ? (
+            <p className="px-2 text-[10px] text-zinc-600 italic">Belum ada subjek</p>
           ) : (
-            <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
-              {filteredNotes.map((n) => (
-                <button
-                  key={n.id}
-                  onClick={() => onSelectNote(n.id)}
-                  className={`w-full text-left p-2.5 rounded-xl text-xs transition-all flex items-center justify-between group border ${
-                    selectedNoteId === n.id
-                      ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-semibold border-indigo-500/50 shadow-md shadow-indigo-600/20'
-                      : 'bg-[#171822] hover:bg-[#1e2030] text-zinc-300 border-[#232536] hover:border-indigo-500/30'
-                  }`}
-                >
-                  <div className="overflow-hidden pr-2">
-                    <p className="truncate font-semibold text-xs leading-tight">
-                      {n.title || 'Catatan Tanpa Judul'}
-                    </p>
-                    <p className={`text-[10px] truncate mt-1 ${selectedNoteId === n.id ? 'text-indigo-100' : 'text-zinc-400'}`}>
-                      {n.subject || 'Umum'}
-                    </p>
-                  </div>
-                  <ChevronRight className={`w-3.5 h-3.5 shrink-0 transition-all ${selectedNoteId === n.id ? 'text-white translate-x-0.5' : 'text-zinc-500 opacity-0 group-hover:opacity-100'}`} />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* 6. Filter by Subjects */}
-        {subjects.length > 0 && (
-          <div className="space-y-1 pt-2.5 border-t border-[#1d1e2a]">
-            <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">
-              Subjek
-            </p>
-            {subjects.map(({ name, count }) => (
+            subjects.map(({ name, count }) => (
               <button
                 key={name}
                 onClick={() => {
                   onFilterChange('all');
                   onSubjectChange(selectedSubject === name ? null : name);
                 }}
-                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   selectedSubject === name
-                    ? 'bg-[#212433] text-indigo-300 font-semibold border border-indigo-500/30'
-                    : 'text-zinc-400 hover:bg-[#171822] hover:text-zinc-200'
+                    ? 'bg-[#27272b] text-white font-semibold'
+                    : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
                 }`}
               >
                 <div className="flex items-center gap-2 overflow-hidden">
                   <BookOpen className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                  <span className="truncate max-w-[130px]">{name}</span>
+                  <span className="truncate max-w-[120px]">{name}</span>
                 </div>
-                <span className="text-[10px] font-medium opacity-60">({count})</span>
+                <span className="text-[10px] font-medium opacity-50">({count})</span>
               </button>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
 
-        {/* 7. Filter by Tags */}
-        {tags.length > 0 && (
-          <div className="space-y-1 pt-2.5 border-t border-[#1d1e2a]">
-            <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">
-              Tag
-            </p>
+        {/* 5. Tags Section */}
+        <div className="space-y-1 pt-3">
+          <p className="px-2 text-[11px] font-semibold text-zinc-400 mb-1">
+            Tags
+          </p>
+          {tags.length === 0 ? (
+            <p className="px-2 text-[10px] text-zinc-600 italic">Pin key tags for quick access</p>
+          ) : (
             <div className="flex flex-wrap gap-1 px-1">
               {tags.map(({ name, count }) => (
                 <button
@@ -278,33 +214,45 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                     onFilterChange('all');
                     onTagChange(selectedTag === name ? null : name);
                   }}
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium transition-all ${
                     selectedTag === name
-                      ? 'bg-indigo-600 text-white font-semibold shadow-xs'
-                      : 'bg-[#171822] text-zinc-400 hover:bg-[#1e2030] hover:text-zinc-200 border border-[#232536]'
+                      ? 'bg-indigo-600 text-white font-semibold'
+                      : 'bg-[#1c1c1f] text-zinc-400 hover:bg-[#25252a] hover:text-zinc-200 border border-white/5'
                   }`}
                 >
                   <Tag className="w-2.5 h-2.5 opacity-60" />
                   <span>{name}</span>
-                  <span className="text-[9px] opacity-60">({count})</span>
+                  <span className="text-[9px] opacity-50">({count})</span>
                 </button>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* 8. Craft Bottom Settings Footer */}
-      <div className="pt-2.5 border-t border-[#1d1e2a] shrink-0">
+      {/* 6. Craft Bottom Left Footer Icons */}
+      <div className="pt-2 border-t border-white/5 shrink-0 flex items-center justify-between px-1 text-zinc-400">
         <button
           onClick={onOpenSettings}
-          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-[#171822] rounded-xl transition-all border border-transparent hover:border-[#232536]"
+          className="p-1.5 hover:text-white hover:bg-[#202024] rounded-lg transition-colors"
+          title="Pengaturan"
         >
-          <div className="w-6 h-6 rounded-lg bg-indigo-500/15 text-indigo-400 flex items-center justify-center border border-indigo-500/25">
-            <Settings className="w-3.5 h-3.5" />
-          </div>
-          <span>Pengaturan &amp; Cadangan</span>
+          <Settings className="w-4 h-4" />
         </button>
+
+        {onOpenBackup && (
+          <button
+            onClick={onOpenBackup}
+            className="p-1.5 hover:text-white hover:bg-[#202024] rounded-lg transition-colors"
+            title="Cadangkan & Pemulihan"
+          >
+            <Download className="w-4 h-4" />
+          </button>
+        )}
+
+        <div className="p-1.5 text-indigo-400" title="InstantNotes Local Engine">
+          <Sparkles className="w-4 h-4" />
+        </div>
       </div>
     </aside>
   );
