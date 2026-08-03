@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import type { FilterCategory, Note } from './types/note';
 import { getAllNotes, saveNote, deleteNotePermanently } from './lib/storage/db';
 import { searchNotes } from './lib/search/searchEngine';
@@ -19,6 +19,8 @@ import {
   ArrowLeft,
   LayoutGrid,
   List,
+  Check,
+  ChevronDown,
   Trash2,
 } from 'lucide-react';
 import type { SortOption } from './types/note';
@@ -37,6 +39,9 @@ export function App() {
   const [undoNote, setUndoNote] = useState<Note | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState<boolean>(false);
+
+  const sortRef = useRef<HTMLDivElement>(null);
 
   // Panel Collapse States
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
@@ -71,9 +76,26 @@ export function App() {
     });
   }, []);
 
-  // Sync dark mode class
+  // Sync dark/light mode class on html root
   useEffect(() => {
-    document.documentElement.classList.add('dark');
+    if (settings.theme === 'light') {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
+    }
+  }, [settings.theme]);
+
+  // Click outside to close sort dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setIsSortDropdownOpen(false);
+      }
+    };
+    window.addEventListener('mousedown', handleClickOutside);
+    return () => window.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   // Global Keyboard Shortcuts
@@ -273,8 +295,17 @@ export function App() {
 
   const showSidebar = isSidebarOpen && !isFocusMode;
 
+  const sortLabels: Record<SortOption, string> = {
+    updated: 'Date Updated',
+    newest: 'Date Created',
+    oldest: 'Oldest First',
+    'a-z': 'Name (A-Z)',
+    'z-a': 'Name (Z-A)',
+    recent: 'Recently Opened',
+  };
+
   return (
-    <div className={`flex h-screen w-screen overflow-hidden bg-[#171719] text-zinc-100 font-sans ${fontSizeClass}`}>
+    <div className={`flex h-screen w-screen overflow-hidden bg-[#1e1e22] text-zinc-100 font-sans ${fontSizeClass}`}>
       {/* 1. Craft Left Sidebar */}
       {showSidebar && (
         <FilterBar
@@ -311,15 +342,15 @@ export function App() {
         />
       )}
 
-      {/* 2. Main Content View Area (Craft Top Header Bar + All Docs View or Editor) */}
-      <div className="flex-1 flex flex-col h-full relative overflow-hidden bg-[#171719]">
-        {/* Craft Global Top Header Bar */}
-        <header className="h-12 border-b border-white/5 bg-[#141416]/90 backdrop-blur-md px-4 flex items-center justify-between z-10 shrink-0">
-          <div className="flex items-center gap-2">
+      {/* 2. Main Content View Area */}
+      <div className="flex-1 flex flex-col h-full relative overflow-hidden bg-[#1e1e22]">
+        {/* Prominent Top Header Bar */}
+        <header className="h-14 border-b border-white/10 bg-[#18181c] px-5 flex items-center justify-between z-10 shrink-0 select-none">
+          <div className="flex items-center gap-3">
             {!isSidebarOpen && !isFocusMode && (
               <button
                 onClick={() => setIsSidebarOpen(true)}
-                className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-[#202024] transition-colors"
+                className="p-2 text-zinc-200 hover:text-white rounded-xl hover:bg-[#28282e] transition-colors border border-white/10"
                 title="Buka Sidebar"
               >
                 <PanelLeftOpen className="w-4 h-4" />
@@ -329,69 +360,91 @@ export function App() {
             {selectedNoteId && (
               <button
                 onClick={() => setSelectedNoteId(null)}
-                className="flex items-center gap-1 text-xs text-zinc-400 hover:text-white px-2 py-1 rounded-lg hover:bg-[#202024] transition-colors"
+                className="flex items-center gap-2 text-xs font-bold text-zinc-200 hover:text-white px-3 py-1.5 rounded-xl bg-[#28282e] hover:bg-[#32323a] transition-all border border-white/10"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft className="w-4 h-4 text-indigo-400" />
                 <span>Kembali ke Dokumentasi</span>
               </button>
             )}
           </div>
 
-          {/* Center Floating Pill Search Bar (Craft "Q Open" Style) */}
-          <div className="flex-1 max-w-md mx-4 relative hidden sm:block">
-            <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+          {/* Prominent Floating Search Bar */}
+          <div className="flex-1 max-w-lg mx-6 relative hidden sm:block">
+            <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-zinc-200 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Open or search documents... (Ctrl+K)"
-              className="w-full pl-9 pr-8 py-1.5 bg-[#202024] border border-white/5 rounded-full text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-white/20 transition-all text-center focus:text-left"
+              className="w-full pl-10 pr-9 py-2 bg-[#25252a] border border-white/10 rounded-full text-xs font-medium text-white placeholder:text-zinc-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition-all text-center focus:text-left shadow-inner"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-2 p-0.5 text-zinc-400 hover:text-white"
+                className="absolute right-3 top-2.5 p-0.5 text-zinc-400 hover:text-white"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>
 
-          {/* Right Header Actions: Sorting & View Controls */}
-          <div className="flex items-center gap-1.5 text-xs text-zinc-400">
-            <div className="flex items-center gap-1 bg-[#202024] border border-white/5 rounded-lg px-2 py-1">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-400" />
-              <select
-                value={settings.defaultSort}
-                onChange={(e) => handleUpdateSettings({ ...settings, defaultSort: e.target.value as SortOption })}
-                className="bg-transparent text-[11px] font-medium text-zinc-300 focus:outline-none cursor-pointer"
+          {/* Right Actions: Custom Popover Sort Dropdown & View Mode Switcher */}
+          <div className="flex items-center gap-2 text-xs text-zinc-200">
+            {/* Custom Popover Dropdown (No Jadul HTML Select!) */}
+            <div className="relative" ref={sortRef}>
+              <button
+                onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+                className="flex items-center gap-2 bg-[#25252a] hover:bg-[#2d2d34] border border-white/10 text-white font-bold px-3 py-1.5 rounded-xl transition-all shadow-xs"
               >
-                <option value="updated">Date Updated</option>
-                <option value="newest">Date Created</option>
-                <option value="a-z">Name (A-Z)</option>
-              </select>
+                <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-400" />
+                <span>{sortLabels[settings.defaultSort]}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+              </button>
+
+              {isSortDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-[#25252a] border border-white/10 rounded-2xl shadow-2xl p-1.5 z-40 space-y-0.5">
+                  {(['updated', 'newest', 'a-z', 'z-a'] as SortOption[]).map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() => {
+                        handleUpdateSettings({ ...settings, defaultSort: opt });
+                        setIsSortDropdownOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                        settings.defaultSort === opt
+                          ? 'bg-indigo-600 text-white'
+                          : 'text-zinc-300 hover:bg-[#303038] hover:text-white'
+                      }`}
+                    >
+                      <span>{sortLabels[opt]}</span>
+                      {settings.defaultSort === opt && <Check className="w-3.5 h-3.5" />}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="hidden md:flex items-center border border-white/5 bg-[#202024] rounded-lg p-0.5">
+            {/* View Mode Switcher */}
+            <div className="hidden md:flex items-center border border-white/10 bg-[#25252a] rounded-xl p-0.5">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-1 rounded ${viewMode === 'grid' ? 'bg-[#2b2b32] text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                className={`p-1.5 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-indigo-600 text-white font-bold' : 'text-zinc-400 hover:text-white'}`}
                 title="Grid View"
               >
-                <LayoutGrid className="w-3.5 h-3.5" />
+                <LayoutGrid className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-1 rounded ${viewMode === 'list' ? 'bg-[#2b2b32] text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                className={`p-1.5 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-indigo-600 text-white font-bold' : 'text-zinc-400 hover:text-white'}`}
                 title="List View"
               >
-                <List className="w-3.5 h-3.5" />
+                <List className="w-4 h-4" />
               </button>
             </div>
           </div>
         </header>
 
-        {/* Main Body: Show Note Editor if Selected, Else Show All Docs Grid/List View */}
+        {/* Main Body */}
         {selectedNoteId ? (
           <NoteEditor
             note={selectedNote}
@@ -408,11 +461,11 @@ export function App() {
         ) : (
           <div className="flex-1 overflow-y-auto p-6 sm:p-10 space-y-6">
             {/* View Header */}
-            <div className="flex items-center justify-between pb-2 border-b border-white/5">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleCreateNewNote}
-                  className="w-8 h-8 rounded-full bg-white text-zinc-950 flex items-center justify-center hover:bg-zinc-200 transition-colors shadow-md"
+                  className="w-9 h-9 rounded-full bg-white text-zinc-950 flex items-center justify-center hover:bg-zinc-200 transition-colors shadow-md active:scale-95"
                   title="Catatan Baru"
                 >
                   <Plus className="w-5 h-5 stroke-[2.5]" />
@@ -433,9 +486,9 @@ export function App() {
               {activeFilter === 'trash' && trashCount > 0 && (
                 <button
                   onClick={handleEmptyTrash}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-rose-500/20 text-rose-300 font-semibold text-xs rounded-xl hover:bg-rose-500/30 transition-all border border-rose-500/30"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-rose-500/20 text-rose-300 font-bold text-xs rounded-xl hover:bg-rose-500/30 transition-all border border-rose-500/30"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-4 h-4" />
                   <span>Kosongkan Sampah ({trashCount})</span>
                 </button>
               )}
@@ -445,7 +498,7 @@ export function App() {
             {isLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-64 rounded-2xl bg-[#202024] border border-white/5 animate-pulse" />
+                  <div key={i} className="h-64 rounded-2xl bg-[#27272d] border border-white/5 animate-pulse" />
                 ))}
               </div>
             ) : searchResults.length === 0 ? (
@@ -467,18 +520,18 @@ export function App() {
                 ))}
               </div>
             ) : (
-              <div className="space-y-2 max-w-3xl">
+              <div className="space-y-2.5 max-w-4xl">
                 {searchResults.map(({ note, snippet }) => (
                   <div
                     key={note.id}
                     onClick={() => handleSelectNote(note.id)}
-                    className="p-4 rounded-xl bg-[#202024] hover:bg-[#27272c] border border-white/5 cursor-pointer flex items-center justify-between transition-all"
+                    className="p-4 rounded-2xl bg-[#27272d] hover:bg-[#303038] border border-white/10 cursor-pointer flex items-center justify-between transition-all"
                   >
                     <div className="overflow-hidden pr-4">
                       <h3 className="font-bold text-sm text-white truncate">{note.title || 'Catatan Tanpa Judul'}</h3>
                       <p className="text-xs text-zinc-400 truncate mt-0.5">{snippet}</p>
                     </div>
-                    <span className="text-[10px] text-zinc-500 shrink-0">{note.subject || 'Umum'}</span>
+                    <span className="text-xs text-zinc-300 font-semibold bg-[#1e1e22] px-2.5 py-1 rounded-lg border border-white/5 shrink-0">{note.subject || 'Umum'}</span>
                   </div>
                 ))}
               </div>
@@ -489,7 +542,7 @@ export function App() {
 
       {/* Toast Notification */}
       {undoNote && (
-        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-2.5 bg-[#25252b] text-white text-xs font-semibold rounded-xl shadow-2xl border border-white/10 font-sans">
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-2.5 bg-[#27272d] text-white text-xs font-bold rounded-xl shadow-2xl border border-white/10 font-sans">
           <span>Catatan dipindahkan ke tempat sampah.</span>
           <button
             onClick={handleUndoTrash}
@@ -518,7 +571,11 @@ export function App() {
         onUpdateSettings={handleUpdateSettings}
         onClearSearchHistory={() => setSearchQuery('')}
         onResetSettings={handleResetSettings}
-        onOpenBackup={() => setIsBackupModalOpen(true)}
+        notes={notes}
+        onNotesImported={(imported) => {
+          setNotes(imported);
+          if (imported.length > 0) setSelectedNoteId(imported[0].id);
+        }}
       />
     </div>
   );

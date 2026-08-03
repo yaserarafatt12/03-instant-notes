@@ -3,51 +3,52 @@
 
 @layer base {
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, Roboto, sans-serif;
-    background-color: #171719;
-    color: #f4f4f6;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+    background-color: #1e1e22;
+    color: #f8f9fa;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Craft.do Exact Color & Surface Tokens */
+/* Light mode overrides */
+.light body {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Craft & ChatGPT Popover & Depth Styling */
 .craft-bg-base {
-  background-color: #171719;
+  background-color: #1e1e22;
 }
 
 .craft-bg-sidebar {
-  background-color: #131315;
+  background-color: #18181c;
 }
 
 .craft-bg-card {
-  background-color: #202024;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background-color: #27272d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .craft-bg-card:hover {
-  background-color: #27272c;
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  background-color: #303038;
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
-.craft-pill-active {
-  background-color: #27272b;
-  color: #ffffff;
-}
-
-/* Minimal Craft scrollbar */
+/* Custom sleek scrollbar */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.3);
 }
