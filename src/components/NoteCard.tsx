@@ -55,18 +55,16 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         </p>
       </div>
 
-      {/* Bottom Tags Badge */}
-      <div className="flex items-center justify-between text-[10px] text-zinc-500">
-        <div className="flex items-center gap-1 overflow-hidden">
-          {note.tags.slice(0, 2).map((t, i) => (
-            <span key={i} className="bg-[#18181c] px-1.5 py-0.5 rounded text-zinc-400 font-medium border border-white/5">
-              #{t}
-            </span>
-          ))}
-          {note.tags.length > 2 && (
-            <span className="text-zinc-500">+{note.tags.length - 2}</span>
-          )}
-        </div>
+      {/* Bottom Craft Inline Tags (# tag1 # tag2) */}
+      <div className="flex items-center gap-2 text-[10px] text-indigo-400 font-medium overflow-hidden">
+        {note.tags.slice(0, 3).map((t, i) => (
+          <span key={i} className="hover:underline">
+            #{t}
+          </span>
+        ))}
+        {note.tags.length > 3 && (
+          <span className="text-zinc-500">+{note.tags.length - 3}</span>
+        )}
       </div>
     </div>
   );

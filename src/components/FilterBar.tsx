@@ -5,12 +5,12 @@ import {
   Trash2,
   Plus,
   Folder,
-  Tag,
+  Tag as TagIcon,
   History,
   Settings,
   PanelLeftClose,
   ChevronDown,
-  NotebookPen,
+  Sparkles,
 } from 'lucide-react';
 import type { FilterCategory, Note } from '../types/note';
 
@@ -53,24 +53,25 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   onNewNote,
   onOpenSettings,
   onToggleSidebar,
+  onOpenBackup,
 }) => {
   return (
-    <aside className="w-full lg:w-64 shrink-0 bg-[#18181c] border-r border-[#2b2b32] p-3.5 flex flex-col justify-between h-full select-none font-sans overflow-hidden">
+    <aside className="w-full lg:w-60 shrink-0 bg-[#141416] border-r border-white/5 p-3 flex flex-col justify-between h-full select-none font-sans overflow-hidden">
       <div className="space-y-4 overflow-y-auto flex-1 pr-1">
-        {/* 1. Header: Workspace Selector & Sidebar Toggle */}
+        {/* 1. Craft Top Workspace Header & Sidebar Close Button */}
         <div className="flex items-center justify-between px-1 pt-0.5">
-          <button className="flex items-center gap-2 text-xs font-bold text-white hover:bg-[#25252a] px-2 py-1.5 rounded-xl transition-colors">
-            <div className="w-5 h-5 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold shadow-xs">
-              <NotebookPen className="w-3.5 h-3.5" />
+          <button className="flex items-center gap-1.5 text-xs font-semibold text-white hover:bg-[#202024] px-2 py-1.5 rounded-lg transition-colors">
+            <div className="w-4 h-4 rounded bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] text-white font-bold">
+              ⚡
             </div>
-            <span>Personal Space</span>
+            <span>My Space</span>
             <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
           </button>
 
           {onToggleSidebar && (
             <button
               onClick={onToggleSidebar}
-              className="p-1.5 text-zinc-300 hover:text-white rounded-lg hover:bg-[#25252a] transition-colors"
+              className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-[#202024] transition-colors"
               title="Sembunyikan Sidebar"
             >
               <PanelLeftClose className="w-4 h-4" />
@@ -78,38 +79,34 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           )}
         </div>
 
-        {/* 2. New Document Action Button */}
+        {/* 2. New Document Action Link (Craft Style) */}
         <button
           onClick={onNewNote}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-3 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-semibold text-xs rounded-xl transition-all shadow-md shadow-indigo-600/20"
+          className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-zinc-300 hover:text-white hover:bg-[#202024] rounded-lg transition-colors group"
         >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          <span>Catatan Baru</span>
+          <Plus className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
+          <span>New Document</span>
         </button>
 
-        {/* 3. Main Nav Menu */}
+        {/* 3. Craft Main Nav Menu */}
         <div className="space-y-0.5 pt-1">
-          <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
-            Navigasi
-          </p>
-
           <button
             onClick={() => {
               onFilterChange('all');
               onSubjectChange(null);
               onTagChange(null);
             }}
-            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all ${
+            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               activeFilter === 'all' && !selectedSubject && !selectedTag
-                ? 'bg-[#282830] text-white font-bold border border-white/10 shadow-xs'
-                : 'text-zinc-300 hover:bg-[#232328] hover:text-white'
+                ? 'bg-[#252528] text-white font-semibold'
+                : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
             }`}
           >
             <div className="flex items-center gap-2.5">
-              <FileText className="w-4 h-4 text-indigo-400" />
-              <span>Semua Catatan</span>
+              <FileText className="w-3.5 h-3.5 opacity-80" />
+              <span>All Docs</span>
             </div>
-            <span className="text-[11px] font-semibold opacity-70 bg-[#2b2b34] px-2 py-0.5 rounded-md">{totalNotes}</span>
+            <span className="text-xs text-zinc-500 font-normal">{totalNotes}</span>
           </button>
 
           <button
@@ -118,14 +115,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               onSubjectChange(null);
               onTagChange(null);
             }}
-            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all ${
+            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               activeFilter === 'recent'
-                ? 'bg-[#282830] text-white font-bold border border-white/10 shadow-xs'
-                : 'text-zinc-300 hover:bg-[#232328] hover:text-white'
+                ? 'bg-[#252528] text-white font-semibold'
+                : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
             }`}
           >
             <div className="flex items-center gap-2.5">
-              <History className="w-4 h-4 text-emerald-400" />
+              <History className="w-3.5 h-3.5 text-emerald-400" />
               <span>Terakhir Dibuka</span>
             </div>
           </button>
@@ -136,17 +133,17 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               onSubjectChange(null);
               onTagChange(null);
             }}
-            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all ${
+            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               activeFilter === 'favorites'
-                ? 'bg-[#282830] text-white font-bold border border-white/10 shadow-xs'
-                : 'text-zinc-300 hover:bg-[#232328] hover:text-white'
+                ? 'bg-[#252528] text-white font-semibold'
+                : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
             }`}
           >
             <div className="flex items-center gap-2.5">
-              <Star className="w-4 h-4 text-amber-400 fill-amber-400/20" />
+              <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400/20" />
               <span>Favorit</span>
             </div>
-            <span className="text-[11px] font-semibold opacity-70 bg-[#2b2b34] px-2 py-0.5 rounded-md">{favoriteCount}</span>
+            <span className="text-xs text-zinc-500 font-normal">{favoriteCount}</span>
           </button>
 
           <button
@@ -155,28 +152,27 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               onSubjectChange(null);
               onTagChange(null);
             }}
-            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all ${
+            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               activeFilter === 'trash'
-                ? 'bg-[#282830] text-white font-bold border border-white/10 shadow-xs'
-                : 'text-zinc-300 hover:bg-[#232328] hover:text-white'
+                ? 'bg-[#252528] text-white font-semibold'
+                : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
             }`}
           >
             <div className="flex items-center gap-2.5">
-              <Trash2 className="w-4 h-4 text-rose-400" />
+              <Trash2 className="w-3.5 h-3.5 text-rose-400" />
               <span>Tempat Sampah</span>
             </div>
-            <span className="text-[11px] font-semibold opacity-70 bg-[#2b2b34] px-2 py-0.5 rounded-md">{trashCount}</span>
+            <span className="text-xs text-zinc-500 font-normal">{trashCount}</span>
           </button>
         </div>
 
-        {/* 4. Folders Section (Replaces "Subjek") */}
-        <div className="space-y-1 pt-3">
-          <p className="px-2 text-[11px] font-bold text-zinc-300 mb-1 flex items-center gap-1.5">
-            <Folder className="w-3.5 h-3.5 text-amber-400" />
-            <span>Folders</span>
+        {/* 4. Folders Section */}
+        <div className="space-y-0.5 pt-3">
+          <p className="px-2 text-[11px] font-semibold text-zinc-400 mb-1">
+            Folders
           </p>
           {subjects.length === 0 ? (
-            <p className="px-2 text-[10px] text-zinc-500 italic">Belum ada folder</p>
+            <p className="px-2 text-[10px] text-zinc-600 italic">Belum ada folder</p>
           ) : (
             subjects.map(({ name, count }) => (
               <button
@@ -184,48 +180,49 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 onClick={() => {
                   onFilterChange('all');
                   onSubjectChange(selectedSubject === name ? null : name);
+                  onTagChange(null);
                 }}
-                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   selectedSubject === name
-                    ? 'bg-[#282830] text-white font-bold border border-white/10'
-                    : 'text-zinc-300 hover:bg-[#232328] hover:text-white'
+                    ? 'bg-[#252528] text-white font-semibold'
+                    : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
                 }`}
               >
                 <div className="flex items-center gap-2 overflow-hidden">
-                  <Folder className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                  <span className="truncate max-w-[130px]">{name}</span>
+                  <Folder className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                  <span className="truncate max-w-[120px]">{name}</span>
                 </div>
-                <span className="text-[10px] font-semibold opacity-60">({count})</span>
+                <span className="text-xs text-zinc-500 font-normal">({count})</span>
               </button>
             ))
           )}
         </div>
 
-        {/* 5. Tags Section */}
-        <div className="space-y-1 pt-3">
-          <p className="px-2 text-[11px] font-bold text-zinc-300 mb-1 flex items-center gap-1.5">
-            <Tag className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Tags</span>
+        {/* 5. Clean Craft-style Tags Section (# tag format) */}
+        <div className="space-y-0.5 pt-3">
+          <p className="px-2 text-[11px] font-semibold text-zinc-400 mb-1">
+            Tags
           </p>
           {tags.length === 0 ? (
-            <p className="px-2 text-[10px] text-zinc-500 italic">Belum ada tag</p>
+            <p className="px-2 text-[10px] text-zinc-600 italic">Pin key tags for quick access</p>
           ) : (
-            <div className="flex flex-wrap gap-1 px-1">
-              {tags.map(({ name, count }) => (
+            <div className="space-y-0.5">
+              {tags.map(({ name }) => (
                 <button
                   key={name}
                   onClick={() => {
                     onFilterChange('all');
+                    onSubjectChange(null);
                     onTagChange(selectedTag === name ? null : name);
                   }}
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
+                  className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-left ${
                     selectedTag === name
-                      ? 'bg-indigo-600 text-white font-bold shadow-xs'
-                      : 'bg-[#232328] text-zinc-300 hover:bg-[#2c2c34] hover:text-white border border-white/5'
+                      ? 'bg-[#252528] text-indigo-400 font-bold'
+                      : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
                   }`}
                 >
+                  <TagIcon className="w-3 h-3 opacity-60 text-indigo-400" />
                   <span>#{name}</span>
-                  <span className="text-[9px] opacity-60">({count})</span>
                 </button>
               ))}
             </div>
@@ -233,17 +230,29 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </div>
       </div>
 
-      {/* 6. Clean Bottom Sidebar Footer (Icon Settings + Tulisan "Pengaturan") */}
-      <div className="pt-3 border-t border-[#2b2b32] shrink-0">
+      {/* 6. Craft Bottom Left Footer Icons */}
+      <div className="pt-2 border-t border-white/5 shrink-0 flex items-center justify-between px-1 text-zinc-400">
         <button
           onClick={onOpenSettings}
-          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-200 hover:text-white hover:bg-[#232328] rounded-xl transition-all border border-transparent hover:border-white/10"
+          className="p-1.5 hover:text-white hover:bg-[#202024] rounded-lg transition-colors"
+          title="Pengaturan"
         >
-          <div className="w-6 h-6 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
-            <Settings className="w-4 h-4" />
-          </div>
-          <span>Pengaturan</span>
+          <Settings className="w-4 h-4" />
         </button>
+
+        {onOpenBackup && (
+          <button
+            onClick={onOpenBackup}
+            className="p-1.5 hover:text-white hover:bg-[#202024] rounded-lg transition-colors"
+            title="Cadangkan & Pemulihan"
+          >
+            <Settings className="w-4 h-4 opacity-0 pointer-events-none" />
+          </button>
+        )}
+
+        <div className="p-1.5 text-indigo-400" title="InstantNotes Local Engine">
+          <Sparkles className="w-4 h-4" />
+        </div>
       </div>
     </aside>
   );

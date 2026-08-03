@@ -15,7 +15,6 @@ import {
   Search,
   X,
   SlidersHorizontal,
-  Plus,
   ArrowLeft,
   LayoutGrid,
   List,
@@ -390,7 +389,7 @@ export function App() {
 
           {/* Right Actions: Custom Popover Sort Dropdown & View Mode Switcher */}
           <div className="flex items-center gap-2 text-xs text-zinc-200">
-            {/* Custom Popover Dropdown (No Jadul HTML Select!) */}
+            {/* Custom Popover Dropdown */}
             <div className="relative" ref={sortRef}>
               <button
                 onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
@@ -460,28 +459,19 @@ export function App() {
           />
         ) : (
           <div className="flex-1 overflow-y-auto p-6 sm:p-10 space-y-6">
-            {/* View Header */}
+            {/* View Header (Big + Icon Removed as Requested!) */}
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleCreateNewNote}
-                  className="w-9 h-9 rounded-full bg-white text-zinc-950 flex items-center justify-center hover:bg-zinc-200 transition-colors shadow-md active:scale-95"
-                  title="Catatan Baru"
-                >
-                  <Plus className="w-5 h-5 stroke-[2.5]" />
-                </button>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                  {selectedSubject
-                    ? selectedSubject
-                    : selectedTag
-                    ? `#${selectedTag}`
-                    : activeFilter === 'favorites'
-                    ? 'Favorit'
-                    : activeFilter === 'trash'
-                    ? 'Tempat Sampah'
-                    : 'All Docs'}
-                </h1>
-              </div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                {selectedSubject
+                  ? selectedSubject
+                  : selectedTag
+                  ? `#${selectedTag}`
+                  : activeFilter === 'favorites'
+                  ? 'Favorit'
+                  : activeFilter === 'trash'
+                  ? 'Tempat Sampah'
+                  : 'All Docs'}
+              </h1>
 
               {activeFilter === 'trash' && trashCount > 0 && (
                 <button
