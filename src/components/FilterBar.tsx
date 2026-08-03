@@ -61,12 +61,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   onToggleSidebar,
 }) => {
   return (
-    <aside className="w-full lg:w-72 shrink-0 bg-[#13141b] border-r border-[#1f212c] p-3.5 flex flex-col justify-between h-full select-none font-sans overflow-hidden">
+    <aside className="w-full lg:w-72 shrink-0 bg-[#111218] border-r border-[#1d1e2a] p-3.5 flex flex-col justify-between h-full select-none font-sans overflow-hidden">
       <div className="space-y-4 overflow-y-auto flex-1 pr-1">
-        {/* 1. Header Row: InstantNotes Title + Sidebar Close Button */}
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold shadow-sm">
+        {/* 1. Header: Craft-style Brand Title + Sidebar Collapse Toggle */}
+        <div className="flex items-center justify-between px-1 pt-0.5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold shadow-md shadow-indigo-500/20">
               <NotebookPen className="w-4 h-4" />
             </div>
             <h1 className="font-bold text-sm text-white tracking-tight">
@@ -77,7 +77,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           {onToggleSidebar && (
             <button
               onClick={onToggleSidebar}
-              className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-[#1b1d28] transition-colors"
+              className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-[#1b1c26] transition-colors"
               title="Tutup Sidebar"
             >
               <PanelLeftClose className="w-4 h-4" />
@@ -85,21 +85,21 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           )}
         </div>
 
-        {/* 2. Search Bar */}
+        {/* 2. Craft Search Input */}
         <div className="relative flex items-center">
           <Search className="absolute left-3 w-4 h-4 text-zinc-400 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}
-            placeholder="Cari catatan..."
+            placeholder="Cari catatan instan..."
             aria-label="Cari catatan"
-            className="w-full pl-9 pr-8 py-2 bg-[#1b1d28] border border-[#272938] rounded-xl text-xs font-medium text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500/80 transition-all"
+            className="w-full pl-9 pr-8 py-2 bg-[#171822] border border-[#232536] rounded-xl text-xs font-medium text-white placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/20 transition-all"
           />
           {searchQuery && (
             <button
               onClick={() => onSearchQueryChange('')}
-              className="absolute right-2.5 p-0.5 text-zinc-400 hover:text-zinc-200 rounded"
+              className="absolute right-2.5 p-0.5 text-zinc-400 hover:text-white rounded"
               title="Hapus pencarian"
             >
               <X className="w-3.5 h-3.5" />
@@ -107,16 +107,16 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           )}
         </div>
 
-        {/* 3. Single "+ Catatan Baru" Button */}
+        {/* 3. Primary New Note Action Button */}
         <button
           onClick={onNewNote}
-          className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-semibold text-xs rounded-xl transition-all shadow-sm"
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-3 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 active:scale-[0.98] text-white font-semibold text-xs rounded-xl transition-all shadow-md shadow-indigo-600/20"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
           <span>Catatan Baru</span>
         </button>
 
-        {/* 4. Main Navigation Categories */}
+        {/* 4. Navigation Menu */}
         <div className="space-y-0.5 pt-1">
           <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">
             Navigasi
@@ -128,17 +128,17 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               onSubjectChange(null);
               onTagChange(null);
             }}
-            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
+            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all ${
               activeFilter === 'all' && !selectedSubject && !selectedTag
-                ? 'bg-indigo-500/15 text-indigo-400 font-semibold border border-indigo-500/20'
-                : 'text-zinc-400 hover:bg-[#1b1d28] hover:text-zinc-200'
+                ? 'bg-indigo-500/15 text-indigo-300 font-semibold border border-indigo-500/30 shadow-xs'
+                : 'text-zinc-400 hover:bg-[#171822] hover:text-zinc-200'
             }`}
           >
-            <div className="flex items-center gap-2">
-              <FileText className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-2.5">
+              <FileText className="w-3.5 h-3.5 text-indigo-400" />
               <span>Semua Catatan</span>
             </div>
-            <span className="text-[11px] font-medium opacity-60">{totalNotes}</span>
+            <span className="text-[11px] font-medium opacity-60 bg-[#1e202e] px-1.5 py-0.5 rounded-md">{totalNotes}</span>
           </button>
 
           <button
@@ -147,13 +147,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               onSubjectChange(null);
               onTagChange(null);
             }}
-            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
+            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all ${
               activeFilter === 'recent'
-                ? 'bg-indigo-500/15 text-indigo-400 font-semibold border border-indigo-500/20'
-                : 'text-zinc-400 hover:bg-[#1b1d28] hover:text-zinc-200'
+                ? 'bg-indigo-500/15 text-indigo-300 font-semibold border border-indigo-500/30 shadow-xs'
+                : 'text-zinc-400 hover:bg-[#171822] hover:text-zinc-200'
             }`}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <History className="w-3.5 h-3.5 text-emerald-400" />
               <span>Terakhir Dibuka</span>
             </div>
@@ -165,17 +165,17 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               onSubjectChange(null);
               onTagChange(null);
             }}
-            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
+            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all ${
               activeFilter === 'favorites'
-                ? 'bg-indigo-500/15 text-indigo-400 font-semibold border border-indigo-500/20'
-                : 'text-zinc-400 hover:bg-[#1b1d28] hover:text-zinc-200'
+                ? 'bg-indigo-500/15 text-indigo-300 font-semibold border border-indigo-500/30 shadow-xs'
+                : 'text-zinc-400 hover:bg-[#171822] hover:text-zinc-200'
             }`}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400/20" />
               <span>Favorit</span>
             </div>
-            <span className="text-[11px] font-medium opacity-60">{favoriteCount}</span>
+            <span className="text-[11px] font-medium opacity-60 bg-[#1e202e] px-1.5 py-0.5 rounded-md">{favoriteCount}</span>
           </button>
 
           <button
@@ -184,51 +184,51 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               onSubjectChange(null);
               onTagChange(null);
             }}
-            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
+            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all ${
               activeFilter === 'trash'
-                ? 'bg-rose-500/15 text-rose-400 font-semibold border border-rose-500/20'
-                : 'text-zinc-400 hover:bg-[#1b1d28] hover:text-zinc-200'
+                ? 'bg-rose-500/15 text-rose-300 font-semibold border border-rose-500/30 shadow-xs'
+                : 'text-zinc-400 hover:bg-[#171822] hover:text-zinc-200'
             }`}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <Trash2 className="w-3.5 h-3.5 text-rose-400" />
               <span>Tempat Sampah</span>
             </div>
-            <span className="text-[11px] font-medium opacity-60">{trashCount}</span>
+            <span className="text-[11px] font-medium opacity-60 bg-[#1e202e] px-1.5 py-0.5 rounded-md">{trashCount}</span>
           </button>
         </div>
 
-        {/* 5. Notes List inside Sidebar */}
-        <div className="space-y-1 pt-2 border-t border-[#1f212c]">
-          <div className="flex items-center justify-between px-2 mb-1">
+        {/* 5. Craft Notes List Tiles inside Sidebar */}
+        <div className="space-y-1 pt-2.5 border-t border-[#1d1e2a]">
+          <div className="flex items-center justify-between px-2 mb-1.5">
             <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
               Daftar Catatan ({filteredNotes.length})
             </p>
           </div>
 
           {filteredNotes.length === 0 ? (
-            <p className="px-2 py-2 text-xs text-zinc-500 italic">Tidak ada catatan</p>
+            <p className="px-2 py-3 text-xs text-zinc-500 italic text-center">Belum ada catatan</p>
           ) : (
-            <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+            <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
               {filteredNotes.map((n) => (
                 <button
                   key={n.id}
                   onClick={() => onSelectNote(n.id)}
-                  className={`w-full text-left px-2.5 py-2 rounded-xl text-xs transition-all flex items-center justify-between group ${
+                  className={`w-full text-left p-2.5 rounded-xl text-xs transition-all flex items-center justify-between group border ${
                     selectedNoteId === n.id
-                      ? 'bg-indigo-600 text-white font-semibold shadow-xs'
-                      : 'text-zinc-300 hover:bg-[#1b1d28] hover:text-white'
+                      ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-semibold border-indigo-500/50 shadow-md shadow-indigo-600/20'
+                      : 'bg-[#171822] hover:bg-[#1e2030] text-zinc-300 border-[#232536] hover:border-indigo-500/30'
                   }`}
                 >
-                  <div className="overflow-hidden pr-1">
+                  <div className="overflow-hidden pr-2">
                     <p className="truncate font-semibold text-xs leading-tight">
                       {n.title || 'Catatan Tanpa Judul'}
                     </p>
-                    <p className={`text-[10px] truncate mt-0.5 ${selectedNoteId === n.id ? 'text-indigo-200' : 'text-zinc-500'}`}>
+                    <p className={`text-[10px] truncate mt-1 ${selectedNoteId === n.id ? 'text-indigo-100' : 'text-zinc-400'}`}>
                       {n.subject || 'Umum'}
                     </p>
                   </div>
-                  <ChevronRight className={`w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity ${selectedNoteId === n.id ? 'opacity-100 text-white' : 'text-zinc-400'}`} />
+                  <ChevronRight className={`w-3.5 h-3.5 shrink-0 transition-all ${selectedNoteId === n.id ? 'text-white translate-x-0.5' : 'text-zinc-500 opacity-0 group-hover:opacity-100'}`} />
                 </button>
               ))}
             </div>
@@ -237,7 +237,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
         {/* 6. Filter by Subjects */}
         {subjects.length > 0 && (
-          <div className="space-y-0.5 pt-2 border-t border-[#1f212c]">
+          <div className="space-y-1 pt-2.5 border-t border-[#1d1e2a]">
             <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">
               Subjek
             </p>
@@ -248,10 +248,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   onFilterChange('all');
                   onSubjectChange(selectedSubject === name ? null : name);
                 }}
-                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
+                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
                   selectedSubject === name
                     ? 'bg-[#212433] text-indigo-300 font-semibold border border-indigo-500/30'
-                    : 'text-zinc-400 hover:bg-[#1b1d28] hover:text-zinc-200'
+                    : 'text-zinc-400 hover:bg-[#171822] hover:text-zinc-200'
                 }`}
               >
                 <div className="flex items-center gap-2 overflow-hidden">
@@ -266,7 +266,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
         {/* 7. Filter by Tags */}
         {tags.length > 0 && (
-          <div className="space-y-1 pt-2 border-t border-[#1f212c]">
+          <div className="space-y-1 pt-2.5 border-t border-[#1d1e2a]">
             <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">
               Tag
             </p>
@@ -278,10 +278,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                     onFilterChange('all');
                     onTagChange(selectedTag === name ? null : name);
                   }}
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium transition-all ${
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
                     selectedTag === name
-                      ? 'bg-indigo-600 text-white font-semibold'
-                      : 'bg-[#1b1d28] text-zinc-400 hover:bg-[#252838] hover:text-zinc-200 border border-[#272938]'
+                      ? 'bg-indigo-600 text-white font-semibold shadow-xs'
+                      : 'bg-[#171822] text-zinc-400 hover:bg-[#1e2030] hover:text-zinc-200 border border-[#232536]'
                   }`}
                 >
                   <Tag className="w-2.5 h-2.5 opacity-60" />
@@ -294,13 +294,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         )}
       </div>
 
-      {/* 8. Settings at Bottom Footer */}
-      <div className="pt-2 border-t border-[#1f212c] shrink-0">
+      {/* 8. Craft Bottom Settings Footer */}
+      <div className="pt-2.5 border-t border-[#1d1e2a] shrink-0">
         <button
           onClick={onOpenSettings}
-          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-[#1b1d28] rounded-xl transition-all"
+          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-[#171822] rounded-xl transition-all border border-transparent hover:border-[#232536]"
         >
-          <div className="w-6 h-6 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+          <div className="w-6 h-6 rounded-lg bg-indigo-500/15 text-indigo-400 flex items-center justify-center border border-indigo-500/25">
             <Settings className="w-3.5 h-3.5" />
           </div>
           <span>Pengaturan &amp; Cadangan</span>
