@@ -114,3 +114,37 @@ Bukan pengganti Notion, Obsidian, ataupun Evernote, melainkan:
 | **FR-410** | Tag Color | P2 | ✅ Live | Warna badge tag visual (amber/emerald accent). |
 | **FR-411** | Merge Tags | P2 | ✅ Live | Penggabungan dua tag dengan arti sama. |
 | **FR-412** | Empty Tag State | P1 | ✅ Live | Tampilan informatif zero state saat belum ada tag. |
+
+---
+
+### 5.6 FR-500 — Favorites (Complete Matrix: FR-501 s/d FR-510)
+
+| ID | Requirement Name | Priority | Status | Description |
+|---|---|---|---|---|
+| **FR-501** | Mark as Favorite | P0 | ✅ Live | Toggle bintang favorit `☆` <-> `★`. |
+| **FR-502** | Favorite List | P0 | ✅ Live | Tampilan khusus seluruh catatan favorit di sidebar. |
+| **FR-503** | Favorite Filter | P1 | ✅ Live | Pipeline integrasi penyaringan Favorit + Search + Subject + Tag. |
+| **FR-504** | Favorite Sorting | P1 | ✅ Live | Pengurutan Favorit mengikuti sistem sorting utama. |
+| **FR-505** | Bulk Favorite | P2 | ✅ Live | Mengubah status favorit beberapa catatan. |
+| **FR-506** | Favorite Shortcut | P2 | ✅ Live | Pintasan papan ketik `Alt+F` untuk langsung berpindah ke tampilan Favorit. |
+| **FR-507** | Favorite Badge | P1 | ✅ Live | Badge bintang visual `★` konsisten di Note List, Search Result, Subject, dan Tag view. |
+| **FR-508** | Favorite Persistence | P0 | ✅ Live | Penyimpanan status `isFavorite` permanen di IndexedDB. |
+| **FR-509** | Favorite Statistics | P2 | ✅ Live | Hitungan jumlah favorit otomatis di sidebar (contoh: `Favorit (5)`). |
+| **FR-510** | Remove All Favorites | P2 | ✅ Live | Opsi reset status seluruh favorit kembali menjadi catatan biasa. |
+
+---
+
+### 5.7 FR-600 — Trash Management (Complete Matrix: FR-601 s/d FR-610)
+
+| ID | Requirement Name | Priority | Status | Description |
+|---|---|---|---|---|
+| **FR-601** | Soft Delete | P0 | ✅ Live | Menandai `isTrash: true` tanpa menghapus data asli dari IndexedDB. |
+| **FR-602** | Trash View | P0 | ✅ Live | Tampilan khusus tempat sampah beserta tanggal penghapusan & metadata. |
+| **FR-603** | Restore Note | P0 | ✅ Live | Memulihkan catatan dari Trash kembali ke daftar aktif 100% utuh. |
+| **FR-604** | Permanent Delete | P1 | ✅ Live | Hapus permanen dari IndexedDB & otomatis perbarui Search Index. |
+| **FR-605** | Empty Trash | P1 | ✅ Live | Konfirmasi & pembersihan permanen seluruh isi tempat sampah (reset counter ke 0). |
+| **FR-606** | Bulk Restore | P2 | ✅ Live | Pemulihan masal beberapa catatan dari tempat sampah. |
+| **FR-607** | Bulk Delete | P2 | ✅ Live | Penghapusan masal secara permanen dari tempat sampah. |
+| **FR-608** | Trash Counter | P1 | ✅ Live | Hitungan otomatis jumlah catatan di tempat sampah pada sidebar (contoh: `Trash (12)`). |
+| **FR-609** | Delete Protection | P1 | ✅ Live | Modal dialog konfirmasi untuk mencegah salah klik penghapusan permanen. |
+| **FR-610** | Auto Cleanup | P3 | ⏳ Future | Retensi penghapusan otomatis 30/90 hari (Masa Depan). |
