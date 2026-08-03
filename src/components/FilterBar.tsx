@@ -57,11 +57,17 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   onNewNote,
   onOpenSettings,
   onToggleSidebar,
+  notes = [],
+  selectedNoteId,
+  onSelectNote = () => {},
   onAddFolder,
 }) => {
-  const [isFoldersCollapsed, setIsFoldersCollapsed] = useState(false);
+  const [isFoldersSectionCollapsed, setIsFoldersSectionCollapsed] = useState(false);
   const [isTagsCollapsed, setIsTagsCollapsed] = useState(false);
   const [isPinTagPopoverOpen, setIsPinTagPopoverOpen] = useState(false);
+
+  // Track expanded folder names for nested document tree
+  const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
 
   const tagPopoverRef = useRef<HTMLDivElement>(null);
 
@@ -85,6 +91,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     }
     setPinnedTags(updated);
     localStorage.setItem(PINNED_TAGS_KEY, JSON.stringify(updated));
+  };
+
+  const toggleFolderExpand = (folderName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (expandedFolders.includes(folderName)) {
+      setExpandedFolders(expandedFolders.filter((f) => f !== folderName));
+    } else {
+      setExpandedFolders([...expandedFolders, folderName]);
+    }
   };
 
   useEffect(() => {
@@ -216,7 +231,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </button>
         </div>
 
-        {/* 4. Folders Section (Collapsible Header + Add Folder Button) */}
+        {/* 4. Folders Section (Nested Collapsible Document Tree) */}
         <div className="space-y-0.5 pt-3 group/folders">
           <div className="flex items-center justify-between px-2 mb-1">
             <span className="text-[11px] font-semibold text-zinc-400">Folders</span>
@@ -229,11 +244,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 <Plus className="w-3.5 h-3.5" />
               </button>
               <button
-                onClick={() => setIsFoldersCollapsed(!isFoldersCollapsed)}
+                onClick={() => setIsFoldersSectionCollapsed(!isFoldersSectionCollapsed)}
                 className="p-0.5 text-zinc-400 hover:text-white rounded hover:bg-[#202024] transition-colors"
-                title={isFoldersCollapsed ? 'Buka Folders' : 'Sembunyikan Folders'}
+                title={isFoldersSectionCollapsed ? 'Buka Folders' : 'Sembunyikan Folders'}
               >
-                {isFoldersCollapsed ? (
+                {isFoldersSectionCollapsed ? (
                   <ChevronRight className="w-3.5 h-3.5" />
                 ) : (
                   <ChevronDown className="w-3.5 h-3.5" />
@@ -242,32 +257,71 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             </div>
           </div>
 
-          {!isFoldersCollapsed && (
+          {!isFoldersSectionCollapsed && (
             <div className="space-y-0.5">
               {subjects.length === 0 ? (
                 <p className="px-2 text-[10px] text-zinc-600 italic">Belum ada folder</p>
               ) : (
-                subjects.map(({ name, count }) => (
-                  <button
-                    key={name}
-                    onClick={() => {
-                      onFilterChange('all');
-                      onSubjectChange(selectedSubject === name ? null : name);
-                      onTagChange(null);
-                    }}
-                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                      selectedSubject === name
-                        ? 'bg-[#252528] text-white font-semibold'
-                        : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <Folder className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                      <span className="truncate max-w-[120px]">{name}</span>
+                subjects.map(({ name, count }) => {
+                  const isExpanded = expandedFolders.includes(name);
+                  const folderNotes = notes.filter((n) => !n.isTrash && n.subject.toLowerCase() === name.toLowerCase());
+
+                  return (
+                    <div key={name} className="space-y-0.5">
+                      <div
+                        onClick={() => {
+                          onFilterChange('all');
+                          onSubjectChange(selectedSubject === name ? null : name);
+                          onTagChange(null);
+                        }}
+                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer group/item ${
+                          selectedSubject === name
+                            ? 'bg-[#252528] text-white font-semibold'
+                            : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 overflow-hidden">
+                          <button
+                            onClick={(e) => toggleFolderExpand(name, e)}
+                            className="p-0.5 text-zinc-500 hover:text-zinc-200 rounded"
+                          >
+                            {isExpanded ? (
+                              <ChevronDown className="w-3 h-3" />
+                            ) : (
+                              <ChevronRight className="w-3 h-3" />
+                            )}
+                          </button>
+                          <Folder className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          <span className="truncate max-w-[110px]">{name}</span>
+                        </div>
+                        <span className="text-xs text-zinc-500 font-normal">{count}</span>
+                      </div>
+
+                      {/* Nested Documents under this Folder */}
+                      {isExpanded && (
+                        <div className="pl-6 space-y-0.5 border-l border-white/5 ml-3 my-0.5">
+                          {folderNotes.length === 0 ? (
+                            <p className="px-2 py-1 text-[10px] text-zinc-600 italic">Kosong</p>
+                          ) : (
+                            folderNotes.map((fn) => (
+                              <button
+                                key={fn.id}
+                                onClick={() => onSelectNote(fn.id)}
+                                className={`w-full text-left px-2 py-1 rounded text-[11px] truncate block transition-colors ${
+                                  selectedNoteId === fn.id
+                                    ? 'text-indigo-400 font-bold bg-[#202024]'
+                                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#1a1a1d]'
+                                }`}
+                              >
+                                {fn.title || 'Catatan Tanpa Judul'}
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <span className="text-xs text-zinc-500 font-normal">{count}</span>
-                  </button>
-                ))
+                  );
+                })
               )}
             </div>
           )}
@@ -363,14 +417,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </div>
       </div>
 
-      {/* 6. Craft Bottom Left Footer Icons */}
-      <div className="pt-2 border-t border-white/5 shrink-0 flex items-center justify-between px-1 text-zinc-400">
+      {/* 6. Craft Bottom Left Footer: Clear Icon + Text "Pengaturan" */}
+      <div className="pt-2 border-t border-white/5 shrink-0 flex items-center justify-between px-1">
         <button
           onClick={onOpenSettings}
-          className="p-1.5 hover:text-white hover:bg-[#202024] rounded-lg transition-colors"
+          className="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-[#202024] rounded-lg transition-colors"
           title="Pengaturan"
         >
-          <Settings className="w-4 h-4" />
+          <Settings className="w-4 h-4 text-zinc-400" />
+          <span>Pengaturan</span>
         </button>
 
         <div className="p-1.5 text-indigo-400" title="InstantNotes Local Engine">
