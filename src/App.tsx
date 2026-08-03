@@ -61,6 +61,16 @@ export function App() {
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, [notes]);
 
+  const handleSelectNote = async (id: string) => {
+    setSelectedNoteId(id);
+    const target = notes.find((n) => n.id === id);
+    if (target) {
+      const updated = { ...target, lastOpenedAt: Date.now() };
+      await saveNote(updated);
+      setNotes((prev) => prev.map((n) => (n.id === id ? updated : n)));
+    }
+  };
+
   const handleCreateNewNote = async () => {
     const newNote: Note = {
       id: 'note-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
@@ -72,11 +82,35 @@ export function App() {
       isTrash: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
+      lastOpenedAt: Date.now(),
     };
 
     await saveNote(newNote);
     setNotes((prev) => [newNote, ...prev]);
     setSelectedNoteId(newNote.id);
+  };
+
+  // FR-106: Duplicate Note
+  const handleDuplicateNote = async (sourceNote: Note, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (sourceNote.isTrash) return;
+
+    const duplicated: Note = {
+      id: 'note-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
+      title: sourceNote.title ? `${sourceNote.title} (Salinan)` : 'Salinan Catatan',
+      content: sourceNote.content,
+      subject: sourceNote.subject,
+      tags: [...sourceNote.tags],
+      isFavorite: false,
+      isTrash: false,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      lastOpenedAt: Date.now(),
+    };
+
+    await saveNote(duplicated);
+    setNotes((prev) => [duplicated, ...prev]);
+    setSelectedNoteId(duplicated.id);
   };
 
   const handleSaveNote = async (updated: Note) => {
@@ -163,6 +197,12 @@ export function App() {
       result = result.filter((n) => !n.isTrash && n.isFavorite);
     } else if (activeFilter === 'trash') {
       result = result.filter((n) => n.isTrash);
+    } else if (activeFilter === 'recent') {
+      result = result
+        .filter((n) => !n.isTrash && n.lastOpenedAt)
+        .sort((a, b) => (b.lastOpenedAt || 0) - (a.lastOpenedAt || 0))
+        .slice(0, 10);
+      return result;
     } else {
       result = result.filter((n) => !n.isTrash);
     }
@@ -179,6 +219,7 @@ export function App() {
     return [...result].sort((a, b) => {
       if (sortOption === 'newest') return b.createdAt - a.createdAt;
       if (sortOption === 'oldest') return a.createdAt - b.createdAt;
+      if (sortOption === 'recent') return (b.lastOpenedAt || 0) - (a.lastOpenedAt || 0);
       if (sortOption === 'a-z') return a.title.localeCompare(b.title);
       if (sortOption === 'z-a') return b.title.localeCompare(a.title);
       return b.updatedAt - a.updatedAt; // default 'updated'
@@ -277,9 +318,10 @@ export function App() {
                 snippet={snippet}
                 searchQuery={searchQuery}
                 isSelected={selectedNoteId === note.id}
-                onSelect={() => setSelectedNoteId(note.id)}
+                onSelect={() => handleSelectNote(note.id)}
                 onToggleFavorite={(e) => handleToggleFavorite(note.id, e)}
                 onToggleTrash={(e) => handleToggleTrash(note.id, e)}
+                onDuplicateNote={(e) => handleDuplicateNote(note, e)}
                 onDeletePermanently={(e) => handleDeletePermanently(note.id, e)}
               />
             ))
@@ -295,6 +337,7 @@ export function App() {
           onClose={() => setSelectedNoteId(null)}
           onToggleFavorite={handleToggleFavorite}
           onToggleTrash={handleToggleTrash}
+          onDuplicate={(n) => handleDuplicateNote(n)}
         />
       </div>
 

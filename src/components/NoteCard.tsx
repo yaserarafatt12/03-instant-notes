@@ -1,7 +1,8 @@
 import React from 'react';
-import { Star, Trash2, RotateCcw, Copy, Check, Calendar, Tag, BookOpen } from 'lucide-react';
+import { Star, Trash2, RotateCcw, Copy, Check, Calendar, Tag, BookOpen, CopyPlus } from 'lucide-react';
 import type { Note } from '../types/note';
 import { HighlightText } from './HighlightText';
+import { formatRelativeTime } from '../lib/dateUtils';
 
 interface NoteCardProps {
   note: Note;
@@ -11,6 +12,7 @@ interface NoteCardProps {
   onSelect: () => void;
   onToggleFavorite: (e: React.MouseEvent) => void;
   onToggleTrash: (e: React.MouseEvent) => void;
+  onDuplicateNote?: (e: React.MouseEvent) => void;
   onDeletePermanently?: (e: React.MouseEvent) => void;
 }
 
@@ -22,6 +24,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   onSelect,
   onToggleFavorite,
   onToggleTrash,
+  onDuplicateNote,
   onDeletePermanently,
 }) => {
   const [copied, setCopied] = React.useState(false);
@@ -31,11 +34,6 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     navigator.clipboard.writeText(`${note.title}\n\n${note.content}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const formatDate = (timestamp: number) => {
-    const d = new Date(timestamp);
-    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
   return (
@@ -53,17 +51,29 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         </h3>
         <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
           {!note.isTrash && (
-            <button
-              onClick={onToggleFavorite}
-              className={`p-1 rounded-lg transition-colors ${
-                note.isFavorite
-                  ? 'text-amber-500 hover:text-amber-600'
-                  : 'text-slate-300 dark:text-slate-600 hover:text-amber-500'
-              }`}
-              title={note.isFavorite ? 'Hapus dari favorit' : 'Tambah ke favorit'}
-            >
-              <Star className={`w-4 h-4 ${note.isFavorite ? 'fill-amber-500' : ''}`} />
-            </button>
+            <>
+              <button
+                onClick={onToggleFavorite}
+                className={`p-1 rounded-lg transition-colors ${
+                  note.isFavorite
+                    ? 'text-amber-500 hover:text-amber-600'
+                    : 'text-slate-300 dark:text-slate-600 hover:text-amber-500'
+                }`}
+                title={note.isFavorite ? 'Hapus dari favorit' : 'Tambah ke favorit'}
+              >
+                <Star className={`w-4 h-4 ${note.isFavorite ? 'fill-amber-500' : ''}`} />
+              </button>
+
+              {onDuplicateNote && (
+                <button
+                  onClick={onDuplicateNote}
+                  className="p-1 text-slate-400 hover:text-amber-500 rounded-lg transition-colors"
+                  title="Duplikat catatan (FR-106)"
+                >
+                  <CopyPlus className="w-4 h-4" />
+                </button>
+              )}
+            </>
           )}
 
           <button
@@ -128,9 +138,9 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           )}
         </div>
 
-        <div className="flex items-center gap-1 font-mono text-[10px] shrink-0">
+        <div className="flex items-center gap-1 font-mono text-[10px] shrink-0" title={`Diubah: ${new Date(note.updatedAt).toLocaleString('id-ID')}`}>
           <Calendar className="w-3 h-3" />
-          <span>{formatDate(note.updatedAt)}</span>
+          <span>{formatRelativeTime(note.updatedAt)}</span>
         </div>
       </div>
     </div>

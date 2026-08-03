@@ -11,6 +11,7 @@ import {
   Zap,
   Moon,
   Sun,
+  History,
 } from 'lucide-react';
 import type { FilterCategory } from '../types/note';
 
@@ -112,6 +113,24 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               <span>Semua Catatan</span>
             </div>
             <span className="text-xs font-mono font-bold opacity-75">{totalNotes}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              onFilterChange('recent');
+              onSubjectChange(null);
+              onTagChange(null);
+            }}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+              activeFilter === 'recent'
+                ? 'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 font-semibold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <History className="w-4 h-4 text-emerald-500" />
+              <span>Terakhir Dibuka</span>
+            </div>
           </button>
 
           <button

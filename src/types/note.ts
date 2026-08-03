@@ -8,11 +8,12 @@ export interface Note {
   isTrash: boolean;
   createdAt: number; // Unix timestamp in ms
   updatedAt: number; // Unix timestamp in ms
+  lastOpenedAt?: number; // Unix timestamp in ms
 }
 
-export type FilterCategory = 'all' | 'favorites' | 'trash';
+export type FilterCategory = 'all' | 'favorites' | 'trash' | 'recent';
 
-export type SortOption = 'updated' | 'newest' | 'oldest' | 'a-z' | 'z-a';
+export type SortOption = 'updated' | 'newest' | 'oldest' | 'a-z' | 'z-a' | 'recent';
 
 export type FontSizeOption = 'sm' | 'base' | 'lg';
 
