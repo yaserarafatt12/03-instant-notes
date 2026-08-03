@@ -204,10 +204,11 @@ Bukan pengganti Notion, Obsidian, ataupun Evernote, melainkan:
 
 ---
 
-## BAB 7 — UI/UX Specification (UX-1000 s/d UX-1200 Matrix)
+## BAB 7 — UI/UX Specification (UX-1000 s/d UX-1300 Matrix)
 
 | Module ID | Module Title | Status | Core Specification |
 |---|---|---|---|
 | **UX-1000** | UI & Design Philosophy | ✅ Live | Modern Minimalism, 3-panel layout, *Content First*, *One Click Rule*, *Instant Feedback*. |
 | **UX-1100** | Design Tokens Specification | ✅ Live | Centralized design tokens: Color, Typography, Spacing (4-point), Border Radius, Shadow, Motion, Z-Index. |
 | **UX-1200** | Typography System | ✅ Live | Inter sans-serif stack, JetBrains Mono code font, 7-level hierarchy, max 720px (70-80 chars) reading width, 1.7 line height. |
+| **UX-1300** | Color & Theme System | ✅ Live | Neutral Slate UI + Amber-500 accent + Semantic feedback (Green success, Rose error, Amber warning, Sky info). WCAG AA compliant. |
