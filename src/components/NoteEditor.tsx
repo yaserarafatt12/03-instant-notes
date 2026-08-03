@@ -120,7 +120,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800">
+    <div className="flex-1 flex flex-col h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 overflow-hidden">
       {/* Top Toolbar */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-slate-200 dark:border-slate-800 select-none">
         <div className="flex items-center gap-3">
@@ -140,6 +140,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           {/* FR-803 Export as Plain Text (.txt) */}
           <button
             onClick={() => exportNoteAsTXT(note)}
+            aria-label="Ekspor catatan ke file teks"
             className="p-2 text-slate-400 hover:text-emerald-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
             title="Ekspor catatan ke file teks .txt (FR-803)"
           >
@@ -149,6 +150,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           {onDuplicate && !note.isTrash && (
             <button
               onClick={() => onDuplicate(note)}
+              aria-label="Duplikat catatan"
               className="p-2 text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
               title="Duplikat catatan ini (FR-106)"
             >
@@ -158,6 +160,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
           <button
             onClick={() => onToggleFavorite(note.id)}
+            aria-label={note.isFavorite ? 'Hapus dari favorit' : 'Tambah ke favorit'}
             className={`p-2 rounded-xl transition-colors ${
               note.isFavorite
                 ? 'text-amber-500 hover:text-amber-600 bg-amber-50 dark:bg-amber-950/50'
@@ -170,6 +173,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
           <button
             onClick={() => onToggleTrash(note.id)}
+            aria-label="Pindahkan ke tempat sampah"
             className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-xl transition-colors"
             title="Pindahkan ke tempat sampah"
           >
@@ -178,6 +182,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
           <button
             onClick={onClose}
+            aria-label="Tutup editor"
             className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
             title="Tutup editor"
           >
@@ -186,8 +191,8 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         </div>
       </div>
 
-      {/* Editor Body */}
-      <div className="flex-1 flex flex-col p-6 overflow-y-auto space-y-4">
+      {/* Editor Body with Max 720px Reading Container Width (UX-1200) */}
+      <div className="flex-1 flex flex-col p-6 overflow-y-auto space-y-4 max-w-[720px] w-full mx-auto">
         {/* Title Input */}
         <input
           ref={titleRef}
@@ -196,7 +201,8 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
           placeholder="Judul catatan..."
-          className="w-full text-2xl font-bold bg-transparent text-slate-900 dark:text-slate-100 placeholder:text-slate-300 dark:placeholder:text-slate-700 border-none focus:outline-none"
+          aria-label="Judul catatan"
+          className="w-full text-2xl font-bold bg-transparent text-slate-900 dark:text-slate-100 placeholder:text-slate-300 dark:placeholder:text-slate-700 border-none focus:outline-none tracking-tight"
         />
 
         {/* Subject & Tags Controls */}
@@ -210,6 +216,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               value={subject}
               onChange={(e) => handleSubjectChange(e.target.value)}
               placeholder="Tambah Subjek (misal: Fisika)..."
+              aria-label="Subjek catatan"
               className="bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-amber-500 placeholder:text-slate-400"
             />
           </div>
@@ -223,7 +230,11 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                 className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 font-medium rounded-md"
               >
                 #{t}
-                <button onClick={() => handleRemoveTag(t)} className="hover:text-rose-500">
+                <button
+                  onClick={() => handleRemoveTag(t)}
+                  aria-label={`Hapus tag ${t}`}
+                  className="hover:text-rose-500"
+                >
                   <X className="w-3 h-3" />
                 </button>
               </span>
@@ -241,6 +252,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                 onFocus={() => setShowTagSuggestions(true)}
                 onKeyDown={handleTagInputKeyDown}
                 placeholder="+ Tag (Enter)..."
+                aria-label="Tambah tag baru"
                 className="bg-transparent text-slate-600 dark:text-slate-400 focus:outline-none placeholder:text-slate-400 text-xs"
               />
 
@@ -251,6 +263,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                     <button
                       key={sug}
                       onClick={() => handleAddTag(sug)}
+                      aria-label={`Pilih saran tag ${sug}`}
                       className="w-full text-left px-2.5 py-1 text-xs text-slate-700 dark:text-slate-300 hover:bg-amber-500/10 hover:text-amber-500 rounded-lg transition-colors"
                     >
                       #{sug}
@@ -262,12 +275,13 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           </div>
         </div>
 
-        {/* Content Textarea */}
+        {/* Content Textarea with Optimal 1.7 Line-Height for Extended Reading (UX-1200) */}
         <textarea
           value={content}
           onChange={(e) => handleContentChange(e.target.value)}
           placeholder="Mulai ketik catatan di sini... Semua teks tersimpan secara instan."
-          className="flex-1 w-full bg-transparent text-slate-800 dark:text-slate-200 placeholder:text-slate-300 dark:placeholder:text-slate-700 border-none focus:outline-none resize-none leading-relaxed text-sm font-normal"
+          aria-label="Isi catatan"
+          className="flex-1 w-full bg-transparent text-slate-800 dark:text-slate-200 placeholder:text-slate-300 dark:placeholder:text-slate-700 border-none focus:outline-none resize-none leading-[1.7] text-sm font-normal"
         />
       </div>
     </div>
