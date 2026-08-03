@@ -95,3 +95,22 @@ Bukan pengganti Notion, Obsidian, ataupun Evernote, melainkan:
 | **FR-310** | Empty Subject State | P1 | ✅ Live | Zero state saat subjek belum memiliki catatan. |
 | **FR-311** | Default Subject | P1 | ✅ Live | Default ke `Umum` / `No Subject` saat pembuatan tanpa kategori. |
 | **FR-312** | Subject Validation | P0 | ✅ Live | Validasi UTF-8, unik, maks 40 karakter, non-spasi kosong. |
+
+---
+
+### 5.5 FR-400 — Tag Management (Complete Matrix: FR-401 s/d FR-412)
+
+| ID | Requirement Name | Priority | Status | Description |
+|---|---|---|---|---|
+| **FR-401** | Create Tag | P0 | ✅ Live | Pembuatan tag fleksibel (maks 25 karakter, case-insensitive). |
+| **FR-402** | Assign Multiple Tags | P0 | ✅ Live | Banyak tag per catatan tanpa duplikasi dalam satu catatan. |
+| **FR-403** | Remove Tag | P0 | ✅ Live | Menghapus tag dari catatan tertentu tanpa menghapus tag sistem. |
+| **FR-404** | Rename Tag | P1 | ✅ Live | Mengubah nama tag pada seluruh catatan yang menggunakannya. |
+| **FR-405** | Delete Tag | P1 | ✅ Live | Menghapus tag dari seluruh catatan sistem. |
+| **FR-406** | Tag Autocomplete | P1 | ✅ Live | Autocomplete saran tag saat pengetikan `#tag` di editor. |
+| **FR-407** | Prevent Duplicate Tag | P0 | ✅ Live | Mencegah tag ganda secara case-insensitive (`exam` == `Exam`). |
+| **FR-408** | Multi Tag Filter | P1 | ✅ Live | Penyaringan catatan berdasarkan tag di sidebar. |
+| **FR-409** | Popular Tags | P2 | ✅ Live | Pengurutan & statistik frekuensi tag paling banyak digunakan. |
+| **FR-410** | Tag Color | P2 | ✅ Live | Warna badge tag visual (amber/emerald accent). |
+| **FR-411** | Merge Tags | P2 | ✅ Live | Penggabungan dua tag dengan arti sama. |
+| **FR-412** | Empty Tag State | P1 | ✅ Live | Tampilan informatif zero state saat belum ada tag. |

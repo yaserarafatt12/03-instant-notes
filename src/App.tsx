@@ -47,12 +47,18 @@ export function App() {
     }
   }, [isDarkMode]);
 
-  // Global Keyboard Shortcuts (Ctrl+N, Esc, etc.)
+  // Global Keyboard Shortcuts (Ctrl+N, Alt+F, Esc, etc.)
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key.toLowerCase() === 'n') {
         e.preventDefault();
         handleCreateNewNote();
+      } else if (e.altKey && e.key.toLowerCase() === 'f') {
+        // FR-506: Alt+F Favorite Shortcut
+        e.preventDefault();
+        setActiveFilter('favorites');
+        setSelectedSubject(null);
+        setSelectedTag(null);
       } else if (e.key === 'Escape') {
         setSelectedNoteId(null);
       }
@@ -194,7 +200,7 @@ export function App() {
 
   const allTagNames = useMemo(() => tags.map((t) => t.name), [tags]);
 
-  // Compute counts
+  // Compute counts (FR-509 Favorite Statistics)
   const totalActiveNotes = useMemo(() => notes.filter((n) => !n.isTrash).length, [notes]);
   const favoriteCount = useMemo(() => notes.filter((n) => !n.isTrash && n.isFavorite).length, [notes]);
   const trashCount = useMemo(() => notes.filter((n) => n.isTrash).length, [notes]);
@@ -224,7 +230,7 @@ export function App() {
       result = result.filter((n) => n.tags.some((t) => t.toLowerCase() === selectedTag.toLowerCase()));
     }
 
-    // Apply Sorting Options (FR-024)
+    // Apply Sorting Options (FR-024 & FR-504)
     return [...result].sort((a, b) => {
       if (sortOption === 'newest') return b.createdAt - a.createdAt;
       if (sortOption === 'oldest') return a.createdAt - b.createdAt;
