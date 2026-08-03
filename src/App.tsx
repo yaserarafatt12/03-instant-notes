@@ -268,6 +268,7 @@ export function App() {
           selectedNoteId={selectedNoteId}
           onSelectNote={handleSelectNote}
           filteredNotes={searchResults.map((sr) => sr.note)}
+          onToggleSidebar={() => setIsSidebarOpen(false)}
         />
       )}
 

@@ -11,6 +11,8 @@ import {
   Search,
   X,
   ChevronRight,
+  PanelLeftClose,
+  NotebookPen,
 } from 'lucide-react';
 import type { FilterCategory, Note } from '../types/note';
 
@@ -34,6 +36,7 @@ interface FilterBarProps {
   selectedNoteId: string | null;
   onSelectNote: (id: string) => void;
   filteredNotes: Note[];
+  onToggleSidebar?: () => void;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -55,11 +58,34 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   selectedNoteId,
   onSelectNote,
   filteredNotes,
+  onToggleSidebar,
 }) => {
   return (
-    <aside className="w-full lg:w-72 shrink-0 bg-[#13141b] border-r border-[#1f212c] p-3 flex flex-col justify-between h-full select-none font-sans overflow-hidden">
+    <aside className="w-full lg:w-72 shrink-0 bg-[#13141b] border-r border-[#1f212c] p-3.5 flex flex-col justify-between h-full select-none font-sans overflow-hidden">
       <div className="space-y-4 overflow-y-auto flex-1 pr-1">
-        {/* 1. Search Bar at the VERY TOP */}
+        {/* 1. Header Row: InstantNotes Title + Sidebar Close Button */}
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold shadow-sm">
+              <NotebookPen className="w-4 h-4" />
+            </div>
+            <h1 className="font-bold text-sm text-white tracking-tight">
+              Instant<span className="text-indigo-400">Notes</span>
+            </h1>
+          </div>
+
+          {onToggleSidebar && (
+            <button
+              onClick={onToggleSidebar}
+              className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-[#1b1d28] transition-colors"
+              title="Tutup Sidebar"
+            >
+              <PanelLeftClose className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* 2. Search Bar */}
         <div className="relative flex items-center">
           <Search className="absolute left-3 w-4 h-4 text-zinc-400 pointer-events-none" />
           <input
@@ -81,7 +107,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           )}
         </div>
 
-        {/* 2. Single "+ Catatan Baru" Button */}
+        {/* 3. Single "+ Catatan Baru" Button */}
         <button
           onClick={onNewNote}
           className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-semibold text-xs rounded-xl transition-all shadow-sm"
@@ -90,7 +116,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           <span>Catatan Baru</span>
         </button>
 
-        {/* 3. Main Navigation Categories */}
+        {/* 4. Main Navigation Categories */}
         <div className="space-y-0.5 pt-1">
           <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">
             Navigasi
@@ -172,7 +198,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </button>
         </div>
 
-        {/* 4. Notes List directly inside Sidebar */}
+        {/* 5. Notes List inside Sidebar */}
         <div className="space-y-1 pt-2 border-t border-[#1f212c]">
           <div className="flex items-center justify-between px-2 mb-1">
             <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
@@ -209,7 +235,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           )}
         </div>
 
-        {/* 5. Filter by Subjects */}
+        {/* 6. Filter by Subjects */}
         {subjects.length > 0 && (
           <div className="space-y-0.5 pt-2 border-t border-[#1f212c]">
             <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">
@@ -238,7 +264,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </div>
         )}
 
-        {/* 6. Filter by Tags */}
+        {/* 7. Filter by Tags */}
         {tags.length > 0 && (
           <div className="space-y-1 pt-2 border-t border-[#1f212c]">
             <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">
@@ -268,7 +294,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         )}
       </div>
 
-      {/* 7. Settings at Bottom Footer */}
+      {/* 8. Settings at Bottom Footer */}
       <div className="pt-2 border-t border-[#1f212c] shrink-0">
         <button
           onClick={onOpenSettings}
