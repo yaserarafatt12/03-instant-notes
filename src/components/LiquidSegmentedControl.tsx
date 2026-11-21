@@ -340,24 +340,24 @@ export function LiquidSegmentedControl<T extends string>({
         <div
           className="absolute inset-0 z-0 rounded-full"
           style={{
-            backdropFilter: 'blur(24px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+            backdropFilter: 'blur(24px) saturate(110%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(110%)',
           }}
         />
         <div
           className="absolute inset-0 z-10 rounded-full"
           style={{
             background: isLight
-              ? 'rgba(255, 255, 255, 0.68)'
-              : 'linear-gradient(180deg, rgba(255, 255, 255, 0.11) 0%, rgba(15, 29, 54, 0.44) 100%)',
+              ? 'rgba(255, 255, 255, 0.72)'
+              : 'linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0%, rgba(28, 32, 40, 0.52) 100%)',
           }}
         />
         <div
           className="absolute inset-0 z-20 rounded-full"
           style={{
             boxShadow: isLight
-              ? 'inset 1px 1.5px 1px 0 rgba(255, 255, 255, 0.72), inset -1px -1px 1px 0 rgba(0, 0, 0, 0.05)'
-              : 'inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.24), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.06)',
+              ? 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.82)'
+              : 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.20), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.04)',
           }}
         />
       </div>
@@ -389,43 +389,43 @@ export function LiquidSegmentedControl<T extends string>({
               className="w-full h-full rounded-full relative transition-all duration-200"
               style={{
                 backdropFilter: isHolding
-                  ? 'blur(10px) saturate(220%) brightness(1.18)'
-                  : 'blur(12px) saturate(160%)',
+                  ? 'blur(12px) saturate(160%) brightness(1.14)'
+                  : 'blur(12px) saturate(110%)',
                 WebkitBackdropFilter: isHolding
-                  ? 'blur(10px) saturate(220%) brightness(1.18)'
-                  : 'blur(12px) saturate(160%)',
+                  ? 'blur(12px) saturate(160%) brightness(1.14)'
+                  : 'blur(12px) saturate(110%)',
                 background: isHolding
                   ? isLight
-                    ? 'radial-gradient(120% 100% at 50% 0%, rgba(255,255,255,0.68) 0%, rgba(255,255,255,0.20) 55%, rgba(56,189,248,0.18) 100%)'
-                    : 'radial-gradient(120% 100% at 50% 0%, rgba(255,255,255,0.24) 0%, rgba(56,189,248,0.10) 52%, rgba(255,255,255,0.06) 100%)'
+                    ? 'radial-gradient(120% 100% at 50% 0%, rgba(255,255,255,0.78) 0%, rgba(240,244,250,0.45) 60%, rgba(200,210,225,0.28) 100%)'
+                    : 'radial-gradient(120% 100% at 50% 0%, rgba(255,255,255,0.28) 0%, rgba(210,218,230,0.16) 55%, rgba(255,255,255,0.10) 100%)'
                   : isLight
-                    ? 'rgba(0, 163, 255, 0.13)'
-                    : 'rgba(255, 255, 255, 0.14)',
+                    ? 'rgba(10, 17, 40, 0.08)'
+                    : 'rgba(255, 255, 255, 0.16)',
                 boxShadow: isHolding
                   ? isLight
-                    ? 'inset 0 2px 3px rgba(255,255,255,0.95), inset 0 -2px 4px rgba(0,163,255,0.35), inset 2px 0 3px rgba(255,255,255,0.5), inset -2px 0 3px rgba(56,189,248,0.3), 0 8px 24px rgba(0,0,0,0.16), 0 0 0 1px rgba(255,255,255,0.7)'
-                    : 'inset 0 2px 3px rgba(255,255,255,0.72), inset 0 -2px 5px rgba(56,189,248,0.45), inset 2px 0 4px rgba(125,211,252,0.32), inset -2px 0 4px rgba(192,132,252,0.24), 0 10px 28px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.36)'
+                    ? 'inset 0 2px 3px rgba(255,255,255,0.95), inset 0 -2px 4px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.14), 0 0 0 1px rgba(255,255,255,0.8)'
+                    : 'inset 0 2px 3px rgba(255,255,255,0.72), inset 0 -2px 5px rgba(255,255,255,0.22), inset 2px 0 4px rgba(255,255,255,0.24), inset -2px 0 4px rgba(200,210,230,0.20), 0 10px 28px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.36)'
                   : isLight
-                    ? 'inset 0 1px 1px rgba(255,255,255,0.75)'
-                    : 'inset 0 1px 1px rgba(255,255,255,0.24)',
+                    ? 'inset 0 1px 1px rgba(255,255,255,0.7)'
+                    : 'inset 0 1px 1px rgba(255,255,255,0.22)',
               }}
             >
-              {/* Top Liquid Specular Highlight Arc */}
+              {/* Full-bleed Top Specular Sheen (only when holding — no inner oval sticker) */}
               <div
-                className="absolute top-[2px] left-[14%] right-[14%] h-[38%] rounded-full pointer-events-none transition-opacity duration-200"
+                className="absolute inset-0 rounded-full pointer-events-none transition-opacity duration-200"
                 style={{
-                  opacity: isHolding ? 0.95 : 0.3,
+                  opacity: isHolding ? 0.9 : 0,
                   background:
-                    'linear-gradient(180deg, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.08) 65%, transparent 100%)',
+                    'radial-gradient(100% 70% at 50% 0%, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0.06) 55%, transparent 100%)',
                 }}
               />
-              {/* Bottom Prismatic Chromatic Refraction Rim (iOS 26 Liquid Glass signature) */}
+              {/* Bottom Prismatic Chromatic Refraction Rim */}
               <div
-                className="absolute bottom-[1px] left-[12%] right-[12%] h-[5px] rounded-full blur-[2px] pointer-events-none transition-opacity duration-200"
+                className="absolute bottom-[1px] left-[12%] right-[12%] h-[4px] rounded-full blur-[1.5px] pointer-events-none transition-opacity duration-200"
                 style={{
-                  opacity: isHolding ? 0.85 : 0,
+                  opacity: isHolding ? 0.75 : 0,
                   background:
-                    'linear-gradient(90deg, rgba(56,189,248,0.85) 0%, rgba(255,255,255,0.9) 50%, rgba(167,139,250,0.75) 100%)',
+                    'linear-gradient(90deg, rgba(200,220,255,0.75) 0%, rgba(255,255,255,0.9) 50%, rgba(215,205,255,0.75) 100%)',
                 }}
               />
             </div>
