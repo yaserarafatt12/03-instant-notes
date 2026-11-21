@@ -421,28 +421,28 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
 
       {/* Main Database Container */}
       <div
-        className={`relative group/colcard rounded-2xl bg-[#0B172E]/80 backdrop-blur-xl border transition-all overflow-hidden font-sans shadow-[inset_0_1px_0_rgba(255,255,255,0.20),0_14px_36px_rgba(2,6,23,0.45)] ${
+        className={`relative group/colcard rounded-2xl glass-card transition-all overflow-hidden font-sans ${
           isSelected
-            ? 'ring-2 ring-sky-400/80 border-sky-400/80 shadow-2xl'
+            ? 'ring-2 ring-[#38BDF8]/70 !border-[#38BDF8]/70'
             : isAllSelected
-            ? 'ring-1 ring-sky-400/50 border-sky-400/80'
-            : 'border-white/15 hover:border-sky-300/30'
+            ? 'ring-1 ring-[#38BDF8]/45 !border-[#38BDF8]/60'
+            : ''
         }`}
       >
         {/* Top Header Section */}
-        <div className="px-4 pt-3.5 pb-2 border-b border-white/10 space-y-2.5 bg-white/[0.03]">
+        <div className="px-4 pt-3.5 pb-2 border-b q-border space-y-2.5 bg-white/[0.03]">
           {/* Collection Title */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 flex-1">
-              <div className="p-1.5 rounded-lg bg-sky-500/15 text-sky-300 border border-sky-400/25">
-                <Layers className="w-4 h-4" />
+              <div className="p-1.5 rounded-lg glass-control">
+                <Layers className="w-4 h-4 q-text-primary" />
               </div>
               <input
                 type="text"
                 value={collection.title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="Collection Title"
-                className="text-base font-bold text-slate-100 bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-sky-400/50 rounded px-1.5 py-0.5 w-full transition-all"
+                className="text-base font-bold q-text-primary bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-[#38BDF8]/50 rounded px-1.5 py-0.5 w-full transition-all tracking-tight"
               />
             </div>
 
@@ -452,8 +452,8 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
                 className={`p-1.5 rounded-lg transition-colors border ${
                   isSearchOpen
-                    ? 'bg-sky-500/20 text-sky-300 border-sky-400/35'
-                    : 'bg-white/[0.06] text-slate-400 hover:text-white border-white/10'
+                    ? 'liquid-lens-active q-text-accent'
+                    : 'glass-control'
                 }`}
                 title="Cari dalam database"
               >
@@ -462,16 +462,16 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
 
               <button
                 onClick={handleAddRow}
-                className="flex items-center gap-1 px-2.5 py-1.5 bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 hover:text-white border border-white/15 hover:border-sky-400/40 rounded-lg text-xs font-semibold transition-all shadow-sm"
+                className="flex items-center gap-1 px-2.5 py-1.5 glass-control rounded-lg text-xs font-semibold q-text-primary"
                 title="Tambah baris data baru"
               >
-                <Plus className="w-3.5 h-3.5 text-sky-400" />
+                <Plus className="w-3.5 h-3.5 q-text-muted" />
                 <span>Baris Baru</span>
               </button>
 
               <button
                 onClick={onDelete}
-                className="p-1.5 bg-white/[0.06] hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/10 hover:border-rose-400/30 rounded-lg transition-colors shadow-sm"
+                className="p-1.5 glass-control hover:bg-rose-500/15 hover:text-rose-400 hover:border-rose-400/30 rounded-lg transition-colors"
                 title="Hapus Collection"
               >
                 <Trash2 className="w-3.5 h-3.5" />

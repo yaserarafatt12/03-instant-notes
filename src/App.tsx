@@ -10,6 +10,8 @@ import { ExportImportModal } from './components/ExportImportModal';
 import { SettingsModal, DEFAULT_SETTINGS } from './components/SettingsModal';
 import { CreateFolderModal } from './components/CreateFolderModal';
 import { ConfirmModal } from './components/ConfirmModal';
+import { BrandLogo } from './components/BrandLogo';
+import { LiquidSegmentedControl } from './components/LiquidSegmentedControl';
 import type { AppSettings } from './components/SettingsModal';
 import {
   Undo2,
@@ -46,10 +48,10 @@ export function App() {
       console.error('Failed to load folder meta map:', e);
     }
     return {
-      Umum: { color: '#6366f1', icon: 'folder' },
-      Fisika: { color: '#ef6b6b', icon: 'science' },
-      Biologi: { color: '#4ade80', icon: 'plant' },
-      Programming: { color: '#60a5fa', icon: 'code' },
+      Umum: { icon: 'folder' },
+      Fisika: { icon: 'science' },
+      Biologi: { icon: 'plant' },
+      Programming: { icon: 'code' },
     };
   });
 
@@ -74,7 +76,7 @@ export function App() {
     if (color || icon) {
       const updatedMeta = {
         ...folderMetaMap,
-        [folderPath]: { color: color || '#6366f1', icon: icon || 'folder' },
+        [folderPath]: { color: color || undefined, icon: icon || 'folder' },
       };
       setFolderMetaMap(updatedMeta);
       localStorage.setItem(FOLDER_META_KEY, JSON.stringify(updatedMeta));
@@ -598,14 +600,25 @@ export function App() {
 
   const showSidebar = isSidebarOpen && !isFocusMode;
 
-  const sortLabels: Record<SortOption, string> = {
-    updated: 'Date Updated',
-    newest: 'Date Created',
-    oldest: 'Oldest First',
-    'a-z': 'Name (A-Z)',
-    'z-a': 'Name (Z-A)',
-    recent: 'Recently Opened',
-  };
+  const isEn = settings.language === 'en';
+
+  const sortLabels: Record<SortOption, string> = isEn
+    ? {
+        updated: 'Last Updated',
+        newest: 'Newest First',
+        oldest: 'Oldest First',
+        'a-z': 'Title (A–Z)',
+        'z-a': 'Title (Z–A)',
+        recent: 'Recently Opened',
+      }
+    : {
+        updated: 'Terakhir Diubah',
+        newest: 'Terbaru',
+        oldest: 'Terlama',
+        'a-z': 'Judul (A–Z)',
+        'z-a': 'Judul (Z–A)',
+        recent: 'Baru Dibuka',
+      };
 
   const handleSelectAllVisible = () => {
     const visibleIds = searchResults.map((sr) => sr.note.id);
@@ -617,13 +630,9 @@ export function App() {
   };
 
   return (
-    <div className={`flex h-screen w-screen overflow-hidden midnight-ambient-bg text-slate-100 font-sans relative ${fontSizeClass}`}>
-      {/* Ambient Midnight Navy Atmospheric Glow Orbs */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
-        <div className="absolute -top-32 -left-24 w-[440px] h-[440px] rounded-full bg-sky-500/[0.08] blur-[120px]" />
-        <div className="absolute -top-20 right-[12%] w-[420px] h-[420px] rounded-full bg-indigo-500/[0.10] blur-[130px]" />
-        <div className="absolute -bottom-36 right-[20%] w-[460px] h-[460px] rounded-full bg-violet-500/[0.08] blur-[140px]" />
-      </div>
+    <div className={`flex h-screen w-screen overflow-hidden midnight-ambient-bg q-text-primary font-sans relative ${fontSizeClass}`}>
+      {/* Quest Subtle Ambient Cyan Radial & Side Energy Overlay */}
+      <div className="quest-ambient-energy" aria-hidden="true" />
 
       {/* 1. Tempered Glass Left Sidebar */}
       {showSidebar && (
@@ -667,6 +676,7 @@ export function App() {
           onDeleteFolder={handleDeleteFolder}
           onMoveFolder={handleMoveFolder}
           folderMetaMap={folderMetaMap}
+          language={settings.language}
         />
       )}
 
@@ -677,51 +687,55 @@ export function App() {
           <header className="h-14 glass-header px-5 flex items-center justify-between z-20 shrink-0 select-none">
           <div className="flex items-center gap-3">
             {!isSidebarOpen && !isFocusMode && (
-              <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="p-2 text-slate-200 hover:text-white rounded-xl bg-white/[0.06] hover:bg-white/[0.12] transition-all border border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
-                title="Buka Sidebar"
-              >
-                <svg className="w-4 h-3.5 text-slate-200" viewBox="0 0 20 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="1.5" y="1.5" width="17" height="13" rx="2.5" />
-                  <line x1="6.5" y1="1.5" x2="6.5" y2="14.5" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-2.5">
+                <button
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="p-2 rounded-xl glass-control"
+                  title={isEn ? 'Open Sidebar' : 'Buka Sidebar'}
+                >
+                  <svg className="w-4 h-3.5" viewBox="0 0 20 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="1.5" y="1.5" width="17" height="13" rx="2.5" />
+                    <line x1="6.5" y1="1.5" x2="6.5" y2="14.5" />
+                  </svg>
+                </button>
+                <BrandLogo />
+              </div>
             )}
 
             {selectedNoteId && (
               <button
                 onClick={() => setSelectedNoteId(null)}
-                className="flex items-center gap-2 text-xs font-semibold text-slate-200 hover:text-white px-3 py-1.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] transition-all border border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
+                className="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-xl glass-control"
               >
-                <ArrowLeft className="w-4 h-4 text-white" />
-                <span>Kembali ke Dokumentasi</span>
+                <ArrowLeft className="w-4 h-4" />
+                <span>{isEn ? 'Back to Notes' : 'Kembali ke Catatan'}</span>
               </button>
             )}
           </div>
 
-          {/* Prominent Floating Liquid Glass Search Bar */}
+          {/* Prominent Floating Tempered Glass Search Bar */}
           <div className="flex-1 max-w-lg mx-6 relative hidden sm:block">
-            <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-sky-300/80 pointer-events-none" />
+            <Search className="absolute left-3.5 top-2.5 w-4 h-4 q-text-muted pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Open or search documents... (Ctrl+K)"
-              className="w-full pl-10 pr-9 py-2 glass-input rounded-full text-xs font-medium text-white placeholder:text-slate-400 focus:outline-none transition-all text-center focus:text-left"
+              placeholder={isEn ? 'Search notes, folders, or tags... (Ctrl+K)' : 'Cari catatan, folder, atau tag... (Ctrl+K)'}
+              className="w-full pl-10 pr-9 py-2 glass-input rounded-full text-xs font-medium q-text-primary placeholder:text-slate-400 focus:outline-none transition-all text-center focus:text-left"
             />
             {searchQuery && (
               <button
                 onClick={() => handleSearchChange('')}
-                className="absolute right-3 top-2.5 p-0.5 text-slate-400 hover:text-white transition-colors"
+                className="absolute right-3 top-2.5 p-0.5 q-text-muted hover:q-text-primary transition-colors"
+                aria-label={isEn ? 'Clear search' : 'Hapus pencarian'}
               >
                 <X className="w-4 h-4" />
               </button>
             )}
           </div>
 
-          {/* Right Actions: Multi-select Toggle, Custom Popover Sort Dropdown & View Switcher */}
-          <div className="flex items-center gap-2 text-xs text-slate-200">
+          {/* Right Actions: Multi-select Toggle, Custom Popover Sort Dropdown & iOS 26 Liquid Glass View Switcher */}
+          <div className="flex items-center gap-2 text-xs q-text-secondary">
             {/* Multi-select Toggle Button */}
             <button
               onClick={() => {
@@ -734,30 +748,34 @@ export function App() {
               }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
                 isSelectionMode
-                  ? 'liquid-lens-active text-white'
-                  : 'bg-white/[0.06] hover:bg-white/[0.12] border-white/15 text-slate-200 hover:text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]'
+                  ? 'liquid-lens-active q-text-primary'
+                  : 'glass-control'
               }`}
-              title="Multi-select Catatan"
+              title={isEn ? 'Select Multiple Notes' : 'Pilih Beberapa Catatan'}
             >
-              <CheckSquare className="w-3.5 h-3.5" />
+              <CheckSquare className={`w-3.5 h-3.5 ${isSelectionMode ? 'q-text-accent' : ''}`} />
               <span>
                 {isSelectionMode
                   ? selectedNoteIds.length > 0
-                    ? `${selectedNoteIds.length} Selected`
+                    ? `${selectedNoteIds.length} ${isEn ? 'Selected' : 'Dipilih'}`
+                    : isEn
+                    ? 'Cancel'
                     : 'Batal'
-                  : 'Select'}
+                  : isEn
+                  ? 'Select'
+                  : 'Pilih'}
               </span>
             </button>
 
-            {/* Custom Popover Dropdown */}
+            {/* Custom Popover Sort Dropdown */}
             <div className="relative" ref={sortRef}>
               <button
                 onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
-                className="flex items-center gap-2 bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-white font-semibold px-3.5 py-1.5 rounded-full transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]"
+                className="flex items-center gap-2 glass-control font-semibold px-3.5 py-1.5 rounded-full"
               >
-                <SlidersHorizontal className="w-3.5 h-3.5 text-sky-400" />
-                <span>{sortLabels[settings.defaultSort]}</span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                <SlidersHorizontal className="w-3.5 h-3.5 q-text-muted" />
+                <span className="q-text-primary">{sortLabels[settings.defaultSort]}</span>
+                <ChevronDown className="w-3.5 h-3.5 q-text-muted" />
               </button>
 
               {isSortDropdownOpen && (
@@ -771,34 +789,39 @@ export function App() {
                       }}
                       className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                         settings.defaultSort === opt
-                          ? 'liquid-lens-active text-white'
-                          : 'text-slate-300 hover:bg-white/[0.08] hover:text-white'
+                          ? 'liquid-lens-active q-text-primary'
+                          : 'q-text-secondary hover:bg-white/[0.08] hover:q-text-primary'
                       }`}
                     >
                       <span>{sortLabels[opt]}</span>
-                      {settings.defaultSort === opt && <Check className="w-3.5 h-3.5 text-sky-200" />}
+                      {settings.defaultSort === opt && <Check className="w-3.5 h-3.5 q-text-accent" />}
                     </button>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Liquid Glass View Mode Switcher */}
-            <div className="hidden md:flex items-center liquid-pill rounded-full p-0.5 gap-0.5">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-full transition-all ${viewMode === 'grid' ? 'liquid-lens-active text-white' : 'text-slate-400 hover:text-white'}`}
-                title="Grid View"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded-full transition-all ${viewMode === 'list' ? 'liquid-lens-active text-white' : 'text-slate-400 hover:text-white'}`}
-                title="List View"
-              >
-                <List className="w-3.5 h-3.5" />
-              </button>
+            {/* True iOS 26 Liquid Glass Sliding Lens View Switcher */}
+            <div className="hidden md:flex items-center">
+              <LiquidSegmentedControl
+                size="xs"
+                value={viewMode}
+                onChange={setViewMode}
+                options={[
+                  {
+                    value: 'grid',
+                    icon: <LayoutGrid className="w-3.5 h-3.5" />,
+                    label: isEn ? 'Grid' : 'Kotak',
+                    title: isEn ? 'Grid View' : 'Tampilan Kotak',
+                  },
+                  {
+                    value: 'list',
+                    icon: <List className="w-3.5 h-3.5" />,
+                    label: isEn ? 'List' : 'Daftar',
+                    title: isEn ? 'List View' : 'Tampilan Daftar',
+                  },
+                ]}
+              />
             </div>
           </div>
         </header>
@@ -824,47 +847,62 @@ export function App() {
         ) : (
           <div className="flex-1 overflow-y-auto p-6 sm:p-10 space-y-6">
             {/* View Header */}
-            <div className="flex items-center justify-between pb-3.5 mb-2 border-b border-white/10 px-0.5">
-              <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight pl-0.5">
-                {selectedSubject
-                  ? selectedSubject
-                  : selectedTag
-                  ? `#${selectedTag}`
-                  : activeFilter === 'favorites'
-                  ? 'Favorit'
-                  : activeFilter === 'trash'
-                  ? 'Tempat Sampah'
-                  : activeFilter === 'recent'
-                  ? 'Terakhir Dibuka'
-                  : 'All Notes'}
-              </h1>
+            <div className="flex items-center justify-between pb-3.5 mb-2 border-b q-border px-0.5">
+              <div className="flex items-baseline gap-2.5 pl-0.5">
+                <h1 className="text-xl sm:text-2xl font-bold q-text-primary tracking-tight">
+                  {selectedSubject
+                    ? selectedSubject
+                    : selectedTag
+                    ? `#${selectedTag}`
+                    : activeFilter === 'favorites'
+                    ? isEn ? 'Favorites' : 'Favorit'
+                    : activeFilter === 'trash'
+                    ? isEn ? 'Trash' : 'Tempat Sampah'
+                    : activeFilter === 'recent'
+                    ? isEn ? 'Recently Opened' : 'Baru Dibuka'
+                    : isEn ? 'All Notes' : 'Semua Catatan'}
+                </h1>
+                {!isLoading && (
+                  <span className="text-xs font-medium q-text-muted">
+                    {searchResults.length} {isEn ? (searchResults.length === 1 ? 'note' : 'notes') : 'catatan'}
+                  </span>
+                )}
+              </div>
 
               {activeFilter === 'trash' && trashCount > 0 && (
                 <button
                   onClick={() => setIsConfirmEmptyTrashOpen(true)}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-rose-500/20 text-rose-200 font-semibold text-xs rounded-full hover:bg-rose-500/30 transition-all border border-rose-400/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 glass-control text-xs font-semibold rounded-full hover:border-rose-400/40 hover:text-rose-300 transition-all"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>Kosongkan Sampah ({trashCount})</span>
+                  <span>{isEn ? `Empty Trash (${trashCount})` : `Kosongkan Sampah (${trashCount})`}</span>
                 </button>
               )}
             </div>
 
             {/* Scoped Search vs Global Search Toggle Banner */}
             {searchQuery.trim() && (selectedSubject || selectedTag) && (
-              <div className="flex items-center justify-between p-3.5 glass-card rounded-2xl text-xs text-slate-200">
+              <div className="flex items-center justify-between p-3.5 glass-card rounded-2xl text-xs q-text-secondary">
                 <span>
                   {isGlobalSearchOverride ? (
-                    <>Menampilkan pencarian di <strong className="text-white">seluruh dokumen</strong></>
+                    isEn ? (
+                      <>Showing results across <strong className="q-text-primary">all notes</strong></>
+                    ) : (
+                      <>Menampilkan hasil di <strong className="q-text-primary">semua catatan</strong></>
+                    )
+                  ) : isEn ? (
+                    <>Showing results in <strong className="q-text-primary">'{selectedSubject || selectedTag}'</strong> ({searchResults.length})</>
                   ) : (
-                    <>Menampilkan hasil pencarian di folder <strong className="text-white">'{selectedSubject || selectedTag}'</strong> ({searchResults.length} hasil)</>
+                    <>Menampilkan hasil di folder <strong className="q-text-primary">'{selectedSubject || selectedTag}'</strong> ({searchResults.length} hasil)</>
                   )}
                 </span>
                 <button
                   onClick={() => setIsGlobalSearchOverride(!isGlobalSearchOverride)}
-                  className="px-3.5 py-1.5 glass-btn-primary text-white font-semibold text-xs rounded-full transition-all"
+                  className="px-3.5 py-1.5 glass-btn-primary font-semibold text-xs rounded-full transition-all"
                 >
-                  {isGlobalSearchOverride ? 'Kembali ke Scope Folder' : 'Cari di Seluruh Dokumen'}
+                  {isGlobalSearchOverride
+                    ? isEn ? 'Back to Folder' : 'Kembali ke Folder'
+                    : isEn ? 'Search All Notes' : 'Cari di Semua Catatan'}
                 </button>
               </div>
             )}
@@ -880,6 +918,7 @@ export function App() {
               <EmptyState
                 type={searchQuery ? 'search' : activeFilter}
                 onNewNote={handleCreateNewNote}
+                language={settings.language}
               />
             ) : viewMode === 'grid' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -915,10 +954,10 @@ export function App() {
                         handleSelectNote(note.id);
                       }
                     }}
-                    className={`p-4 rounded-2xl cursor-pointer flex items-center justify-between transition-all ${
+                    className={`p-4 rounded-2xl cursor-pointer flex items-center justify-between transition-all glass-card ${
                       selectedNoteIds.includes(note.id)
-                        ? 'glass-card !border-sky-400/70 ring-1 ring-sky-400/50'
-                        : 'glass-card'
+                        ? '!border-[#38BDF8]/65 ring-1 ring-[#38BDF8]/40'
+                        : ''
                     }`}
                   >
                     <div className="flex items-center gap-3 overflow-hidden pr-4">
@@ -926,20 +965,24 @@ export function App() {
                         <div
                           className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all ${
                             selectedNoteIds.includes(note.id)
-                              ? 'bg-sky-500 border-sky-300 text-white shadow-[0_0_10px_rgba(56,189,248,0.4)]'
-                              : 'border-white/25 bg-[#071123]/80'
+                              ? 'bg-[#38BDF8] border-[#38BDF8] text-[#071124]'
+                              : 'border-white/25 glass-recessed'
                           }`}
                         >
-                          {selectedNoteIds.includes(note.id) && <Check className="w-3 h-3 text-white" />}
+                          {selectedNoteIds.includes(note.id) && <Check className="w-3 h-3" />}
                         </div>
                       )}
-                      <div>
-                        <h3 className="font-bold text-sm text-white truncate">{note.title || 'Catatan Tanpa Judul'}</h3>
-                        <p className="text-xs text-slate-400 truncate mt-0.5">{snippet}</p>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-sm q-text-primary truncate tracking-tight">
+                          {note.title || (isEn ? 'Untitled Note' : 'Catatan Tanpa Judul')}
+                        </h3>
+                        <p className="text-xs q-text-muted truncate mt-0.5">{snippet}</p>
                       </div>
                     </div>
                     {note.subject && (
-                      <span className="text-xs text-sky-200 font-semibold bg-sky-400/10 px-2.5 py-1 rounded-full border border-sky-300/20 shrink-0">{note.subject}</span>
+                      <span className="text-[11px] q-text-secondary font-medium glass-control px-2.5 py-1 rounded-full shrink-0">
+                        {note.subject}
+                      </span>
                     )}
                   </div>
                 ))}
@@ -951,50 +994,54 @@ export function App() {
 
       {/* Floating iOS 26 Liquid Glass Batch Multi-Select Action Bar */}
       {isSelectionMode && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-4 py-2.5 liquid-pill rounded-full animate-in slide-in-from-bottom duration-200 font-sans">
-          <div className="flex items-center gap-2 pr-3 border-r border-white/15 text-xs font-bold text-white">
-            <CheckCircle2 className="w-4 h-4 text-sky-400" />
-            <span>{selectedNoteIds.length} dipilih</span>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 liquid-pill rounded-full animate-in slide-in-from-bottom duration-200 font-sans">
+          <div className="flex items-center gap-2 pr-3 border-r q-border text-xs font-semibold q-text-primary">
+            <CheckCircle2 className="w-4 h-4 q-text-accent" />
+            <span>{selectedNoteIds.length} {isEn ? 'selected' : 'dipilih'}</span>
           </div>
 
           <button
             onClick={handleSelectAllVisible}
-            className="px-3 py-1.5 hover:bg-white/10 text-slate-200 hover:text-white text-xs font-semibold rounded-full transition-colors"
+            className="px-3 py-1.5 hover:bg-white/10 q-text-secondary hover:q-text-primary text-xs font-semibold rounded-full transition-colors"
           >
-            {selectedNoteIds.length === searchResults.length ? 'Batal Semua' : 'Pilih Semua'}
+            {selectedNoteIds.length === searchResults.length
+              ? isEn ? 'Deselect All' : 'Batal Semua'
+              : isEn ? 'Select All' : 'Pilih Semua'}
           </button>
 
           {activeFilter === 'trash' ? (
             <>
-              {/* Trash View Bulk Actions: Pulihkan & Hapus Permanen */}
               <button
                 onClick={handleBulkRestore}
                 disabled={selectedNoteIds.length === 0}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 disabled:opacity-40 text-emerald-200 text-xs font-bold rounded-full transition-colors border border-emerald-400/35"
+                className="flex items-center gap-1.5 px-3 py-1.5 glass-control disabled:opacity-40 q-text-primary text-xs font-semibold rounded-full transition-colors"
               >
-                <Undo2 className="w-3.5 h-3.5 text-emerald-300" />
-                <span>Pulihkan ({selectedNoteIds.length})</span>
+                <Undo2 className="w-3.5 h-3.5" />
+                <span>{isEn ? 'Restore' : 'Pulihkan'} ({selectedNoteIds.length})</span>
               </button>
 
               <button
                 onClick={handleBulkDeletePermanently}
                 disabled={selectedNoteIds.length === 0}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 disabled:opacity-40 text-rose-200 text-xs font-bold rounded-full transition-colors border border-rose-400/35"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/15 hover:bg-rose-500/25 disabled:opacity-40 text-rose-300 text-xs font-semibold rounded-full transition-colors border border-rose-400/30"
               >
-                <Trash2 className="w-3.5 h-3.5 text-rose-300" />
-                <span>Hapus Permanen ({selectedNoteIds.length})</span>
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{isEn ? 'Delete Forever' : 'Hapus Permanen'} ({selectedNoteIds.length})</span>
               </button>
             </>
           ) : (
             <>
-              {/* Normal View Bulk Actions */}
               <button
                 onClick={handleBulkFavorite}
                 disabled={selectedNoteIds.length === 0}
-                className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-white/10 disabled:opacity-40 text-amber-300 text-xs font-semibold rounded-full transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-white/10 disabled:opacity-40 q-text-secondary hover:q-text-primary text-xs font-semibold rounded-full transition-colors"
               >
-                <Star className={`w-3.5 h-3.5 ${isAllSelectedFavorite ? 'fill-amber-300' : 'fill-amber-300/20'}`} />
-                <span>{isAllSelectedFavorite ? 'Unfavoritkan' : 'Favoritkan'}</span>
+                <Star className={`w-3.5 h-3.5 ${isAllSelectedFavorite ? 'fill-current q-text-accent' : ''}`} />
+                <span>
+                  {isAllSelectedFavorite
+                    ? isEn ? 'Unfavorite' : 'Hapus Favorit'
+                    : isEn ? 'Favorite' : 'Favoritkan'}
+                </span>
               </button>
 
               {/* Bulk Move Popover */}
@@ -1002,10 +1049,10 @@ export function App() {
                 <button
                   onClick={() => setIsBulkMovePopoverOpen(!isBulkMovePopoverOpen)}
                   disabled={selectedNoteIds.length === 0}
-                  className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-white/10 disabled:opacity-40 text-slate-200 hover:text-white text-xs font-semibold rounded-full transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-white/10 disabled:opacity-40 q-text-secondary hover:q-text-primary text-xs font-semibold rounded-full transition-colors"
                 >
-                  <FolderInput className="w-3.5 h-3.5 text-sky-400" />
-                  <span>Pindah Folder</span>
+                  <FolderInput className="w-3.5 h-3.5" />
+                  <span>{isEn ? 'Move to Folder' : 'Pindah Folder'}</span>
                 </button>
 
                 {isBulkMovePopoverOpen && (
@@ -1014,7 +1061,7 @@ export function App() {
                       <button
                         key={f}
                         onClick={() => handleBulkMove(f)}
-                        className="w-full text-left px-2.5 py-1.5 text-xs truncate rounded-xl text-slate-200 hover:text-white hover:bg-white/10 transition-colors"
+                        className="w-full text-left px-2.5 py-1.5 text-xs truncate rounded-xl q-text-secondary hover:q-text-primary hover:bg-white/10 transition-colors"
                       >
                         {f}
                       </button>
@@ -1026,10 +1073,10 @@ export function App() {
               <button
                 onClick={handleBulkDelete}
                 disabled={selectedNoteIds.length === 0}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 disabled:opacity-40 text-rose-200 text-xs font-bold rounded-full transition-colors border border-rose-400/35"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/15 hover:bg-rose-500/25 disabled:opacity-40 text-rose-300 text-xs font-semibold rounded-full transition-colors border border-rose-400/30"
               >
-                <Trash2 className="w-3.5 h-3.5 text-rose-300" />
-                <span>Hapus ({selectedNoteIds.length})</span>
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{isEn ? 'Delete' : 'Hapus'} ({selectedNoteIds.length})</span>
               </button>
             </>
           )}
@@ -1039,8 +1086,8 @@ export function App() {
               setIsSelectionMode(false);
               setSelectedNoteIds([]);
             }}
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-            title="Tutup Mode Pilih"
+            className="p-1.5 q-text-muted hover:q-text-primary hover:bg-white/10 rounded-full transition-colors"
+            title={isEn ? 'Exit Selection Mode' : 'Tutup Mode Pilih'}
           >
             <X className="w-4 h-4" />
           </button>
@@ -1049,14 +1096,14 @@ export function App() {
 
       {/* Toast Notification */}
       {undoNote && (
-        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-2.5 glass-popover text-white text-xs font-semibold rounded-full font-sans">
-          <span>Catatan dipindahkan ke tempat sampah.</span>
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-2.5 glass-popover q-text-primary text-xs font-semibold rounded-full font-sans">
+          <span>{isEn ? 'Note moved to Trash.' : 'Catatan dipindahkan ke tempat sampah.'}</span>
           <button
             onClick={handleUndoTrash}
-            className="flex items-center gap-1 text-sky-300 hover:text-sky-200 hover:underline font-bold"
+            className="flex items-center gap-1 q-text-accent hover:underline font-semibold"
           >
             <Undo2 className="w-3.5 h-3.5" />
-            <span>Batalkan</span>
+            <span>{isEn ? 'Undo' : 'Batalkan'}</span>
           </button>
         </div>
       )}

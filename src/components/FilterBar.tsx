@@ -30,6 +30,8 @@ import {
 import type { FilterCategory, Note } from '../types/note';
 import { ConfirmModal } from './ConfirmModal';
 import { CreateFolderModal } from './CreateFolderModal';
+import { BrandLogo } from './BrandLogo';
+import { LiquidSegmentedControl } from './LiquidSegmentedControl';
 import { getFolderIconComponent } from '../lib/folderIcons';
 
 interface FilterBarProps {
@@ -60,6 +62,7 @@ interface FilterBarProps {
   onDeleteFolder?: (folderPath: string) => void;
   onMoveFolder?: (sourceFolderPath: string, targetParentFolderPath: string) => void;
   folderMetaMap?: Record<string, { color?: string; icon?: string }>;
+  language?: 'id' | 'en';
 }
 
 const PINNED_TAGS_KEY = 'instant_notes_pinned_tags';
@@ -96,7 +99,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   onDeleteFolder,
   onMoveFolder,
   folderMetaMap = {},
+  language = 'id',
 }) => {
+  const isEn = language === 'en';
   const [isFoldersSectionCollapsed, setIsFoldersSectionCollapsed] = useState(false);
   const [isTagsCollapsed, setIsTagsCollapsed] = useState(false);
   const [isPinTagPopoverOpen, setIsPinTagPopoverOpen] = useState(false);
@@ -348,7 +353,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
     const meta = folderMetaMap?.[node.fullPath];
     const CustomFolderIcon = getFolderIconComponent(meta?.icon);
-    const customColor = meta?.color || '#ffffff';
+    const customColor = meta?.color;
 
     return (
       <div key={node.fullPath} className="space-y-0.5 relative">
@@ -365,23 +370,26 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           }}
           className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer group/item relative ${
             isSelected
-              ? 'bg-white/[0.11] text-white font-semibold border border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-              : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100 border border-transparent'
+              ? 'liquid-lens-active q-text-primary font-semibold'
+              : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
           }`}
           style={{ paddingLeft: `${depth * 12 + 10}px` }}
         >
           <div className="flex items-center gap-1.5 overflow-hidden">
             <button
               onClick={(e) => toggleFolderPathExpand(node.fullPath, e)}
-              className="p-0.5 text-slate-500 hover:text-slate-200 rounded"
+              className="p-0.5 q-text-muted hover:q-text-primary rounded"
             >
               {isExpanded ? (
-                <ChevronDown className="w-3 h-3 text-slate-400" />
+                <ChevronDown className="w-3 h-3" />
               ) : (
-                <ChevronRight className="w-3 h-3 text-slate-400" />
+                <ChevronRight className="w-3 h-3" />
               )}
             </button>
-            <CustomFolderIcon className="w-3.5 h-3.5 shrink-0" style={{ color: customColor }} />
+            <CustomFolderIcon
+              className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'q-text-accent' : 'q-text-muted'}`}
+              style={customColor && customColor !== '#ffffff' ? { color: customColor } : undefined}
+            />
             <span className="truncate max-w-[110px]">{node.name}</span>
           </div>
 
@@ -557,80 +565,43 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   onSubjectChange(null);
                   onTagChange(null);
                 }}
-                className="flex items-center gap-2 px-3 py-1.5 bg-white/[0.08] hover:bg-white/[0.14] border border-white/15 hover:border-white/25 rounded-full text-xs font-semibold text-slate-100 hover:text-white transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.22)] group"
-                title="Kembali ke Beranda"
+                className="flex items-center gap-2 px-3 py-1.5 glass-control rounded-full text-xs font-semibold q-text-primary group"
+                title={isEn ? 'Back to All Notes' : 'Kembali ke Beranda'}
               >
-                <Home className="w-3.5 h-3.5 text-sky-300 group-hover:scale-105 transition-transform shrink-0" />
-                <span className="leading-none pt-[1px] font-medium">Home</span>
+                <Home className="w-3.5 h-3.5 q-text-secondary group-hover:q-text-primary transition-colors shrink-0" />
+                <span className="leading-none pt-[1px] font-medium">{isEn ? 'Home' : 'Beranda'}</span>
               </button>
 
               {onToggleSidebar && (
                 <button
                   onClick={onToggleSidebar}
-                  className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors"
-                  title="Sembunyikan Sidebar"
+                  className="p-1.5 q-text-muted hover:q-text-primary rounded-xl hover:bg-white/10 transition-colors"
+                  title={isEn ? 'Hide Sidebar' : 'Sembunyikan Sidebar'}
                 >
-                  <svg className="w-4 h-3.5 text-slate-400 hover:text-white" viewBox="0 0 20 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="1.5" y="1.5" width="17" height="13" rx="2.5" />
-                    <line x1="6.5" y1="1.5" x2="6.5" y2="14.5" />
-                  </svg>
+                  <PanelLeft className="w-4 h-4" />
                 </button>
               )}
             </div>
 
-            {/* iOS 26 Liquid Glass 4-Tab Toolbar Pill Bar (List, CheckCircle, Paperclip, Search) */}
-            <div className="flex items-center justify-between liquid-pill rounded-full p-1 text-xs select-none gap-0.5">
-              <button
-                onClick={() => setTocTab('list')}
-                className={`flex-1 flex justify-center py-1.5 rounded-full transition-all ${
-                  tocTab === 'list'
-                    ? 'liquid-lens-active text-white font-bold'
-                    : 'text-slate-400 hover:text-slate-100'
-                }`}
-                title="Table of Contents"
-              >
-                <List className={`w-3.5 h-3.5 ${tocTab === 'list' ? 'text-white stroke-[2.25]' : ''}`} />
-              </button>
-              <button
-                onClick={() => setTocTab('tasks')}
-                className={`flex-1 flex justify-center py-1.5 rounded-full transition-all ${
-                  tocTab === 'tasks'
-                    ? 'liquid-lens-active text-white font-bold'
-                    : 'text-slate-400 hover:text-slate-100'
-                }`}
-                title="Daftar Tugas (TODO)"
-              >
-                <CheckCircle2 className={`w-3.5 h-3.5 ${tocTab === 'tasks' ? 'text-white stroke-[2.25]' : ''}`} />
-              </button>
-              <button
-                onClick={() => setTocTab('attachments')}
-                className={`flex-1 flex justify-center py-1.5 rounded-full transition-all ${
-                  tocTab === 'attachments'
-                    ? 'liquid-lens-active text-white font-bold'
-                    : 'text-slate-400 hover:text-slate-100'
-                }`}
-                title="Media & Lampiran"
-              >
-                <Paperclip className={`w-3.5 h-3.5 ${tocTab === 'attachments' ? 'text-white stroke-[2.25]' : ''}`} />
-              </button>
-              <button
-                onClick={() => setTocTab('search')}
-                className={`flex-1 flex justify-center py-1.5 rounded-full transition-all ${
-                  tocTab === 'search'
-                    ? 'liquid-lens-active text-white font-bold'
-                    : 'text-slate-400 hover:text-slate-100'
-                }`}
-                title="Cari kata dalam catatan"
-              >
-                <Search className={`w-3.5 h-3.5 ${tocTab === 'search' ? 'text-white stroke-[2.25]' : ''}`} />
-              </button>
-            </div>
+            {/* True iOS 26 Liquid Glass 4-Tab Sliding Lens Toolbar */}
+            <LiquidSegmentedControl
+              fullWidth
+              size="xs"
+              value={tocTab}
+              onChange={setTocTab}
+              options={[
+                { value: 'list', icon: <List className="w-3.5 h-3.5" />, title: isEn ? 'Outline' : 'Daftar Isi' },
+                { value: 'tasks', icon: <CheckCircle2 className="w-3.5 h-3.5" />, title: isEn ? 'Tasks' : 'Daftar Tugas' },
+                { value: 'attachments', icon: <Paperclip className="w-3.5 h-3.5" />, title: isEn ? 'Media & Files' : 'Media & Lampiran' },
+                { value: 'search', icon: <Search className="w-3.5 h-3.5" />, title: isEn ? 'Find in Note' : 'Cari dalam Catatan' },
+              ]}
+            />
 
             {/* Tab 1: Table of Contents & Pages Tree */}
             {tocTab === 'list' && (
               <div className="space-y-2 flex-1 overflow-y-auto pr-1">
-                <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider px-1">
-                  Pages & Structure
+                <div className="text-[10px] font-semibold q-text-muted uppercase tracking-wider px-1">
+                  {isEn ? 'Outline & Subpages' : 'Struktur & Halaman'}
                 </div>
 
                 {/* Root Document Title */}
@@ -638,14 +609,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   onClick={() => {
                     window.dispatchEvent(new CustomEvent('navigate-root-note'));
                   }}
-                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-xs font-bold text-white truncate transition-colors text-left group cursor-pointer"
-                  title="Kembali ke Catatan Utama"
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.10] text-xs font-semibold q-text-primary truncate transition-colors text-left group cursor-pointer border q-border"
+                  title={isEn ? 'Back to Main Note' : 'Kembali ke Catatan Utama'}
                 >
-                  <FileText className="w-3.5 h-3.5 text-indigo-400 shrink-0 group-hover:scale-110 transition-transform" />
-                  <span className="truncate">{activeNote.title || 'Catatan'}</span>
+                  <FileText className="w-3.5 h-3.5 q-text-accent shrink-0" />
+                  <span className="truncate">{activeNote.title || (isEn ? 'Untitled Note' : 'Catatan Tanpa Judul')}</span>
                 </button>
                 {/* TOC Items Tree (Pages & Headings) */}
-                <div className="space-y-0.5 pl-2 border-l border-white/10">
+                <div className="space-y-0.5 pl-2 border-l q-border">
                   {tocItems.map((item: { id: string; type: string; title: string; subpageId?: string; level?: number; rawContent?: string }) => (
                     <button
                       key={item.id}
@@ -661,22 +632,22 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }
                       }}
-                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/10 transition-colors text-left truncate group"
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium q-text-secondary hover:q-text-primary hover:bg-white/10 transition-colors text-left truncate group"
                       style={{ paddingLeft: item.level ? `${item.level * 8}px` : '8px' }}
                     >
                       {item.type === 'page' ? (
-                        <FileText className="w-3.5 h-3.5 text-indigo-400 shrink-0 group-hover:scale-110 transition-transform" />
+                        <FileText className="w-3.5 h-3.5 q-text-muted shrink-0" />
                       ) : item.type === 'heading' ? (
-                        <Hash className="w-3 h-3 text-zinc-500 shrink-0" />
+                        <Hash className="w-3 h-3 q-text-muted shrink-0" />
                       ) : (
-                        <Code className="w-3 h-3 text-emerald-400 shrink-0" />
+                        <Code className="w-3 h-3 q-text-muted shrink-0" />
                       )}
                       <span className="truncate">{item.title}</span>
                     </button>
                   ))}
                   {tocItems.length === 0 && (
-                    <div className="text-[11px] text-zinc-500 italic px-2 py-2">
-                      Belum ada subpage atau heading...
+                    <div className="text-[11px] q-text-muted italic px-2 py-2">
+                      {isEn ? 'No headings or subpages yet.' : 'Belum ada heading atau subhalaman.'}
                     </div>
                   )}
                 </div>
@@ -686,18 +657,18 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             {/* Tab 2: Tasks / TODOs */}
             {tocTab === 'tasks' && (
               <div className="space-y-1 flex-1 overflow-y-auto pr-1">
-                <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider px-1 mb-2">
-                  Daftar Tugas ({extractedTasks.length})
+                <div className="text-[10px] font-semibold q-text-muted uppercase tracking-wider px-1 mb-2">
+                  {isEn ? `Tasks (${extractedTasks.length})` : `Daftar Tugas (${extractedTasks.length})`}
                 </div>
                 {extractedTasks.map((t: { id: string; text: string; completed: boolean }) => (
-                  <div key={t.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/[0.03] text-xs text-zinc-300">
-                    <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${t.completed ? 'text-emerald-400' : 'text-zinc-500'}`} />
-                    <span className={`truncate ${t.completed ? 'line-through text-zinc-500' : ''}`}>{t.text}</span>
+                  <div key={t.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/[0.04] text-xs q-text-secondary">
+                    <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${t.completed ? 'q-text-accent' : 'q-text-muted'}`} />
+                    <span className={`truncate ${t.completed ? 'line-through q-text-muted' : ''}`}>{t.text}</span>
                   </div>
                 ))}
                 {extractedTasks.length === 0 && (
-                  <div className="text-[11px] text-zinc-500 italic px-2 py-2">
-                    Tidak ada tugas TODO di dokumen ini.
+                  <div className="text-[11px] q-text-muted italic px-2 py-2">
+                    {isEn ? 'No checklist tasks in this note.' : 'Tidak ada tugas di catatan ini.'}
                   </div>
                 )}
               </div>
@@ -706,18 +677,18 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             {/* Tab 3: Attachments */}
             {tocTab === 'attachments' && (
               <div className="space-y-1 flex-1 overflow-y-auto pr-1">
-                <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider px-1 mb-2">
-                  Media & Lampiran ({extractedAttachments.length})
+                <div className="text-[10px] font-semibold q-text-muted uppercase tracking-wider px-1 mb-2">
+                  {isEn ? `Media & Files (${extractedAttachments.length})` : `Media & Lampiran (${extractedAttachments.length})`}
                 </div>
                 {extractedAttachments.map((a: { id: string; title: string; url?: string; type: string }) => (
-                  <div key={a.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/[0.03] text-xs text-zinc-300">
-                    <ImageIcon className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                  <div key={a.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/[0.04] text-xs q-text-secondary">
+                    <ImageIcon className="w-3.5 h-3.5 q-text-muted shrink-0" />
                     <span className="truncate">{a.title}</span>
                   </div>
                 ))}
                 {extractedAttachments.length === 0 && (
-                  <div className="text-[11px] text-zinc-500 italic px-2 py-2">
-                    Belum ada lampiran media di dokumen ini.
+                  <div className="text-[11px] q-text-muted italic px-2 py-2">
+                    {isEn ? 'No media attachments in this note.' : 'Belum ada lampiran media di catatan ini.'}
                   </div>
                 )}
               </div>
@@ -788,33 +759,31 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </div>
         ) : (
           <>
-            {/* 1. Clean Top Brand Header & Sidebar Close Button */}
-            <div className="flex items-center justify-between px-1 pt-0.5">
-              <h1 className="tracking-tight text-base sm:text-lg font-black px-1 py-1 bg-gradient-to-r from-white via-sky-100 to-indigo-200 bg-clip-text text-transparent">
-                SeeNote
-              </h1>
+            {/* 1. Minimal Monochrome Tempered-Glass Brand Header & Sidebar Close Button */}
+            <div className="flex items-center justify-between px-1.5 pt-0.5">
+              <BrandLogo />
 
               {onToggleSidebar && (
                 <button
                   onClick={onToggleSidebar}
-                  className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors"
-                  title="Sembunyikan Sidebar"
+                  className="p-1.5 q-text-muted hover:q-text-primary rounded-xl hover:bg-white/10 transition-colors"
+                  title={isEn ? 'Hide Sidebar' : 'Sembunyikan Sidebar'}
                 >
                   <PanelLeft className="w-4 h-4" />
                 </button>
               )}
             </div>
 
-            {/* 2. New Document Liquid Glass CTA */}
+            {/* 2. Crisp Quest Primary CTA */}
             <button
               onClick={onNewNote}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-white glass-btn-primary rounded-xl transition-all active:scale-[0.98] group"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold glass-btn-primary rounded-xl active:scale-[0.98] group"
             >
-              <SquarePen className="w-3.5 h-3.5 text-white transition-transform group-hover:scale-105" />
-              <span>New Document</span>
+              <SquarePen className="w-3.5 h-3.5 transition-transform group-hover:scale-105" />
+              <span>{isEn ? 'New Note' : 'Catatan Baru'}</span>
             </button>
 
-            {/* 3. Main Nav Menu */}
+            {/* 3. Main Nav Menu (Strict Monochrome + Restrained Accent) */}
             <div className="space-y-1 pt-1">
               <button
                 onClick={() => {
@@ -824,15 +793,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 }}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
                   activeFilter === 'all' && !selectedSubject && !selectedTag
-                    ? 'liquid-lens-active text-white font-semibold'
-                    : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100 border border-transparent'
+                    ? 'liquid-lens-active q-text-primary font-semibold'
+                    : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <FileText className="w-3.5 h-3.5 opacity-90" />
-                  <span>All Notes</span>
+                  <FileText className={`w-3.5 h-3.5 ${activeFilter === 'all' && !selectedSubject && !selectedTag ? 'q-text-accent' : 'q-text-muted'}`} />
+                  <span>{isEn ? 'All Notes' : 'Semua Catatan'}</span>
                 </div>
-                <span className="text-[11px] text-slate-300/80 font-medium">{totalNotes}</span>
+                <span className="text-[11px] q-text-muted font-medium">{totalNotes}</span>
               </button>
 
               <button
@@ -843,13 +812,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 }}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
                   activeFilter === 'recent'
-                    ? 'bg-emerald-500/20 text-emerald-200 font-bold border border-emerald-400/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                    : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100 border border-transparent'
+                    ? 'liquid-lens-active q-text-primary font-semibold'
+                    : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <History className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Terakhir Dibuka</span>
+                  <History className={`w-3.5 h-3.5 ${activeFilter === 'recent' ? 'q-text-accent' : 'q-text-muted'}`} />
+                  <span>{isEn ? 'Recently Opened' : 'Baru Dibuka'}</span>
                 </div>
               </button>
 
@@ -861,15 +830,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 }}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
                   activeFilter === 'favorites'
-                    ? 'bg-amber-500/20 text-amber-200 font-bold border border-amber-400/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                    : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100 border border-transparent'
+                    ? 'liquid-lens-active q-text-primary font-semibold'
+                    : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400/20" />
-                  <span>Favorit</span>
+                  <Star className={`w-3.5 h-3.5 ${activeFilter === 'favorites' ? 'q-text-accent fill-current' : 'q-text-muted'}`} />
+                  <span>{isEn ? 'Favorites' : 'Favorit'}</span>
                 </div>
-                <span className="text-[11px] text-slate-300/80 font-medium">{favoriteCount}</span>
+                <span className="text-[11px] q-text-muted font-medium">{favoriteCount}</span>
               </button>
 
               <button
@@ -880,37 +849,37 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 }}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
                   activeFilter === 'trash'
-                    ? 'bg-rose-500/20 text-rose-200 font-semibold border border-rose-400/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                    : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100 border border-transparent'
+                    ? 'liquid-lens-active q-text-primary font-semibold'
+                    : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-                  <span>Tempat Sampah</span>
+                  <Trash2 className={`w-3.5 h-3.5 ${activeFilter === 'trash' ? 'q-text-accent' : 'q-text-muted'}`} />
+                  <span>{isEn ? 'Trash' : 'Tempat Sampah'}</span>
                 </div>
-                <span className="text-[11px] text-slate-300/80 font-medium">{trashCount}</span>
+                <span className="text-[11px] q-text-muted font-medium">{trashCount}</span>
               </button>
             </div>
 
-            {/* 4. Folders Section Header (Aligned px-2.5) */}
+            {/* 4. Folders Section Header */}
             <div className="space-y-0.5 pt-3 group/folders">
               <div className="flex items-center justify-between px-2.5 mb-1">
-                <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-2">
-                  <FoldersHeaderIcon className="w-3.5 h-3.5 text-sky-300" />
-                  <span>Folders</span>
+                <span className="text-[11px] font-semibold q-text-muted flex items-center gap-2">
+                  <FoldersHeaderIcon className="w-3.5 h-3.5" />
+                  <span>{isEn ? 'Folders' : 'Folder'}</span>
                 </span>
                 <div className="flex items-center gap-1 opacity-0 group-hover/folders:opacity-100 transition-opacity">
                   <button
                     onClick={() => handleCreateFolderPrompt('')}
-                    className="p-0.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
-                    title="Tambah Root Folder"
+                    className="p-0.5 q-text-muted hover:q-text-primary rounded-lg hover:bg-white/10 transition-colors"
+                    title={isEn ? 'New Folder' : 'Tambah Folder'}
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => setIsFoldersSectionCollapsed(!isFoldersSectionCollapsed)}
-                    className="p-0.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
-                    title={isFoldersSectionCollapsed ? 'Buka Folders' : 'Sembunyikan Folders'}
+                    className="p-0.5 q-text-muted hover:q-text-primary rounded-lg hover:bg-white/10 transition-colors"
+                    title={isFoldersSectionCollapsed ? (isEn ? 'Expand Folders' : 'Buka Folder') : (isEn ? 'Collapse Folders' : 'Tutup Folder')}
                   >
                     {isFoldersSectionCollapsed ? (
                       <ChevronRight className="w-3.5 h-3.5" />
@@ -924,7 +893,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               {!isFoldersSectionCollapsed && (
                 <div className="space-y-0.5">
                   {folderTree.size === 0 ? (
-                    <p className="px-2.5 text-[10px] text-slate-500 italic">Belum ada folder</p>
+                    <p className="px-2.5 text-[10px] q-text-muted italic">{isEn ? 'No folders yet' : 'Belum ada folder'}</p>
                   ) : (
                     <>
                       {(showAllFolders
@@ -935,9 +904,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                       {folderTree.size > 4 && (
                         <button
                           onClick={() => setShowAllFolders(!showAllFolders)}
-                          className="w-full text-left px-2.5 py-1 text-[11px] font-semibold text-sky-400 hover:text-sky-300 hover:underline transition-colors block mt-1"
+                          className="w-full text-left px-2.5 py-1 text-[11px] font-semibold q-text-accent hover:underline transition-colors block mt-1"
                         >
-                          {showAllFolders ? 'Sembunyikan' : `Lihat Semua (+${folderTree.size - 4} folder lagi)`}
+                          {showAllFolders
+                            ? isEn ? 'Show less' : 'Sembunyikan'
+                            : isEn ? `Show all (+${folderTree.size - 4})` : `Lihat semua (+${folderTree.size - 4} lagi)`}
                         </button>
                       )}
                     </>
@@ -946,25 +917,25 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               )}
             </div>
 
-            {/* 5. Tags Section Header (Aligned px-2.5) */}
+            {/* 5. Tags Section Header */}
             <div className="space-y-0.5 pt-3 group/tags relative">
               <div className="flex items-center justify-between px-2.5 mb-1">
-                <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-2">
-                  <TagIcon className="w-3.5 h-3.5 text-slate-400 rotate-90" />
-                  <span>Tags</span>
+                <span className="text-[11px] font-semibold q-text-muted flex items-center gap-2">
+                  <TagIcon className="w-3.5 h-3.5 rotate-90" />
+                  <span>{isEn ? 'Tags' : 'Tag'}</span>
                 </span>
                 <div className="flex items-center gap-1 opacity-0 group-hover/tags:opacity-100 transition-opacity">
                   <button
                     onClick={() => setIsPinTagPopoverOpen(!isPinTagPopoverOpen)}
-                    className="p-0.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
-                    title="Pilih Tag yang di-Pin"
+                    className="p-0.5 q-text-muted hover:q-text-primary rounded-lg hover:bg-white/10 transition-colors"
+                    title={isEn ? 'Pin Tags' : 'Pilih Tag yang di-Pin'}
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => setIsTagsCollapsed(!isTagsCollapsed)}
-                    className="p-0.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
-                    title={isTagsCollapsed ? 'Buka Tags' : 'Sembunyikan Tags'}
+                    className="p-0.5 q-text-muted hover:q-text-primary rounded-lg hover:bg-white/10 transition-colors"
+                    title={isTagsCollapsed ? (isEn ? 'Expand Tags' : 'Buka Tag') : (isEn ? 'Collapse Tags' : 'Tutup Tag')}
                   >
                     {isTagsCollapsed ? (
                       <ChevronRight className="w-3.5 h-3.5" />
@@ -981,11 +952,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   ref={tagPopoverRef}
                   className="absolute left-2 top-8 w-44 glass-popover rounded-2xl p-2 z-50 space-y-1"
                 >
-                  <p className="text-[10px] font-bold text-slate-400 px-2 py-1 uppercase tracking-wider">
-                    Pilih Tag Pin
+                  <p className="text-[10px] font-semibold q-text-muted px-2 py-1 uppercase tracking-wider">
+                    {isEn ? 'Pin Tags' : 'Pilih Tag Pin'}
                   </p>
                   {tags.length === 0 ? (
-                    <p className="text-[10px] text-slate-500 px-2 py-1">Belum ada tag</p>
+                    <p className="text-[10px] q-text-muted px-2 py-1">{isEn ? 'No tags yet' : 'Belum ada tag'}</p>
                   ) : (
                     <div className="max-h-40 overflow-y-auto space-y-0.5">
                       {tags.map(({ name }) => {
@@ -995,11 +966,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                             key={name}
                             onClick={() => togglePinTag(name)}
                             className={`w-full flex items-center justify-between px-2 py-1 rounded-xl text-xs transition-colors ${
-                              isPinned ? 'bg-white/[0.12] text-white font-semibold' : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100'
+                              isPinned ? 'bg-white/[0.12] q-text-primary font-semibold' : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary'
                             }`}
                           >
                             <span>#{name}</span>
-                            {isPinned && <Check className="w-3 h-3 text-sky-300" />}
+                            {isPinned && <Check className="w-3 h-3 q-text-accent" />}
                           </button>
                         );
                       })}
@@ -1011,7 +982,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               {!isTagsCollapsed && (
                 <div className="space-y-0.5">
                   {tags.filter((t) => pinnedTags.includes(t.name)).length === 0 ? (
-                    <p className="px-2 text-[10px] text-slate-500 italic">Pin key tags for quick access</p>
+                    <p className="px-2 text-[10px] q-text-muted italic">
+                      {isEn ? 'Pin key tags for quick access' : 'Sematkan tag penting untuk akses cepat'}
+                    </p>
                   ) : (
                     tags
                       .filter((t) => pinnedTags.includes(t.name))
@@ -1025,11 +998,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                           }}
                           className={`w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all text-left ${
                             selectedTag === name
-                              ? 'bg-white/[0.11] text-white font-semibold border border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                              : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100 border border-transparent'
+                              ? 'liquid-lens-active q-text-primary font-semibold'
+                              : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
                           }`}
                         >
-                          <span className="text-sky-400/80 font-normal">#</span>
+                          <span className={selectedTag === name ? 'q-text-accent' : 'q-text-muted'}>#</span>
                           <span>{name}</span>
                         </button>
                       ))
@@ -1041,48 +1014,42 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         )}
       </div>
 
-      {/* Wide & Prominent iOS 26 Liquid Glass Floating Bottom Dock Switcher */}
+      {/* True iOS 26 Liquid Glass Sliding Lens Bottom Dock Switcher */}
       {selectedNoteId && (
         <div className="pt-2 pb-1 flex justify-center z-30 shrink-0 select-none w-full px-0.5">
-          <div className="w-full liquid-pill rounded-full p-1 flex items-center gap-1">
-            <button
-              onClick={() => setSidebarView('folders')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-full text-xs font-bold transition-all ${
-                sidebarView === 'folders'
-                  ? 'liquid-lens-active text-white'
-                  : 'text-slate-400 hover:text-white hover:bg-white/10'
-              }`}
-              title="Navigasi Folder & Catatan Global"
-            >
-              <Folder className={`w-3.5 h-3.5 shrink-0 ${sidebarView === 'folders' ? 'text-white stroke-[2.25]' : ''}`} />
-              <span>Folders</span>
-            </button>
-            <button
-              onClick={() => setSidebarView('toc')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-full text-xs font-bold transition-all ${
-                sidebarView === 'toc'
-                  ? 'liquid-lens-active text-white'
-                  : 'text-slate-400 hover:text-white hover:bg-white/10'
-              }`}
-              title="Navigasi Page & Subpage Dokumen"
-            >
-              <FileText className={`w-3.5 h-3.5 shrink-0 ${sidebarView === 'toc' ? 'text-white stroke-[2.25]' : ''}`} />
-              <span>Page</span>
-            </button>
-          </div>
+          <LiquidSegmentedControl
+            fullWidth
+            size="sm"
+            value={sidebarView}
+            onChange={setSidebarView}
+            options={[
+              {
+                value: 'folders',
+                icon: <Folder className="w-3.5 h-3.5" />,
+                label: isEn ? 'Folders' : 'Folder',
+                title: isEn ? 'Browse Folders & Notes' : 'Navigasi Folder & Catatan',
+              },
+              {
+                value: 'toc',
+                icon: <FileText className="w-3.5 h-3.5" />,
+                label: isEn ? 'Outline' : 'Struktur',
+                title: isEn ? 'Note Outline & Subpages' : 'Struktur & Subhalaman Catatan',
+              },
+            ]}
+          />
         </div>
       )}
 
       {/* 6. Bottom Left Footer (Only in Folders view) */}
       {sidebarView !== 'toc' && (
-        <div className="pt-2 border-t border-white/10 shrink-0 flex items-center justify-between px-1">
+        <div className="pt-2 border-t q-border shrink-0 flex items-center justify-between px-1">
           <button
             onClick={onOpenSettings}
-            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/[0.08] rounded-xl transition-colors"
-            title="Pengaturan"
+            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-xs font-semibold q-text-secondary hover:q-text-primary hover:bg-white/[0.08] rounded-xl transition-colors"
+            title={isEn ? 'Settings' : 'Pengaturan'}
           >
-            <Settings className="w-4 h-4 text-slate-400" />
-            <span>Pengaturan</span>
+            <Settings className="w-4 h-4 q-text-muted" />
+            <span>{isEn ? 'Settings' : 'Pengaturan'}</span>
           </button>
         </div>
       )}

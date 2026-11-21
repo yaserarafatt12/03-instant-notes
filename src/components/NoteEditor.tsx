@@ -62,6 +62,7 @@ import { exportNoteAsTXT } from '../lib/storage/db';
 import { saveVersionLog } from '../lib/storage/versionHistory';
 import { VersionHistoryModal } from './VersionHistoryModal';
 import { DashboardEmptyEditor } from './EmptyState';
+import { LiquidSegmentedControl } from './LiquidSegmentedControl';
 
 interface NoteEditorProps {
   note: Note | null;
@@ -345,16 +346,23 @@ const RenameAttachmentModal: React.FC<RenameAttachmentModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150 select-none">
-      <div className="w-full max-w-sm bg-[#0B172E]/95 border border-white/10 rounded-2xl shadow-2xl overflow-hidden p-5 space-y-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in duration-150 select-none"
+      style={{ backgroundColor: 'var(--surface-modal-backdrop)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm glass-panel rounded-3xl overflow-hidden p-5 space-y-4"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <CraftRenameIcon className="w-4 h-4" />
-            <span>Ubah Nama File Attachment</span>
+          <h3 className="text-sm font-bold q-text-primary tracking-tight flex items-center gap-2">
+            <CraftRenameIcon className="w-4 h-4 q-text-muted" />
+            <span>Ubah Nama Lampiran</span>
           </h3>
           <button
             onClick={onClose}
-            className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/10"
+            className="p-1.5 q-text-muted hover:q-text-primary rounded-xl hover:bg-white/10 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -366,20 +374,20 @@ const RenameAttachmentModal: React.FC<RenameAttachmentModalProps> = ({
             value={val}
             onChange={(e) => setVal(e.target.value)}
             autoFocus
-            className="w-full px-3.5 py-2 bg-[#14151b] border border-white/10 rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500 transition-colors"
+            className="w-full px-3.5 py-2 glass-input rounded-xl text-xs font-medium q-text-primary placeholder:text-slate-500 focus:outline-none transition-colors"
           />
 
           <div className="flex items-center justify-end gap-2 pt-1">
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-1.5 bg-[#252732] hover:bg-[#2e313e] text-zinc-300 text-xs font-semibold rounded-xl transition-colors"
+              className="px-4 py-1.5 glass-control q-text-primary text-xs font-semibold rounded-full"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-colors shadow-lg shadow-indigo-600/30"
+              className="px-4 py-1.5 glass-btn-primary text-xs font-semibold rounded-full"
             >
               Simpan
             </button>
@@ -895,51 +903,29 @@ const MermaidBlockRenderer: React.FC<{
 
         <div
           data-mmd-id={block.data.id}
-          className={`relative group/mmdcard rounded-2xl bg-[#0B172E]/80 border transition-all overflow-hidden ${
+          className={`relative group/mmdcard rounded-2xl glass-card transition-all overflow-hidden ${
           isSelected
-            ? 'ring-1 ring-indigo-500/50 border-indigo-500/60 shadow-lg shadow-indigo-500/5'
+            ? 'ring-1 ring-[#38BDF8]/55 !border-[#38BDF8]/65'
             : isAllSelected
-            ? 'ring-1 ring-indigo-500/40 border-indigo-500/50'
-            : 'border-white/10 hover:border-white/15 shadow-md'
+            ? 'ring-1 ring-[#38BDF8]/35 !border-[#38BDF8]/45'
+            : ''
         }`}>
           {/* Seamless Top Toolbar */}
           <div className="flex items-center justify-between p-2.5 select-none gap-2">
-            {/* Left: View Mode Toggle (Preview vs Code) */}
-            <div className="flex items-center bg-[#071123]/85/95 p-0.5 rounded-lg border border-white/5 gap-0.5">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setViewMode('preview');
-                }}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
-                  viewMode === 'preview'
-                    ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold shadow-xs'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5 border border-transparent'
-                }`}
-                title="Lihat Tampilan Diagram"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                <span>Preview</span>
-              </button>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setViewMode('code');
-                }}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
-                  viewMode === 'code'
-                    ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold shadow-xs'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5 border border-transparent'
-                }`}
-                title="Edit Kode Diagram"
-              >
-                <Code2 className="w-3.5 h-3.5" />
-                <span>Code</span>
-              </button>
+            {/* Left: iOS 26 Liquid Glass View Mode Toggle (Preview vs Code) */}
+            <div onClick={(e) => e.stopPropagation()}>
+              <LiquidSegmentedControl
+                size="xs"
+                value={viewMode}
+                onChange={setViewMode}
+                options={[
+                  { value: 'preview', icon: <Eye className="w-3 h-3" />, label: 'Preview', title: 'Lihat Tampilan Diagram' },
+                  { value: 'code', icon: <Code2 className="w-3 h-3" />, label: 'Code', title: 'Edit Kode Diagram' },
+                ]}
+              />
             </div>
 
-            {/* Right: Action Buttons (Maximize 4-way, Copy, Delete) */}
+            {/* Right: Action Buttons (Maximize, Copy, Delete) */}
             <div className="flex items-center gap-1">
               <button
                 onClick={(e) => {
@@ -947,7 +933,7 @@ const MermaidBlockRenderer: React.FC<{
                   setIsMaximized(true);
                   setZoomLevel(1);
                 }}
-                className="p-1.5 bg-[#071123]/85/95 hover:bg-[#32333f] border border-white/10 hover:border-indigo-500/30 rounded-lg text-zinc-400 hover:text-white transition-all shadow-xs"
+                className="p-1.5 glass-control rounded-lg"
                 title="Perbesar Layar Penuh"
               >
                 <Expand className="w-3.5 h-3.5" />
@@ -955,10 +941,10 @@ const MermaidBlockRenderer: React.FC<{
 
               <button
                 onClick={handleCopy}
-                className="p-1.5 bg-[#071123]/85/95 hover:bg-[#32333f] border border-white/10 hover:border-white/20 rounded-lg text-zinc-400 hover:text-white transition-all shadow-xs"
+                className="p-1.5 glass-control rounded-lg"
                 title="Salin Kode Mermaid"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? <Check className="w-3.5 h-3.5 q-text-accent" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
 
               <button
@@ -966,7 +952,7 @@ const MermaidBlockRenderer: React.FC<{
                   e.stopPropagation();
                   onDeleteBlock(block.data.id);
                 }}
-                className="p-1.5 bg-[#071123]/85/95 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/30 rounded-lg text-zinc-400 hover:text-rose-400 transition-all shadow-xs"
+                className="p-1.5 glass-control hover:text-rose-400 hover:border-rose-400/35 rounded-lg"
                 title="Hapus Mermaid Diagram"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -5178,10 +5164,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               {/* Highlight / Color Picker */}
               <button
                 onClick={() => setShowColorPicker(!showColorPicker)}
-                className={`px-1.5 py-0.5 rounded transition-all flex items-center justify-center ${
+                className={`px-1.5 py-1 rounded-full transition-all flex items-center justify-center ${
                   activeFormats.highlight || showColorPicker
-                    ? 'bg-amber-500/25 text-amber-300 ring-1 ring-amber-400/40'
-                    : 'hover:bg-white/10 text-amber-400'
+                    ? 'liquid-lens-active q-text-primary'
+                    : 'q-text-secondary hover:q-text-primary hover:bg-white/10'
                 }`}
                 title="Warna Teks & Highlight"
               >
@@ -5191,10 +5177,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               {/* Bold */}
               <button
                 onClick={() => applyFormatting('**')}
-                className={`px-1.5 py-0.5 rounded transition-all flex items-center justify-center ${
+                className={`px-1.5 py-1 rounded-full transition-all flex items-center justify-center ${
                   activeFormats.bold
-                    ? 'bg-white/15 text-white ring-1 ring-white/20'
-                    : 'text-zinc-300 hover:text-white hover:bg-white/10'
+                    ? 'liquid-lens-active q-text-primary'
+                    : 'q-text-secondary hover:q-text-primary hover:bg-white/10'
                 }`}
                 title="Bold (Tebal)"
               >
@@ -5204,10 +5190,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               {/* Italic */}
               <button
                 onClick={() => applyFormatting('*')}
-                className={`px-1.5 py-0.5 rounded transition-all flex items-center justify-center ${
+                className={`px-1.5 py-1 rounded-full transition-all flex items-center justify-center ${
                   activeFormats.italic
-                    ? 'bg-white/15 text-white ring-1 ring-white/20'
-                    : 'text-zinc-300 hover:text-white hover:bg-white/10'
+                    ? 'liquid-lens-active q-text-primary'
+                    : 'q-text-secondary hover:q-text-primary hover:bg-white/10'
                 }`}
                 title="Italic (Miring)"
               >
@@ -5217,10 +5203,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               {/* Pure Underline */}
               <button
                 onClick={() => applyFormatting('<u>')}
-                className={`px-1.5 py-0.5 rounded transition-all flex items-center justify-center ${
+                className={`px-1.5 py-1 rounded-full transition-all flex items-center justify-center ${
                   activeFormats.underline
-                    ? 'bg-white/15 text-white ring-1 ring-white/20'
-                    : 'text-zinc-300 hover:text-white hover:bg-white/10'
+                    ? 'liquid-lens-active q-text-primary'
+                    : 'q-text-secondary hover:q-text-primary hover:bg-white/10'
                 }`}
                 title="Underline (Garis Bawah)"
               >
@@ -5230,10 +5216,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               {/* Strikethrough */}
               <button
                 onClick={() => applyFormatting('~~')}
-                className={`px-1.5 py-0.5 rounded transition-all flex items-center justify-center ${
+                className={`px-1.5 py-1 rounded-full transition-all flex items-center justify-center ${
                   activeFormats.strikethrough
-                    ? 'bg-white/15 text-white ring-1 ring-white/20'
-                    : 'text-zinc-300 hover:text-white hover:bg-white/10'
+                    ? 'liquid-lens-active q-text-primary'
+                    : 'q-text-secondary hover:q-text-primary hover:bg-white/10'
                 }`}
                 title="Strikethrough (Coret Tengah)"
               >
@@ -5243,10 +5229,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               {/* Pure Inline Code */}
               <button
                 onClick={() => applyFormatting('`')}
-                className={`px-1.5 py-0.5 rounded transition-all flex items-center justify-center ${
+                className={`px-1.5 py-1 rounded-full transition-all flex items-center justify-center ${
                   activeFormats.code
-                    ? 'bg-pink-500/25 text-pink-300 ring-1 ring-pink-400/40'
-                    : 'text-pink-400 hover:bg-pink-500/15'
+                    ? 'liquid-lens-active q-text-accent'
+                    : 'q-text-secondary hover:q-text-primary hover:bg-white/10'
                 }`}
                 title="Inline Code (Kode Pill)"
               >
@@ -5256,10 +5242,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               {/* Pure Math Equation */}
               <button
                 onClick={() => applyFormatting('$')}
-                className={`px-1.5 py-0.5 rounded transition-all flex items-center justify-center ${
+                className={`px-1.5 py-1 rounded-full transition-all flex items-center justify-center ${
                   activeFormats.math
-                    ? 'bg-indigo-500/25 text-indigo-200 ring-1 ring-indigo-400/40'
-                    : 'text-indigo-400 hover:bg-indigo-500/15'
+                    ? 'liquid-lens-active q-text-accent'
+                    : 'q-text-secondary hover:q-text-primary hover:bg-white/10'
                 }`}
                 title="Persamaan Matematika (Math Equation)"
               >
@@ -5269,7 +5255,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               {/* Pure Clear Format */}
               <button
                 onClick={() => applyFormatting('clear')}
-                className="px-1.5 py-0.5 rounded text-rose-400 hover:bg-rose-500/15 transition-all flex items-center justify-center"
+                className="px-1.5 py-1 rounded-full q-text-muted hover:text-rose-400 hover:bg-rose-500/15 transition-all flex items-center justify-center"
                 title="Hapus Format (Clear Formatting)"
               >
                 <Eraser className="w-3.5 h-3.5 stroke-[2.2]" />
@@ -5467,36 +5453,36 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
                           {/* Popover Dropdown Menu for Block */}
                           {activeBlockMenuIdx === idx && (
-                            <div className="absolute right-0 top-7 w-44 bg-[#1b1c23] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden py-1 text-xs font-semibold text-zinc-300">
+                            <div className="absolute right-0 top-7 w-44 glass-popover rounded-2xl z-50 overflow-hidden p-1.5 text-xs font-semibold q-text-secondary space-y-0.5">
                               <button
                                 onClick={() => handleDuplicateBlockByIdx(idx)}
-                                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-indigo-600/20 hover:text-white text-left transition-colors"
+                                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-white/10 hover:q-text-primary text-left transition-colors"
                               >
-                                <Copy className="w-3.5 h-3.5 text-indigo-400" />
+                                <Copy className="w-3.5 h-3.5 q-text-muted" />
                                 <span>Duplikat Blok</span>
                               </button>
                               <button
                                 onClick={() => handleMoveBlockUp(idx)}
                                 disabled={idx === 0}
-                                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/10 text-left transition-colors disabled:opacity-30"
+                                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-white/10 hover:q-text-primary text-left transition-colors disabled:opacity-30"
                               >
-                                <ArrowUp className="w-3.5 h-3.5 text-zinc-400" />
+                                <ArrowUp className="w-3.5 h-3.5 q-text-muted" />
                                 <span>Geser Ke Atas</span>
                               </button>
                               <button
                                 onClick={() => handleMoveBlockDown(idx)}
                                 disabled={idx === parsedChronologicalBlocks.length - 1}
-                                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/10 text-left transition-colors disabled:opacity-30"
+                                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-white/10 hover:q-text-primary text-left transition-colors disabled:opacity-30"
                               >
-                                <ArrowDown className="w-3.5 h-3.5 text-zinc-400" />
+                                <ArrowDown className="w-3.5 h-3.5 q-text-muted" />
                                 <span>Geser Ke Bawah</span>
                               </button>
-                              <div className="my-1 border-t border-white/5" />
+                              <div className="my-1 border-t q-border" />
                               <button
                                 onClick={() => handleDeleteSelectedBlocks()}
-                                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-rose-500/20 text-rose-400 text-left transition-colors"
+                                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-rose-500/15 text-rose-400 text-left transition-colors"
                               >
-                                <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                                <Trash2 className="w-3.5 h-3.5" />
                                 <span>Hapus Blok</span>
                               </button>
                             </div>
@@ -5608,59 +5594,29 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
         {/* Tempered Glass Right Sidebar Panel */}
         {isRightSidebarOpen && (
-          <aside className="w-52 sm:w-56 glass-sidebar border-t border-l rounded-tl-3xl px-3 py-3 flex flex-col justify-between shrink-0 overflow-y-auto animate-in slide-in-from-right duration-200 select-none font-sans relative">
+          <aside className="w-56 sm:w-60 glass-sidebar border-t border-l rounded-tl-3xl px-3 py-3 flex flex-col justify-between shrink-0 overflow-y-auto animate-in slide-in-from-right duration-200 select-none font-sans relative">
             <div className="space-y-4">
-              {/* Top Panel Navigation Tabs */}
-              <div className="border-b border-white/10 pb-1.5 pt-1.5 mt-0.5">
-                <div className="w-full flex items-center justify-between text-xs font-medium text-slate-400">
-                  <button
-                    onClick={() => setActiveRightTab('insert')}
-                    className={`flex-1 text-center pb-1 border-b-2 transition-all ${
-                      activeRightTab === 'insert'
-                        ? 'border-sky-400 text-white font-bold'
-                        : 'border-transparent hover:text-slate-200'
-                    }`}
-                  >
-                    Insert
-                  </button>
-                  <button
-                    onClick={() => setActiveRightTab('format')}
-                    className={`flex-1 text-center pb-1 border-b-2 transition-all ${
-                      activeRightTab === 'format'
-                        ? 'border-sky-400 text-white font-bold'
-                        : 'border-transparent hover:text-slate-200'
-                    }`}
-                  >
-                    Format
-                  </button>
-                  <button
-                    onClick={() => setActiveRightTab('style')}
-                    className={`flex-1 text-center pb-1 border-b-2 transition-all ${
-                      activeRightTab === 'style'
-                        ? 'border-sky-400 text-white font-bold'
-                        : 'border-transparent hover:text-slate-200'
-                    }`}
-                  >
-                    Style
-                  </button>
-                  <button
-                    onClick={() => setActiveRightTab('info')}
-                    className={`flex-1 text-center pb-1 border-b-2 transition-all ${
-                      activeRightTab === 'info'
-                        ? 'border-sky-400 text-white font-bold'
-                        : 'border-transparent hover:text-slate-200'
-                    }`}
-                  >
-                    Info
-                  </button>
-                </div>
+              {/* True iOS 26 Liquid Glass Sliding Lens Panel Tabs */}
+              <div className="pt-0.5">
+                <LiquidSegmentedControl
+                  fullWidth
+                  size="xs"
+                  value={activeRightTab}
+                  onChange={setActiveRightTab}
+                  options={[
+                    { value: 'insert', label: 'Insert' },
+                    { value: 'format', label: 'Format' },
+                    { value: 'style', label: 'Style' },
+                    { value: 'info', label: 'Info' },
+                  ]}
+                />
               </div>
 
               {/* TAB 1: INSERT PANEL */}
               {activeRightTab === 'insert' && (
                 <div className="space-y-4">
-                  <p className="text-[10px] text-zinc-500 font-semibold px-1">
-                    Drag and drop any item to the document
+                  <p className="text-[10px] q-text-muted font-medium px-1">
+                    Klik atau tarik blok ke dalam catatan
                   </p>
 
                   <div className="space-y-1.5">
@@ -5670,16 +5626,14 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                       onDragStart={(e) => handleSidebarDragStart('text', 'Text Block', e)}
                       onDragEnd={handleDragEnd}
                       onClick={handleInsertTextBlock}
-                      className="w-full flex items-center justify-between py-2 px-3 bg-[#0B172E]/80 hover:bg-[#122446]/90 border border-white/10 hover:border-indigo-500/40 rounded-lg transition-all group cursor-grab active:cursor-grabbing select-none shadow-xs"
-                      title="Klik atau Drag ke dalam teks dokumen untuk menyisipkan Teks"
+                      className="w-full flex items-center justify-between py-2 px-3 glass-control rounded-xl group cursor-grab active:cursor-grabbing select-none"
+                      title="Klik atau tarik ke dokumen untuk menyisipkan Teks"
                     >
                       <div className="flex items-center gap-2.5">
-                        <Type className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
-                        <span className="text-xs font-semibold text-zinc-200 group-hover:text-white">
-                          Text
-                        </span>
+                        <Type className="w-4 h-4 q-text-primary group-hover:scale-105 transition-transform" />
+                        <span className="text-xs font-semibold q-text-primary">Text</span>
                       </div>
-                      <GripVertical className="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-300" />
+                      <GripVertical className="w-3.5 h-3.5 q-text-muted" />
                     </div>
 
                     {/* 2. Page */}
@@ -5688,16 +5642,16 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                       onDragStart={(e) => handleSidebarDragStart('subpage', 'Subpage', e)}
                       onDragEnd={handleDragEnd}
                       onClick={handleInsertPage}
-                      className="w-full flex items-center justify-between py-2 px-3 bg-[#0B172E]/80 hover:bg-[#122446]/90 border border-white/10 hover:border-indigo-500/40 rounded-lg transition-all group cursor-grab active:cursor-grabbing select-none shadow-xs"
-                      title="Klik atau Drag ke dalam teks dokumen untuk menyisipkan Page baru"
+                      className="w-full flex items-center justify-between py-2 px-3 glass-control rounded-xl group cursor-grab active:cursor-grabbing select-none"
+                      title="Klik atau tarik ke dokumen untuk menyisipkan Halaman baru"
                     >
                       <div className="flex items-center gap-2.5">
-                        <FileText className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
-                        <span className="text-xs font-semibold text-zinc-200 group-hover:text-white">
+                        <FileText className="w-4 h-4 q-text-primary group-hover:scale-105 transition-transform" />
+                        <span className="text-xs font-semibold q-text-primary">
                           Page {subPageStack.length >= 4 ? '(Maks 4)' : ''}
                         </span>
                       </div>
-                      <GripVertical className="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-300" />
+                      <GripVertical className="w-3.5 h-3.5 q-text-muted" />
                     </div>
 
                     {/* 3. File Attachment */}
@@ -5706,16 +5660,14 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                       onDragStart={(e) => handleSidebarDragStart('attachment', 'File Attachment', e)}
                       onDragEnd={handleDragEnd}
                       onClick={() => fileAttachmentInputRef.current?.click()}
-                      className="w-full flex items-center justify-between py-2 px-3 bg-[#0B172E]/80 hover:bg-[#122446]/90 border border-white/10 hover:border-indigo-500/40 rounded-lg transition-all group cursor-grab active:cursor-grabbing select-none shadow-xs"
-                      title="Klik atau Drag ke dalam teks dokumen untuk upload & menyisipkan File"
+                      className="w-full flex items-center justify-between py-2 px-3 glass-control rounded-xl group cursor-grab active:cursor-grabbing select-none"
+                      title="Klik atau tarik ke dokumen untuk menyisipkan File"
                     >
                       <div className="flex items-center gap-2.5">
-                        <FileUp className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
-                        <span className="text-xs font-semibold text-zinc-200 group-hover:text-white">
-                          File Attachment
-                        </span>
+                        <FileUp className="w-4 h-4 q-text-primary group-hover:scale-105 transition-transform" />
+                        <span className="text-xs font-semibold q-text-primary">File Attachment</span>
                       </div>
-                      <GripVertical className="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-300" />
+                      <GripVertical className="w-3.5 h-3.5 q-text-muted" />
                     </div>
 
                     {/* 4. Image */}
@@ -5724,16 +5676,14 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                       onDragStart={(e) => handleSidebarDragStart('image', 'Image Block', e)}
                       onDragEnd={handleDragEnd}
                       onClick={() => imageBlockInputRef.current?.click()}
-                      className="w-full flex items-center justify-between py-2 px-3 bg-[#0B172E]/80 hover:bg-[#122446]/90 border border-white/10 hover:border-indigo-500/40 rounded-lg transition-all group cursor-grab active:cursor-grabbing select-none shadow-xs"
-                      title="Klik atau Drag ke dalam teks dokumen untuk menyisipkan Gambar"
+                      className="w-full flex items-center justify-between py-2 px-3 glass-control rounded-xl group cursor-grab active:cursor-grabbing select-none"
+                      title="Klik atau tarik ke dokumen untuk menyisipkan Gambar"
                     >
                       <div className="flex items-center gap-2.5">
-                        <ImageIcon className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
-                        <span className="text-xs font-semibold text-zinc-200 group-hover:text-white">
-                          Image
-                        </span>
+                        <ImageIcon className="w-4 h-4 q-text-primary group-hover:scale-105 transition-transform" />
+                        <span className="text-xs font-semibold q-text-primary">Image</span>
                       </div>
-                      <GripVertical className="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-300" />
+                      <GripVertical className="w-3.5 h-3.5 q-text-muted" />
                     </div>
 
                     {/* 5. Code Block */}
@@ -5742,16 +5692,14 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                       onDragStart={(e) => handleSidebarDragStart('code', 'Code Block', e)}
                       onDragEnd={handleDragEnd}
                       onClick={handleInsertCodeBlock}
-                      className="w-full flex items-center justify-between py-2 px-3 bg-[#0B172E]/80 hover:bg-[#122446]/90 border border-white/10 hover:border-indigo-500/40 rounded-lg transition-all group cursor-grab active:cursor-grabbing select-none shadow-xs"
-                      title="Klik atau Drag ke dalam teks dokumen untuk menyisipkan Code Block"
+                      className="w-full flex items-center justify-between py-2 px-3 glass-control rounded-xl group cursor-grab active:cursor-grabbing select-none"
+                      title="Klik atau tarik ke dokumen untuk menyisipkan Code Block"
                     >
                       <div className="flex items-center gap-2.5">
-                        <Code2 className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
-                        <span className="text-xs font-semibold text-zinc-200 group-hover:text-white">
-                          Code Block
-                        </span>
+                        <Code2 className="w-4 h-4 q-text-primary group-hover:scale-105 transition-transform" />
+                        <span className="text-xs font-semibold q-text-primary">Code Block</span>
                       </div>
-                      <GripVertical className="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-300" />
+                      <GripVertical className="w-3.5 h-3.5 q-text-muted" />
                     </div>
 
                     {/* 6. Mermaid Diagram */}
@@ -5760,36 +5708,34 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                       onDragStart={(e) => handleSidebarDragStart('mermaid', 'Mermaid Diagram', e)}
                       onDragEnd={handleDragEnd}
                       onClick={handleInsertMermaidBlock}
-                      className="w-full flex items-center justify-between py-2 px-3 bg-[#0B172E]/80 hover:bg-[#122446]/90 border border-white/10 hover:border-indigo-500/40 rounded-lg transition-all group cursor-grab active:cursor-grabbing select-none shadow-xs"
-                      title="Klik atau Drag ke dalam teks dokumen untuk menyisipkan Diagram Mermaid"
+                      className="w-full flex items-center justify-between py-2 px-3 glass-control rounded-xl group cursor-grab active:cursor-grabbing select-none"
+                      title="Klik atau tarik ke dokumen untuk menyisipkan Diagram Mermaid"
                     >
                       <div className="flex items-center gap-2.5">
-                        <GitGraph className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
-                        <span className="text-xs font-semibold text-zinc-200 group-hover:text-white">
-                          Mermaid Diagram
-                        </span>
+                        <GitGraph className="w-4 h-4 q-text-primary group-hover:scale-105 transition-transform" />
+                        <span className="text-xs font-semibold q-text-primary">Mermaid Diagram</span>
                       </div>
-                      <GripVertical className="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-300" />
+                      <GripVertical className="w-3.5 h-3.5 q-text-muted" />
                     </div>
                   </div>
 
                   {/* Collections Section */}
-                  <div className="space-y-2 pt-2 border-t border-white/5">
-                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider px-1">Collections</p>
+                  <div className="space-y-2 pt-2 border-t q-border">
+                    <p className="text-[10px] font-semibold q-text-muted uppercase tracking-wider px-1">Collections</p>
                     <div className="space-y-1.5">
                       <div
                         draggable
                         onDragStart={(e) => handleSidebarDragStart('table', 'Table Collection', e)}
                         onDragEnd={handleDragEnd}
                         onClick={() => handleInsertCollection('table')}
-                        className="w-full flex items-center justify-between py-2 px-3 bg-[#0B172E]/80 hover:bg-[#122446]/90 border border-white/10 hover:border-indigo-500/40 rounded-lg transition-all group cursor-grab active:cursor-grabbing select-none shadow-xs"
-                        title="Klik atau Drag ke dalam teks dokumen untuk menyisipkan Database Tabel"
+                        className="w-full flex items-center justify-between py-2 px-3 glass-control rounded-xl group cursor-grab active:cursor-grabbing select-none"
+                        title="Sisipkan Database Tabel"
                       >
                         <div className="flex items-center gap-2.5">
-                          <Table className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
-                          <span className="text-xs font-semibold text-zinc-200 group-hover:text-white">Table</span>
+                          <Table className="w-4 h-4 q-text-primary group-hover:scale-105 transition-transform" />
+                          <span className="text-xs font-semibold q-text-primary">Table</span>
                         </div>
-                        <GripVertical className="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-300" />
+                        <GripVertical className="w-3.5 h-3.5 q-text-muted" />
                       </div>
 
                       <div
@@ -5797,14 +5743,14 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                         onDragStart={(e) => handleSidebarDragStart('gallery', 'Gallery Collection', e)}
                         onDragEnd={handleDragEnd}
                         onClick={() => handleInsertCollection('gallery')}
-                        className="w-full flex items-center justify-between py-2 px-3 bg-[#0B172E]/80 hover:bg-[#122446]/90 border border-white/10 hover:border-indigo-500/40 rounded-lg transition-all group cursor-grab active:cursor-grabbing select-none shadow-xs"
-                        title="Klik atau Drag ke dalam teks dokumen untuk menyisipkan Database Galeri"
+                        className="w-full flex items-center justify-between py-2 px-3 glass-control rounded-xl group cursor-grab active:cursor-grabbing select-none"
+                        title="Sisipkan Database Galeri"
                       >
                         <div className="flex items-center gap-2.5">
-                          <LayoutGrid className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
-                          <span className="text-xs font-semibold text-zinc-200 group-hover:text-white">Gallery</span>
+                          <LayoutGrid className="w-4 h-4 q-text-primary group-hover:scale-105 transition-transform" />
+                          <span className="text-xs font-semibold q-text-primary">Gallery</span>
                         </div>
-                        <GripVertical className="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-300" />
+                        <GripVertical className="w-3.5 h-3.5 q-text-muted" />
                       </div>
 
                       <div
@@ -5812,14 +5758,14 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                         onDragStart={(e) => handleSidebarDragStart('kanban', 'Kanban Collection', e)}
                         onDragEnd={handleDragEnd}
                         onClick={() => handleInsertCollection('kanban')}
-                        className="w-full flex items-center justify-between py-2 px-3 bg-[#0B172E]/80 hover:bg-[#122446]/90 border border-white/10 hover:border-indigo-500/40 rounded-lg transition-all group cursor-grab active:cursor-grabbing select-none shadow-xs"
-                        title="Klik atau Drag ke dalam teks dokumen untuk menyisipkan Papan Kanban"
+                        className="w-full flex items-center justify-between py-2 px-3 glass-control rounded-xl group cursor-grab active:cursor-grabbing select-none"
+                        title="Sisipkan Papan Kanban"
                       >
                         <div className="flex items-center gap-2.5">
-                          <Layout className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
-                          <span className="text-xs font-semibold text-zinc-200 group-hover:text-white">Kanban</span>
+                          <Layout className="w-4 h-4 q-text-primary group-hover:scale-105 transition-transform" />
+                          <span className="text-xs font-semibold q-text-primary">Kanban</span>
                         </div>
-                        <GripVertical className="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-300" />
+                        <GripVertical className="w-3.5 h-3.5 q-text-muted" />
                       </div>
                     </div>
                   </div>
@@ -5829,35 +5775,35 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               {/* TAB 2: FORMAT PANEL */}
               {activeRightTab === 'format' && (
                 <div className="space-y-4">
-                  <p className="text-[10px] text-zinc-500 font-semibold px-1">Format Teks Cepat:</p>
+                  <p className="text-[10px] q-text-muted font-semibold px-1">Format Teks Cepat</p>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => insertBlockAtActivePosition('**Teks Tebal**')}
-                      className="flex items-center gap-2 py-2 px-2.5 bg-[#0B172E]/80 hover:bg-[#122446]/90 border border-white/10 hover:border-white/20 rounded-lg text-xs font-semibold text-zinc-200 transition-all shadow-xs"
+                      className="flex items-center gap-2 py-2 px-2.5 glass-control rounded-xl text-xs font-semibold q-text-primary"
                     >
-                      <Bold className="w-4 h-4 text-indigo-400" />
+                      <Bold className="w-4 h-4 q-text-muted" />
                       <span>Bold</span>
                     </button>
                     <button
                       onClick={() => insertBlockAtActivePosition('*Teks Miring*')}
-                      className="flex items-center gap-2 py-2 px-2.5 bg-[#0B172E]/80 hover:bg-[#122446]/90 border border-white/10 hover:border-white/20 rounded-lg text-xs font-semibold text-zinc-200 transition-all shadow-xs"
+                      className="flex items-center gap-2 py-2 px-2.5 glass-control rounded-xl text-xs font-semibold q-text-primary"
                     >
-                      <Italic className="w-4 h-4 text-indigo-400" />
+                      <Italic className="w-4 h-4 q-text-muted" />
                       <span>Italic</span>
                     </button>
                     <button
                       onClick={() => insertBlockAtActivePosition('~~Teks Coret~~')}
-                      className="flex items-center gap-2 py-2 px-2.5 bg-[#0B172E]/80 hover:bg-[#122446]/90 border border-white/10 hover:border-white/20 rounded-lg text-xs font-semibold text-zinc-200 transition-all shadow-xs"
+                      className="flex items-center gap-2 py-2 px-2.5 glass-control rounded-xl text-xs font-semibold q-text-primary"
                     >
-                      <Strikethrough className="w-4 h-4 text-indigo-400" />
-                      <span>Strikethrough</span>
+                      <Strikethrough className="w-4 h-4 q-text-muted" />
+                      <span>Strike</span>
                     </button>
                     <button
                       onClick={() => insertBlockAtActivePosition('`code inline`')}
-                      className="flex items-center gap-2 py-2 px-2.5 bg-[#0B172E]/80 hover:bg-[#122446]/90 border border-white/10 hover:border-white/20 rounded-lg text-xs font-semibold text-zinc-200 transition-all shadow-xs"
+                      className="flex items-center gap-2 py-2 px-2.5 glass-control rounded-xl text-xs font-semibold q-text-primary"
                     >
-                      <Code2 className="w-4 h-4 text-indigo-400" />
-                      <span>Inline Code</span>
+                      <Code2 className="w-4 h-4 q-text-muted" />
+                      <span>Code</span>
                     </button>
                   </div>
                 </div>
@@ -5866,10 +5812,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               {/* TAB 3: STYLE PANEL */}
               {activeRightTab === 'style' && (
                 <div className="space-y-4">
-                  <p className="text-[10px] text-zinc-500 font-semibold px-1">Gaya Tampilan Dokumen:</p>
-                  <div className="p-3 bg-[#0B172E]/80 border border-white/10 rounded-lg space-y-2 shadow-xs">
-                    <p className="text-xs font-bold text-white">Font Family</p>
-                    <p className="text-xs text-zinc-400">Inter / System Modern Sans</p>
+                  <p className="text-[10px] q-text-muted font-semibold px-1">Tipografi Dokumen</p>
+                  <div className="p-3 glass-recessed rounded-xl space-y-1">
+                    <p className="text-xs font-semibold q-text-primary">Font Utama</p>
+                    <p className="text-xs q-text-muted">Inter — Clean Sans</p>
                   </div>
                 </div>
               )}
@@ -5878,37 +5824,37 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               {activeRightTab === 'info' && (
                 <div className="space-y-5">
                   <div className="space-y-2">
-                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">STATISTIK</p>
+                    <p className="text-[10px] font-semibold q-text-muted uppercase tracking-wider">Statistik</p>
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="bg-[#0B172E]/80 border border-white/10 p-2.5 rounded-lg shadow-xs">
-                        <p className="text-zinc-400 text-[10px]">Kata</p>
-                        <p className="text-base font-bold text-white mt-0.5">{wordCount}</p>
+                      <div className="glass-recessed p-2.5 rounded-xl">
+                        <p className="q-text-muted text-[10px]">Kata</p>
+                        <p className="text-base font-bold q-text-primary mt-0.5 tracking-tight">{wordCount}</p>
                       </div>
-                      <div className="bg-[#0B172E]/80 border border-white/10 p-2.5 rounded-lg shadow-xs">
-                        <p className="text-zinc-400 text-[10px]">Karakter</p>
-                        <p className="text-base font-bold text-white mt-0.5">{charCount}</p>
+                      <div className="glass-recessed p-2.5 rounded-xl">
+                        <p className="q-text-muted text-[10px]">Karakter</p>
+                        <p className="text-base font-bold q-text-primary mt-0.5 tracking-tight">{charCount}</p>
                       </div>
                     </div>
-                    <div className="bg-[#0B172E]/80 border border-white/10 p-2.5 rounded-lg flex items-center justify-between text-xs shadow-xs">
-                      <span className="text-zinc-400 text-[11px]">Waktu Baca</span>
-                      <span className="font-bold text-indigo-300">{readingTimeMinutes} mnt baca</span>
+                    <div className="glass-recessed p-2.5 rounded-xl flex items-center justify-between text-xs">
+                      <span className="q-text-muted text-[11px]">Waktu Baca</span>
+                      <span className="font-semibold q-text-primary">{readingTimeMinutes} mnt</span>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <ListTree className="w-3.5 h-3.5 text-indigo-400" />
-                      <span>DAFTAR ISI (OUTLINE)</span>
+                    <p className="text-[10px] font-semibold q-text-muted uppercase tracking-wider flex items-center gap-1.5">
+                      <ListTree className="w-3.5 h-3.5" />
+                      <span>Daftar Isi</span>
                     </p>
                     {outlineHeadings.length === 0 ? (
-                      <p className="text-xs text-zinc-500 italic px-1">Belum ada heading (# Judul)</p>
+                      <p className="text-xs q-text-muted italic px-1">Belum ada heading (# Judul)</p>
                     ) : (
                       <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
                         {outlineHeadings.map((h, i) => (
                           <div
                             key={i}
-                            className={`text-xs truncate font-medium text-zinc-300 hover:text-white transition-colors cursor-pointer ${
-                              h.level === 1 ? 'pl-0 font-bold text-indigo-300' : h.level === 2 ? 'pl-3' : 'pl-6 text-zinc-400'
+                            className={`text-xs truncate font-medium q-text-secondary hover:q-text-primary transition-colors cursor-pointer ${
+                              h.level === 1 ? 'pl-0 font-semibold q-text-primary' : h.level === 2 ? 'pl-3' : 'pl-6 q-text-muted'
                             }`}
                           >
                             {h.text}
@@ -5925,10 +5871,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             <div className="pt-3 flex items-center justify-between">
               <button
                 onClick={() => exportNoteAsTXT(note)}
-                className="w-full flex items-center justify-center gap-2 py-2 px-3 glass-btn-primary text-xs font-bold text-white rounded-full transition-all group active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-2 py-2 px-3 glass-btn-primary text-xs font-semibold rounded-full group active:scale-[0.98]"
               >
-                <FileDown className="w-4 h-4 text-white stroke-[2.25] group-hover:scale-110 transition-transform" />
-                <span>Export Document</span>
+                <FileDown className="w-4 h-4 transition-transform group-hover:scale-105" />
+                <span>Ekspor Catatan</span>
               </button>
             </div>
           </aside>
@@ -5937,29 +5883,36 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
       {/* File Attachment Preview Modal */}
       {previewAttachment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#020612]/75 backdrop-blur-md animate-in fade-in duration-200 select-none">
-          <div className="w-full max-w-3xl glass-panel rounded-3xl overflow-hidden flex flex-col max-h-[85vh]">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 backdrop-blur-md animate-in fade-in duration-200 select-none"
+          style={{ backgroundColor: 'var(--surface-modal-backdrop)' }}
+          onClick={() => setPreviewAttachment(null)}
+        >
+          <div
+            className="w-full max-w-3xl glass-panel rounded-3xl overflow-hidden flex flex-col max-h-[85vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/10 bg-white/[0.04]">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b q-border bg-white/[0.04]">
               <div className="flex items-center gap-3 min-w-0 pr-4">
                 <CraftFileTypeBadge mime={previewAttachment.mime} name={previewAttachment.name} />
                 <div className="min-w-0">
-                  <h3 className="text-xs sm:text-sm font-bold text-white truncate">{previewAttachment.name}</h3>
-                  <p className="text-[10px] text-slate-400">{previewAttachment.size} • {previewAttachment.mime || 'File'}</p>
+                  <h3 className="text-xs sm:text-sm font-bold q-text-primary truncate">{previewAttachment.name}</h3>
+                  <p className="text-[10px] q-text-muted">{previewAttachment.size} • {previewAttachment.mime || 'File'}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={(e) => handleDownloadAttachment(previewAttachment, e)}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 glass-btn-primary text-white text-xs font-bold rounded-full transition-all"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 glass-btn-primary text-xs font-semibold rounded-full transition-all"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Unduh File</span>
                 </button>
                 <button
                   onClick={() => setPreviewAttachment(null)}
-                  className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors"
+                  className="p-1.5 q-text-muted hover:q-text-primary rounded-xl hover:bg-white/10 transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -5967,23 +5920,23 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             </div>
 
             {/* Modal Body Preview Area */}
-            <div className="flex-1 p-6 overflow-y-auto flex items-center justify-center bg-[#060E1F]/80 min-h-[300px]">
+            <div className="flex-1 p-6 overflow-y-auto flex items-center justify-center glass-recessed min-h-[300px]">
               {previewAttachment.mime.startsWith('image/') ||
               ['png', 'jpg', 'jpeg', 'svg', 'webp', 'gif'].some((ext) => previewAttachment.name.toLowerCase().endsWith('.' + ext)) ? (
                 <img
                   src={previewAttachment.url}
                   alt={previewAttachment.name}
-                  className="max-h-[60vh] max-w-full object-contain rounded-xl shadow-lg border border-white/10"
+                  className="max-h-[60vh] max-w-full object-contain rounded-xl shadow-lg border q-border"
                 />
               ) : previewAttachment.mime.startsWith('audio/') ||
                 ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'].some((ext) => previewAttachment.name.toLowerCase().endsWith('.' + ext)) ? (
-                <div className="w-full max-w-md p-6 bg-[#1a1b24] border border-white/10 rounded-2xl shadow-2xl flex flex-col items-center gap-4 text-center">
-                  <div className="w-16 h-16 bg-violet-600/20 border border-violet-500/30 rounded-full flex items-center justify-center text-violet-400 animate-pulse">
-                    <Music className="w-8 h-8" />
+                <div className="w-full max-w-md p-6 glass-card rounded-2xl flex flex-col items-center gap-4 text-center">
+                  <div className="w-16 h-16 glass-control rounded-full flex items-center justify-center q-text-primary">
+                    <Music className="w-7 h-7" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-white truncate max-w-xs">{previewAttachment.name}</h4>
-                    <p className="text-xs text-zinc-400 mt-0.5">{previewAttachment.size} • File Audio MP3</p>
+                    <h4 className="text-sm font-bold q-text-primary truncate max-w-xs">{previewAttachment.name}</h4>
+                    <p className="text-xs q-text-muted mt-0.5">{previewAttachment.size} • File Audio</p>
                   </div>
                   <audio controls autoPlay src={previewAttachment.url} className="w-full mt-2 rounded-xl" />
                 </div>
@@ -5994,10 +5947,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                     controls
                     autoPlay
                     src={previewAttachment.url}
-                    className="max-h-[60vh] max-w-full rounded-2xl shadow-2xl border border-white/10"
+                    className="max-h-[60vh] max-w-full rounded-2xl shadow-2xl border q-border"
                   />
-                  <span className="text-xs text-zinc-400 font-medium flex items-center gap-1.5">
-                    <Video className="w-4 h-4 text-purple-400 shrink-0" />
+                  <span className="text-xs q-text-muted font-medium flex items-center gap-1.5">
+                    <Video className="w-4 h-4 q-text-muted shrink-0" />
                     <span>{previewAttachment.name} ({previewAttachment.size})</span>
                   </span>
                 </div>
@@ -6005,29 +5958,29 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                 <iframe
                   src={previewAttachment.url}
                   title={previewAttachment.name}
-                  className="w-full h-[60vh] rounded-xl border border-white/10 bg-white"
+                  className="w-full h-[60vh] rounded-xl border q-border bg-white"
                 />
               ) : previewAttachment.url.startsWith('data:text') ||
                 ['txt', 'json', 'csv', 'js', 'ts', 'html', 'css', 'py'].some((ext) => previewAttachment.name.toLowerCase().endsWith('.' + ext)) ? (
                 <iframe
                   src={previewAttachment.url}
                   title={previewAttachment.name}
-                  className="w-full h-[50vh] rounded-xl border border-white/10 bg-[#161720] text-zinc-200 p-4 font-mono text-xs"
+                  className="w-full h-[50vh] rounded-xl border q-border glass-recessed q-text-primary p-4 font-mono text-xs"
                 />
               ) : (
                 <div className="text-center py-12 space-y-4">
-                  <div className="w-16 h-16 mx-auto bg-[#20212b] border border-white/10 rounded-2xl flex items-center justify-center text-amber-400 shadow-xl">
+                  <div className="w-16 h-16 mx-auto glass-control rounded-2xl flex items-center justify-center">
                     <CraftFileTypeBadge mime={previewAttachment.mime} name={previewAttachment.name} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-white">{previewAttachment.name}</h4>
-                    <p className="text-xs text-zinc-400 mt-1 max-w-md mx-auto">
-                      Format file ini dapat diunduh langsung untuk dibuka di aplikasi eksternal lo.
+                    <h4 className="text-sm font-bold q-text-primary">{previewAttachment.name}</h4>
+                    <p className="text-xs q-text-muted mt-1 max-w-md mx-auto">
+                      Format file ini dapat diunduh langsung untuk dibuka di aplikasi perangkat Anda.
                     </p>
                   </div>
                   <button
                     onClick={(e) => handleDownloadAttachment(previewAttachment, e)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg"
+                    className="inline-flex items-center gap-2 px-4 py-2 glass-btn-primary text-xs font-semibold rounded-full transition-all"
                   >
                     <Download className="w-4 h-4" />
                     <span>Unduh Sekarang ({previewAttachment.size})</span>
@@ -6064,10 +6017,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       )}
 
 
-      {/* Marquee Drag Selection Box Overlay (Soft Muted Faded Style) */}
+      {/* Marquee Drag Selection Box Overlay */}
       {dragSelectRect && (
         <div
-          className="fixed z-50 pointer-events-none bg-indigo-500/[0.07] border border-indigo-300/20 rounded-xl"
+          className="fixed z-50 pointer-events-none bg-[#38BDF8]/[0.08] border border-[#38BDF8]/30 rounded-xl"
           style={{
             left: `${dragSelectRect.x}px`,
             top: `${dragSelectRect.y}px`,
@@ -6079,30 +6032,30 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
       {/* Multi-Block Selection Floating Liquid Glass Action Bar */}
       {selectedBlockIndices.length > 1 && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 liquid-pill rounded-full px-5 py-2.5 flex items-center gap-4 z-50 text-xs font-semibold text-slate-100 animate-in fade-in slide-in-from-bottom-3 duration-150">
-          <div className="flex items-center gap-2 pr-3 border-r border-white/15 text-sky-300 font-bold">
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 liquid-pill rounded-full px-5 py-2 flex items-center gap-3 z-50 text-xs font-semibold q-text-primary animate-in fade-in slide-in-from-bottom-3 duration-150">
+          <div className="flex items-center gap-2 pr-3 border-r q-border q-text-accent font-semibold">
             <GripVertical className="w-4 h-4" />
             <span>{selectedBlockIndices.length} Blok Terpilih</span>
           </div>
           <button
             onClick={handleDuplicateSelectedBlocks}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full hover:bg-white/10 text-slate-200 hover:text-white transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full hover:bg-white/10 q-text-secondary hover:q-text-primary transition-colors"
             title="Duplikat Semua Blok Terpilih"
           >
-            <Copy className="w-3.5 h-3.5 text-sky-400" />
+            <Copy className="w-3.5 h-3.5 q-text-muted" />
             <span>Duplikat</span>
           </button>
           <button
             onClick={handleDeleteSelectedBlocks}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full hover:bg-rose-500/15 text-rose-400 transition-colors"
             title="Hapus Semua Blok Terpilih"
           >
-            <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+            <Trash2 className="w-3.5 h-3.5" />
             <span>Hapus</span>
           </button>
           <button
             onClick={() => setSelectedBlockIndices([])}
-            className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors ml-1"
+            className="p-1.5 rounded-full q-text-muted hover:q-text-primary hover:bg-white/10 transition-colors ml-1"
             title="Batal Seleksi (ESC)"
           >
             <X className="w-4 h-4" />

@@ -36,17 +36,24 @@ export const PromptModal: React.FC<PromptModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#020612]/75 backdrop-blur-md font-sans select-none animate-in fade-in duration-150">
-      <div className="w-full max-w-sm glass-panel rounded-3xl overflow-hidden p-5 space-y-4 text-left">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md font-sans select-none animate-in fade-in duration-150"
+      style={{ backgroundColor: 'var(--surface-modal-backdrop)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm glass-panel rounded-3xl overflow-hidden p-5 space-y-4 text-left"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
-            <Edit2 className="w-4 h-4 text-sky-400" />
+          <h3 className="text-sm font-bold q-text-primary tracking-tight flex items-center gap-2">
+            <Edit2 className="w-4 h-4 q-text-muted" />
             <span>{title}</span>
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors"
+            className="p-1.5 q-text-muted hover:q-text-primary rounded-xl hover:bg-white/10 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -60,7 +67,7 @@ export const PromptModal: React.FC<PromptModalProps> = ({
             value={value}
             onChange={(e) => setValue(e.target.value)}
             placeholder={placeholder}
-            className="w-full px-3.5 py-2 glass-input rounded-xl text-xs font-semibold text-white placeholder:text-slate-500 focus:outline-none transition-all"
+            className="w-full px-3.5 py-2 glass-input rounded-xl text-xs font-medium q-text-primary placeholder:text-slate-500 focus:outline-none transition-all"
           />
 
           {/* Action Buttons */}
@@ -68,14 +75,14 @@ export const PromptModal: React.FC<PromptModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-white/[0.08] hover:bg-white/[0.14] text-slate-200 hover:text-white font-semibold text-xs rounded-full transition-all border border-white/15"
+              className="px-4 py-2 glass-control q-text-primary font-semibold text-xs rounded-full"
             >
-              Cancel
+              Batal
             </button>
             <button
               type="submit"
               disabled={!value.trim()}
-              className="px-4 py-2 glass-btn-primary disabled:opacity-50 text-white font-bold text-xs rounded-full transition-all active:scale-[0.98]"
+              className="px-4 py-2 glass-btn-primary disabled:opacity-50 font-semibold text-xs rounded-full active:scale-[0.98]"
             >
               {submitText}
             </button>

@@ -90,7 +90,7 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
   parentPath = '',
   initialName = '',
   initialIcon = 'folder',
-  initialColor = '#6366f1',
+  initialColor = '#ffffff',
   isEditMode = false,
 }) => {
   const [folderName, setFolderName] = useState(initialName);
@@ -136,21 +136,28 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
   const SelectedIconComp = AVAILABLE_ICONS.find((i) => i.id === selectedIcon)?.Icon || Folder;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#020612]/75 backdrop-blur-md font-sans select-none animate-in fade-in duration-150">
-      <div className="w-full max-w-sm glass-panel rounded-3xl p-5 space-y-5 relative overflow-visible">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md font-sans select-none animate-in fade-in duration-150"
+      style={{ backgroundColor: 'var(--surface-modal-backdrop)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm glass-panel rounded-3xl p-5 space-y-5 relative overflow-visible"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
-          <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
-            {isEditMode ? <Edit2 className="w-4 h-4 text-sky-400" /> : <Folder className="w-4 h-4 text-sky-400" />}
+        <div className="flex items-center justify-between border-b q-border pb-3">
+          <h3 className="text-sm font-bold q-text-primary tracking-tight flex items-center gap-2">
+            {isEditMode ? <Edit2 className="w-4 h-4 q-text-muted" /> : <Folder className="w-4 h-4 q-text-muted" />}
             <span>
               {isEditMode
                 ? `Edit '${initialName}'`
                 : parentPath
                 ? `Subfolder di '${parentPath}'`
-                : 'Create New Folder'}
+                : 'Buat Folder Baru'}
             </span>
           </h3>
-          <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors">
+          <button onClick={onClose} className="p-1.5 q-text-muted hover:q-text-primary rounded-xl hover:bg-white/10 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -159,37 +166,36 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4" ref={popoverRef}>
           {/* TITLE Input */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              TITLE
+            <label className="text-[10px] font-semibold uppercase tracking-wider q-text-muted">
+              Nama Folder
             </label>
             <input
               type="text"
               autoFocus
               value={folderName}
               onChange={(e) => setFolderName(e.target.value)}
-              placeholder="Folder Name"
-              className="w-full px-3.5 py-2 glass-input rounded-xl text-xs font-semibold text-white placeholder:text-slate-500 focus:outline-none transition-all"
+              placeholder="Contoh: Kuliah, Proyek, Pribadi"
+              className="w-full px-3.5 py-2 glass-input rounded-xl text-xs font-medium q-text-primary placeholder:text-slate-500 focus:outline-none transition-all"
             />
           </div>
 
           {/* ICON Selection Row */}
-          <div className="flex items-center justify-between py-2 border-b border-white/10 relative">
-            <span className="text-xs font-semibold text-slate-200">Icon</span>
+          <div className="flex items-center justify-between py-2 border-b q-border relative">
+            <span className="text-xs font-semibold q-text-secondary">Ikon</span>
             <button
               type="button"
               onClick={() => {
                 setShowIconPicker(!showIconPicker);
                 setShowColorPicker(false);
               }}
-              className="p-2 bg-white/[0.08] hover:bg-white/[0.14] border border-white/15 rounded-xl transition-all flex items-center gap-1.5"
+              className="p-2 glass-control rounded-xl flex items-center gap-1.5"
             >
-              <SelectedIconComp className="w-4 h-4 text-white" />
+              <SelectedIconComp className="w-4 h-4 q-text-primary" />
             </button>
 
-            {/* Fully Floating & Scrollable Icon Picker Popover */}
             {showIconPicker && (
               <div className="absolute right-0 top-12 w-64 glass-popover rounded-2xl p-3 z-[100] max-h-48 overflow-y-auto space-y-2">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">Pilih Icon Folder</p>
+                <p className="text-[10px] font-semibold q-text-muted uppercase tracking-wider px-1">Pilih Ikon Folder</p>
                 <div className="grid grid-cols-6 gap-1.5">
                   {AVAILABLE_ICONS.map(({ id, Icon }) => (
                     <button
@@ -201,8 +207,8 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
                       }}
                       className={`p-2 rounded-xl flex items-center justify-center transition-all ${
                         selectedIcon === id
-                          ? 'liquid-lens-active text-white'
-                          : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                          ? 'liquid-lens-active q-text-primary'
+                          : 'q-text-secondary hover:bg-white/10 hover:q-text-primary'
                       }`}
                     >
                       <Icon className="w-4 h-4" />
@@ -214,8 +220,8 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
           </div>
 
           {/* COLOR Selection Row */}
-          <div className="flex items-center justify-between py-2 border-b border-white/10 relative">
-            <span className="text-xs font-semibold text-slate-200">Color</span>
+          <div className="flex items-center justify-between py-2 border-b q-border relative">
+            <span className="text-xs font-semibold q-text-secondary">Warna Ikon</span>
             <button
               type="button"
               onClick={() => {
@@ -226,7 +232,6 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
               style={{ backgroundColor: selectedColor }}
             />
 
-            {/* Color Palette Popover */}
             {showColorPicker && (
               <div className="absolute right-0 top-12 w-48 glass-popover rounded-2xl p-2.5 z-[100] grid grid-cols-4 gap-2">
                 {AVAILABLE_COLORS.map((c) => (
@@ -238,7 +243,7 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
                       setShowColorPicker(false);
                     }}
                     className={`w-7 h-7 rounded-full transition-all border ${
-                      selectedColor === c ? 'border-white scale-110 shadow-[0_0_12px_rgba(255,255,255,0.4)]' : 'border-transparent hover:scale-105'
+                      selectedColor === c ? 'border-white scale-110' : 'border-transparent hover:scale-105'
                     }`}
                     style={{ backgroundColor: c }}
                   />
@@ -251,9 +256,9 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
           <button
             type="submit"
             disabled={!folderName.trim()}
-            className="w-full mt-2 py-2.5 px-4 glass-btn-primary disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs rounded-full transition-all active:scale-[0.98]"
+            className="w-full mt-2 py-2.5 px-4 glass-btn-primary disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-xs rounded-full transition-all active:scale-[0.98]"
           >
-            {isEditMode ? 'Save Changes' : 'Create'}
+            {isEditMode ? 'Simpan Perubahan' : 'Buat Folder'}
           </button>
         </form>
       </div>

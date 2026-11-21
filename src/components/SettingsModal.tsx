@@ -15,9 +15,9 @@ import {
   Check,
   ShieldCheck,
 } from 'lucide-react';
-import type { SortOption, FontSizeOption } from '../types/note';
-import type { Note } from '../types/note';
+import type { SortOption, FontSizeOption, Note } from '../types/note';
 import { exportBackupJSON, importBackupJSON } from '../lib/storage/db';
+import { LiquidSegmentedControl } from './LiquidSegmentedControl';
 
 export interface AppSettings {
   theme: 'light' | 'dark' | 'system';
@@ -64,13 +64,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   if (!isOpen) return null;
 
+  const isEn = settings.language === 'en';
+
   const handleExport = async () => {
     const jsonStr = await exportBackupJSON(notes);
     const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `InstantNotes_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `SeeNote_Backup_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -85,99 +87,80 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         const content = event.target?.result as string;
         const imported = await importBackupJSON(content);
         onNotesImported(imported);
-        setImportStatus(`Berhasil mengimpor ${imported.length} catatan!`);
+        setImportStatus(
+          isEn
+            ? `Successfully imported ${imported.length} notes.`
+            : `Berhasil mengimpor ${imported.length} catatan.`
+        );
         setErrorMsg(null);
-      } catch (err: any) {
-        setErrorMsg('Format file tidak valid. Pastikan memilih file JSON cadangan.');
+      } catch {
+        setErrorMsg(
+          isEn
+            ? 'Invalid file format. Please choose a valid JSON backup file.'
+            : 'Format file tidak valid. Pastikan memilih file JSON cadangan.'
+        );
         setImportStatus(null);
       }
     };
     reader.readAsText(file);
   };
 
+  const navItems: { id: TabType; label: string; Icon: React.FC<{ className?: string }> }[] = [
+    { id: 'general', label: isEn ? 'General' : 'Umum', Icon: Settings },
+    { id: 'appearance', label: isEn ? 'Appearance' : 'Tampilan', Icon: Palette },
+    { id: 'language', label: isEn ? 'Language' : 'Bahasa', Icon: Globe },
+    { id: 'archive', label: isEn ? 'History & Reset' : 'Riwayat & Reset', Icon: Archive },
+    { id: 'storage', label: isEn ? 'Backup & Storage' : 'Cadangan & Data', Icon: HardDrive },
+  ];
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#020612]/75 backdrop-blur-md select-none font-sans">
-      <div className="w-full max-w-2xl glass-panel rounded-3xl overflow-hidden flex flex-col md:flex-row min-h-[460px]">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md select-none font-sans"
+      style={{ backgroundColor: 'var(--surface-modal-backdrop)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-2xl glass-panel rounded-3xl overflow-hidden flex flex-col md:flex-row min-h-[460px]"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Left Modal Sidebar */}
-        <div className="w-full md:w-56 bg-[#071123]/65 p-3 border-b md:border-b-0 md:border-r border-white/10 flex flex-col justify-between shrink-0">
+        <div className="w-full md:w-56 glass-recessed p-3 border-b md:border-b-0 md:border-r q-border flex flex-col justify-between shrink-0">
           <div className="space-y-1">
             <div className="flex items-center justify-between px-2 py-2 mb-2">
-              <span className="text-sm font-bold text-white flex items-center gap-2">
-                <Settings className="w-4 h-4 text-sky-400" />
-                <span>Pengaturan</span>
+              <span className="text-sm font-bold q-text-primary tracking-tight flex items-center gap-2">
+                <Settings className="w-4 h-4 q-text-muted" />
+                <span>{isEn ? 'Settings' : 'Pengaturan'}</span>
               </span>
               <button
                 onClick={onClose}
-                className="md:hidden p-1 text-slate-400 hover:text-white"
+                className="md:hidden p-1 q-text-muted hover:q-text-primary"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <button
-              onClick={() => setActiveTab('general')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                activeTab === 'general'
-                  ? 'liquid-lens-active text-white'
-                  : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100 border border-transparent'
-              }`}
-            >
-              <Settings className="w-4 h-4" />
-              <span>Umum</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('appearance')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                activeTab === 'appearance'
-                  ? 'liquid-lens-active text-white'
-                  : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100 border border-transparent'
-              }`}
-            >
-              <Palette className="w-4 h-4" />
-              <span>Personalisasi</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('language')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                activeTab === 'language'
-                  ? 'liquid-lens-active text-white'
-                  : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100 border border-transparent'
-              }`}
-            >
-              <Globe className="w-4 h-4" />
-              <span>Bahasa</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('archive')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                activeTab === 'archive'
-                  ? 'liquid-lens-active text-white'
-                  : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100 border border-transparent'
-              }`}
-            >
-              <Archive className="w-4 h-4" />
-              <span>Arsip &amp; Riwayat</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('storage')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                activeTab === 'storage'
-                  ? 'liquid-lens-active text-white'
-                  : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100 border border-transparent'
-              }`}
-            >
-              <HardDrive className="w-4 h-4" />
-              <span>Penyimpanan</span>
-            </button>
+            {navItems.map(({ id, label, Icon }) => {
+              const isActive = activeTab === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setActiveTab(id)}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                    isActive
+                      ? 'liquid-lens-active q-text-primary'
+                      : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${isActive ? 'q-text-accent' : 'q-text-muted'}`} />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
           </div>
 
-          <div className="pt-2 border-t border-white/10 px-2 text-[10px] text-slate-400 flex items-center justify-between font-mono">
+          <div className="pt-2 border-t q-border px-2 text-[10px] q-text-muted flex items-center justify-between font-mono">
             <span>SeeNote v1.0</span>
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <ShieldCheck className="w-3.5 h-3.5 q-text-muted" />
           </div>
         </div>
 
@@ -185,190 +168,203 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="flex-1 bg-transparent p-6 flex flex-col justify-between overflow-y-auto relative">
           <button
             onClick={onClose}
-            className="hidden md:block absolute top-4 right-4 p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors"
+            className="hidden md:block absolute top-4 right-4 p-1.5 q-text-muted hover:q-text-primary rounded-xl hover:bg-white/10 transition-colors"
+            aria-label={isEn ? 'Close' : 'Tutup'}
           >
             <X className="w-5 h-5" />
           </button>
 
-          {/* TAB 1: General (Umum) */}
+          {/* TAB 1: General */}
           {activeTab === 'general' && (
             <div className="space-y-6">
-              <h3 className="text-base font-bold text-white border-b border-white/10 pb-2">Umum</h3>
+              <h3 className="text-base font-bold q-text-primary tracking-tight border-b q-border pb-2">
+                {isEn ? 'General' : 'Umum'}
+              </h3>
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between py-2 border-b border-white/10">
+                <div className="flex items-center justify-between gap-4 py-2 border-b q-border">
                   <div>
-                    <p className="text-xs font-bold text-white">Penampilan Tema</p>
-                    <p className="text-[11px] text-slate-400">Pilih tema gelap atau terang</p>
+                    <p className="text-xs font-semibold q-text-primary">
+                      {isEn ? 'Theme Mode' : 'Tema Aplikasi'}
+                    </p>
+                    <p className="text-[11px] q-text-muted">
+                      {isEn ? 'Switch between dark, light, or system' : 'Pilih mode gelap, terang, atau ikut sistem'}
+                    </p>
                   </div>
-                  <select
+                  <LiquidSegmentedControl
+                    size="xs"
                     value={settings.theme}
-                    onChange={(e) => onUpdateSettings({ ...settings, theme: e.target.value as any })}
-                    className="glass-input text-xs font-semibold text-white py-1.5 px-3 rounded-xl focus:outline-none"
-                  >
-                    <option value="dark" className="bg-[#0B172E]">Gelap (Dark)</option>
-                    <option value="light" className="bg-[#0B172E]">Terang (Light)</option>
-                    <option value="system" className="bg-[#0B172E]">Sistem</option>
-                  </select>
+                    onChange={(theme) => onUpdateSettings({ ...settings, theme })}
+                    options={[
+                      { value: 'dark', icon: <Moon className="w-3 h-3" />, label: isEn ? 'Dark' : 'Gelap' },
+                      { value: 'light', icon: <Sun className="w-3 h-3" />, label: isEn ? 'Light' : 'Terang' },
+                      { value: 'system', icon: <Monitor className="w-3 h-3" />, label: isEn ? 'Auto' : 'Sistem' },
+                    ]}
+                  />
                 </div>
 
-                <div className="flex items-center justify-between py-2 border-b border-white/10">
+                <div className="flex items-center justify-between gap-4 py-2 border-b q-border">
                   <div>
-                    <p className="text-xs font-bold text-white">Ukuran Font Teks</p>
-                    <p className="text-[11px] text-slate-400">Ukuran font tampilan editor</p>
+                    <p className="text-xs font-semibold q-text-primary">
+                      {isEn ? 'Text Size' : 'Ukuran Teks'}
+                    </p>
+                    <p className="text-[11px] q-text-muted">
+                      {isEn ? 'Adjust reading and editor text scale' : 'Sesuaikan ukuran teks pada editor'}
+                    </p>
                   </div>
-                  <select
+                  <LiquidSegmentedControl
+                    size="xs"
                     value={settings.fontSize}
-                    onChange={(e) => onUpdateSettings({ ...settings, fontSize: e.target.value as FontSizeOption })}
-                    className="glass-input text-xs font-semibold text-white py-1.5 px-3 rounded-xl focus:outline-none"
-                  >
-                    <option value="sm" className="bg-[#0B172E]">Kecil (14px)</option>
-                    <option value="base" className="bg-[#0B172E]">Sedang (16px)</option>
-                    <option value="lg" className="bg-[#0B172E]">Besar (18px)</option>
-                  </select>
+                    onChange={(fontSize) => onUpdateSettings({ ...settings, fontSize })}
+                    options={[
+                      { value: 'sm', label: isEn ? 'Small' : 'Kecil' },
+                      { value: 'base', label: isEn ? 'Default' : 'Sedang' },
+                      { value: 'lg', label: isEn ? 'Large' : 'Besar' },
+                    ]}
+                  />
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB 2: Appearance (Personalisasi) */}
+          {/* TAB 2: Appearance */}
           {activeTab === 'appearance' && (
             <div className="space-y-6">
-              <h3 className="text-base font-bold text-white border-b border-white/10 pb-2">Personalisasi</h3>
+              <h3 className="text-base font-bold q-text-primary tracking-tight border-b q-border pb-2">
+                {isEn ? 'Appearance' : 'Tampilan'}
+              </h3>
 
               <div className="grid grid-cols-3 gap-3">
-                <button
-                  onClick={() => onUpdateSettings({ ...settings, theme: 'dark' })}
-                  className={`p-4 rounded-2xl border text-center space-y-2 transition-all ${
-                    settings.theme === 'dark'
-                      ? 'liquid-lens-active text-white font-bold'
-                      : 'bg-[#071123]/70 border-white/10 text-slate-400 hover:text-white hover:border-white/20'
-                  }`}
-                >
-                  <Moon className="w-6 h-6 mx-auto text-sky-300" />
-                  <p className="text-xs font-semibold">Mode Gelap</p>
-                </button>
-
-                <button
-                  onClick={() => onUpdateSettings({ ...settings, theme: 'light' })}
-                  className={`p-4 rounded-2xl border text-center space-y-2 transition-all ${
-                    settings.theme === 'light'
-                      ? 'liquid-lens-active text-white font-bold'
-                      : 'bg-[#071123]/70 border-white/10 text-slate-400 hover:text-white hover:border-white/20'
-                  }`}
-                >
-                  <Sun className="w-6 h-6 mx-auto text-amber-400" />
-                  <p className="text-xs font-semibold">Mode Terang</p>
-                </button>
-
-                <button
-                  onClick={() => onUpdateSettings({ ...settings, theme: 'system' })}
-                  className={`p-4 rounded-2xl border text-center space-y-2 transition-all ${
-                    settings.theme === 'system'
-                      ? 'liquid-lens-active text-white font-bold'
-                      : 'bg-[#071123]/70 border-white/10 text-slate-400 hover:text-white hover:border-white/20'
-                  }`}
-                >
-                  <Monitor className="w-6 h-6 mx-auto text-emerald-400" />
-                  <p className="text-xs font-semibold">Sistem OS</p>
-                </button>
+                {(
+                  [
+                    { id: 'dark', label: isEn ? 'Dark Mode' : 'Mode Gelap', Icon: Moon },
+                    { id: 'light', label: isEn ? 'Light Mode' : 'Mode Terang', Icon: Sun },
+                    { id: 'system', label: isEn ? 'System' : 'Sistem OS', Icon: Monitor },
+                  ] as const
+                ).map(({ id, label, Icon }) => {
+                  const active = settings.theme === id;
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => onUpdateSettings({ ...settings, theme: id })}
+                      className={`p-4 rounded-2xl border text-center space-y-2 transition-all ${
+                        active
+                          ? 'liquid-lens-active q-text-primary font-semibold'
+                          : 'glass-recessed q-text-secondary hover:q-text-primary'
+                      }`}
+                    >
+                      <Icon className={`w-5 h-5 mx-auto ${active ? 'q-text-accent' : 'q-text-muted'}`} />
+                      <p className="text-xs font-semibold">{label}</p>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
 
-          {/* TAB 3: Language (Bahasa) */}
+          {/* TAB 3: Language */}
           {activeTab === 'language' && (
             <div className="space-y-6">
-              <h3 className="text-base font-bold text-white border-b border-white/10 pb-2">Bahasa (Language)</h3>
+              <h3 className="text-base font-bold q-text-primary tracking-tight border-b q-border pb-2">
+                {isEn ? 'Language' : 'Bahasa'}
+              </h3>
 
               <div className="space-y-2">
                 <button
                   onClick={() => onUpdateSettings({ ...settings, language: 'id' })}
-                  className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-xs font-bold transition-all ${
+                  className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-xs font-semibold transition-all ${
                     settings.language === 'id'
-                      ? 'liquid-lens-active text-white'
-                      : 'bg-[#071123]/70 border-white/10 text-slate-400 hover:text-white hover:border-white/20'
+                      ? 'liquid-lens-active q-text-primary'
+                      : 'glass-recessed q-text-secondary hover:q-text-primary'
                   }`}
                 >
-                  <span>🇮🇩 Bahasa Indonesia (Deteksi Otomatis)</span>
-                  {settings.language === 'id' && <Check className="w-4 h-4 text-sky-200" />}
+                  <span>Bahasa Indonesia</span>
+                  {settings.language === 'id' && <Check className="w-4 h-4 q-text-accent" />}
                 </button>
 
                 <button
                   onClick={() => onUpdateSettings({ ...settings, language: 'en' })}
-                  className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-xs font-bold transition-all ${
+                  className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-xs font-semibold transition-all ${
                     settings.language === 'en'
-                      ? 'liquid-lens-active text-white'
-                      : 'bg-[#071123]/70 border-white/10 text-slate-400 hover:text-white hover:border-white/20'
+                      ? 'liquid-lens-active q-text-primary'
+                      : 'glass-recessed q-text-secondary hover:q-text-primary'
                   }`}
                 >
-                  <span>🇺🇸 English (US)</span>
-                  {settings.language === 'en' && <Check className="w-4 h-4 text-sky-200" />}
+                  <span>English (US)</span>
+                  {settings.language === 'en' && <Check className="w-4 h-4 q-text-accent" />}
                 </button>
               </div>
             </div>
           )}
 
-          {/* TAB 4: Archive & History (Arsip & Riwayat) */}
+          {/* TAB 4: Archive & History */}
           {activeTab === 'archive' && (
             <div className="space-y-6">
-              <h3 className="text-base font-bold text-white border-b border-white/10 pb-2">Arsip &amp; Riwayat</h3>
+              <h3 className="text-base font-bold q-text-primary tracking-tight border-b q-border pb-2">
+                {isEn ? 'History & Reset' : 'Riwayat & Reset'}
+              </h3>
 
               <div className="space-y-3">
                 <button
                   onClick={onClearSearchHistory}
-                  className="w-full py-2.5 px-4 bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-200 text-xs font-semibold rounded-xl transition-all text-left flex items-center justify-between"
+                  className="w-full py-2.5 px-4 glass-control q-text-primary text-xs font-semibold rounded-xl text-left flex items-center justify-between"
                 >
-                  <span>Hapus Riwayat Pencarian</span>
-                  <RotateCcw className="w-4 h-4 text-slate-400" />
+                  <span>{isEn ? 'Clear Search Query' : 'Hapus Riwayat Pencarian'}</span>
+                  <RotateCcw className="w-4 h-4 q-text-muted" />
                 </button>
 
                 <button
                   onClick={onResetSettings}
-                  className="w-full py-2.5 px-4 bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 text-xs font-semibold rounded-xl transition-all text-left flex items-center justify-between border border-rose-400/30"
+                  className="w-full py-2.5 px-4 bg-rose-500/12 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold rounded-xl transition-all text-left flex items-center justify-between border border-rose-400/25"
                 >
-                  <span>Reset Semua Preferensi ke Default</span>
-                  <RotateCcw className="w-4 h-4 text-rose-400" />
+                  <span>{isEn ? 'Reset All Preferences to Default' : 'Reset Semua Pengaturan ke Default'}</span>
+                  <RotateCcw className="w-4 h-4" />
                 </button>
               </div>
             </div>
           )}
 
-          {/* TAB 5: Storage & Backup (Penyimpanan) */}
+          {/* TAB 5: Storage & Backup */}
           {activeTab === 'storage' && (
             <div className="space-y-6">
-              <h3 className="text-base font-bold text-white border-b border-white/10 pb-2">Penyimpanan &amp; Cadangan Data</h3>
+              <h3 className="text-base font-bold q-text-primary tracking-tight border-b q-border pb-2">
+                {isEn ? 'Backup & Storage' : 'Cadangan & Penyimpanan'}
+              </h3>
 
               <div className="space-y-3">
-                <div className="p-4 rounded-2xl bg-[#071123]/70 border border-white/10 space-y-2">
-                  <div className="flex items-center gap-2 text-white font-bold text-xs">
-                    <Download className="w-4 h-4 text-sky-400" />
-                    <span>Ekspor Berkas JSON ({notes.length} Catatan)</span>
+                <div className="p-4 rounded-2xl glass-recessed space-y-2">
+                  <div className="flex items-center gap-2 q-text-primary font-semibold text-xs">
+                    <Download className="w-4 h-4 q-text-muted" />
+                    <span>
+                      {isEn ? `Export JSON Backup (${notes.length} Notes)` : `Ekspor Cadangan JSON (${notes.length} Catatan)`}
+                    </span>
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">
-                    Unduh seluruh data catatan lokal ke komputer lo.
+                  <p className="text-[11px] q-text-muted leading-relaxed">
+                    {isEn
+                      ? 'Download all your local notes to your device as a JSON file.'
+                      : 'Unduh seluruh data catatan lokal ke perangkat Anda dalam format JSON.'}
                   </p>
                   <button
                     onClick={handleExport}
-                    className="w-full mt-2 py-2 px-4 glass-btn-primary text-white font-bold text-xs rounded-full transition-all"
+                    className="w-full mt-2 py-2 px-4 glass-btn-primary font-semibold text-xs rounded-full"
                   >
-                    Unduh Backup JSON
+                    {isEn ? 'Download Backup JSON' : 'Unduh Backup JSON'}
                   </button>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-[#071123]/70 border border-white/10 space-y-2">
-                  <div className="flex items-center gap-2 text-white font-bold text-xs">
-                    <Upload className="w-4 h-4 text-emerald-400" />
-                    <span>Impor Data Catatan</span>
+                <div className="p-4 rounded-2xl glass-recessed space-y-2">
+                  <div className="flex items-center gap-2 q-text-primary font-semibold text-xs">
+                    <Upload className="w-4 h-4 q-text-muted" />
+                    <span>{isEn ? 'Import Backup' : 'Impor Data Catatan'}</span>
                   </div>
-                  <label className="block w-full text-center py-2 px-4 bg-white/[0.08] hover:bg-white/[0.15] border border-white/15 text-white font-semibold text-xs rounded-full transition-all cursor-pointer">
-                    <span>Pilih Berkas Backup JSON</span>
+                  <label className="block w-full text-center py-2 px-4 glass-control q-text-primary font-semibold text-xs rounded-full cursor-pointer">
+                    <span>{isEn ? 'Choose JSON Backup File' : 'Pilih Berkas Backup JSON'}</span>
                     <input type="file" accept=".json" onChange={handleFileUpload} className="hidden" />
                   </label>
                 </div>
 
                 {importStatus && (
-                  <p className="text-xs text-emerald-400 font-semibold">{importStatus}</p>
+                  <p className="text-xs q-text-accent font-semibold">{importStatus}</p>
                 )}
                 {errorMsg && (
                   <p className="text-xs text-rose-400 font-semibold">{errorMsg}</p>

@@ -154,9 +154,9 @@ export const NoteCard: React.FC<NoteCardProps> = ({
       }}
       className={`group relative p-4 rounded-2xl transition-all duration-200 cursor-pointer select-none font-sans flex flex-col justify-between min-h-[260px] glass-card ${
         isMultiSelected
-          ? '!border-sky-400/80 ring-2 ring-sky-400/40 shadow-[0_0_28px_rgba(56,189,248,0.22)]'
+          ? '!border-[#38BDF8]/75 ring-2 ring-[#38BDF8]/35'
           : isSelected
-          ? '!border-sky-400/60 ring-1 ring-sky-400/30'
+          ? '!border-[#38BDF8]/55 ring-1 ring-[#38BDF8]/25'
           : 'hover:-translate-y-0.5'
       }`}
     >
@@ -173,15 +173,15 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                 }}
                 className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all shrink-0 ${
                   isMultiSelected
-                    ? 'bg-sky-500 border-sky-300 text-white shadow-[0_0_10px_rgba(56,189,248,0.4)]'
-                    : 'border-white/25 bg-[#071123]/80 group-hover:border-white/45'
+                    ? 'bg-[#38BDF8] border-[#38BDF8] text-[#071124]'
+                    : 'border-white/25 glass-recessed group-hover:border-white/45'
                 }`}
               >
-                {isMultiSelected && <Check className="w-3 h-3 text-white" />}
+                {isMultiSelected && <Check className="w-3 h-3" />}
               </div>
             )}
 
-            <h3 className="font-bold text-sm text-white line-clamp-1 group-hover:text-sky-200 transition-colors tracking-tight">
+            <h3 className="font-semibold text-sm q-text-primary line-clamp-1 transition-colors tracking-tight">
               <HighlightText text={note.title || 'Catatan Tanpa Judul'} query={searchQuery} />
             </h3>
           </div>
@@ -192,7 +192,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               <div className="relative" ref={menuRef} onClick={(e) => e.stopPropagation()}>
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="p-1 q-text-muted hover:q-text-primary rounded-lg hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
                   title="Opsi Catatan"
                 >
                   <MoreHorizontal className="w-4 h-4" />
@@ -203,16 +203,15 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                   <div className="absolute right-0 top-6 w-44 glass-popover rounded-2xl p-1.5 z-50 space-y-0.5 font-sans">
                     {note.isTrash ? (
                       <>
-                        {/* Trash-specific menu: Pulihkan & Hapus Permanen */}
                         {onToggleTrash && (
                           <button
                             onClick={() => {
                               onToggleTrash(note.id);
                               setIsMenuOpen(false);
                             }}
-                            className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/20 rounded-xl transition-colors"
+                            className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold q-text-primary hover:bg-white/10 rounded-xl transition-colors"
                           >
-                            <Undo2 className="w-3.5 h-3.5 text-emerald-400" />
+                            <Undo2 className="w-3.5 h-3.5 q-text-muted" />
                             <span>Pulihkan</span>
                           </button>
                         )}
@@ -223,26 +222,25 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                               onDeletePermanently(note.id);
                               setIsMenuOpen(false);
                             }}
-                            className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 rounded-xl transition-colors"
+                            className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/15 rounded-xl transition-colors"
                           >
-                            <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                            <Trash2 className="w-3.5 h-3.5" />
                             <span>Hapus Permanen</span>
                           </button>
                         )}
                       </>
                     ) : (
                       <>
-                        {/* Normal note menu */}
                         {onToggleFavorite && (
                           <button
                             onClick={() => {
                               onToggleFavorite(note.id);
                               setIsMenuOpen(false);
                             }}
-                            className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+                            className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold q-text-secondary hover:q-text-primary hover:bg-white/10 rounded-xl transition-colors"
                           >
-                            <Star className={`w-3.5 h-3.5 ${note.isFavorite ? 'text-amber-400 fill-amber-400' : 'text-slate-400'}`} />
-                            <span>{note.isFavorite ? 'Unstar' : 'Pin to Favorite'}</span>
+                            <Star className={`w-3.5 h-3.5 ${note.isFavorite ? 'q-text-accent fill-current' : 'q-text-muted'}`} />
+                            <span>{note.isFavorite ? 'Hapus Favorit' : 'Tandai Favorit'}</span>
                           </button>
                         )}
 
@@ -252,25 +250,24 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                               onDuplicateNote(note);
                               setIsMenuOpen(false);
                             }}
-                            className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+                            className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold q-text-secondary hover:q-text-primary hover:bg-white/10 rounded-xl transition-colors"
                           >
-                            <CopyPlus className="w-3.5 h-3.5 text-slate-400" />
-                            <span>Duplicate</span>
+                            <CopyPlus className="w-3.5 h-3.5 q-text-muted" />
+                            <span>Duplikat</span>
                           </button>
                         )}
 
-                        {/* Move to Folder Submenu */}
                         {onMoveNote && (
                           <div className="relative">
                             <button
                               onClick={() => setIsMovePopoverOpen(!isMovePopoverOpen)}
-                              className="w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+                              className="w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-semibold q-text-secondary hover:q-text-primary hover:bg-white/10 rounded-xl transition-colors"
                             >
                               <div className="flex items-center gap-2">
-                                <FolderInput className="w-3.5 h-3.5 text-slate-400" />
-                                <span>Move to</span>
+                                <FolderInput className="w-3.5 h-3.5 q-text-muted" />
+                                <span>Pindah Folder</span>
                               </div>
-                              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                              <ChevronRight className="w-3.5 h-3.5 q-text-muted" />
                             </button>
 
                             {isMovePopoverOpen && (
@@ -283,7 +280,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                                       setIsMovePopoverOpen(false);
                                       setIsMenuOpen(false);
                                     }}
-                                    className="w-full text-left px-2 py-1 text-xs truncate rounded-lg text-slate-200 hover:text-white hover:bg-white/10"
+                                    className="w-full text-left px-2 py-1 text-xs truncate rounded-lg q-text-secondary hover:q-text-primary hover:bg-white/10"
                                   >
                                     {f}
                                   </button>
@@ -299,10 +296,10 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                               onToggleTrash(note.id);
                               setIsMenuOpen(false);
                             }}
-                            className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 rounded-xl transition-colors"
+                            className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/15 rounded-xl transition-colors"
                           >
-                            <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-                            <span>Delete</span>
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Hapus</span>
                           </button>
                         )}
                       </>
@@ -315,32 +312,31 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         </div>
 
         {/* Metadata Row: Folder Name, Star Badge, & Updated Relative Time */}
-        <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
-          <FolderOpen className="w-3 h-3 text-sky-400 shrink-0" />
-          <span className="truncate text-slate-300">{note.subject || 'Umum'}</span>
+        <div className="flex items-center gap-1.5 text-[10px] q-text-muted font-medium">
+          <FolderOpen className="w-3 h-3 q-text-muted shrink-0" />
+          <span className="truncate q-text-secondary">{note.subject || 'Umum'}</span>
 
-          {/* Sleek Star Icon Badge */}
           {note.isFavorite && (
-            <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0 ml-0.5" />
+            <Star className="w-3 h-3 q-text-accent fill-current shrink-0 ml-0.5" />
           )}
 
-          <span className="text-slate-600">•</span>
-          <Clock className="w-3 h-3 text-slate-500 shrink-0" />
-          <span className="text-slate-400">Updated {formatRelativeTime(note.updatedAt)}</span>
+          <span className="opacity-40">•</span>
+          <Clock className="w-3 h-3 q-text-muted shrink-0" />
+          <span className="q-text-muted">{formatRelativeTime(note.updatedAt)}</span>
         </div>
       </div>
 
-      {/* Middle Recessed Midnight Navy Document Paper Preview */}
-      <div className="flex-1 my-3 bg-[#071123]/75 rounded-xl p-3 border border-white/[0.08] overflow-hidden text-left shadow-[inset_0_2px_8px_rgba(2,6,23,0.5)] flex flex-col justify-start gap-1.5">
+      {/* Middle Recessed Document Preview */}
+      <div className="flex-1 my-3 glass-recessed rounded-xl p-3 overflow-hidden text-left flex flex-col justify-start gap-1.5">
         {miniBlocks.length === 0 ? (
-          <p className="text-[11px] text-slate-500 italic select-none">
+          <p className="text-[11px] q-text-muted italic select-none">
             Belum ada konten catatan.
           </p>
         ) : (
           miniBlocks.slice(0, 3).map((b, i) => {
             if (b.type === 'text') {
               return (
-                <p key={i} className="text-[11px] text-slate-300 font-normal leading-relaxed line-clamp-3 select-none opacity-90">
+                <p key={i} className="text-[11px] q-text-secondary font-normal leading-relaxed line-clamp-3 select-none">
                   <HighlightText text={b.text} query={searchQuery} />
                 </p>
               );
@@ -348,20 +344,20 @@ export const NoteCard: React.FC<NoteCardProps> = ({
 
             if (b.type === 'mermaid') {
               return (
-                <div key={i} className="p-2 bg-[#0B172E]/80 rounded-lg border border-white/[0.08] flex items-center gap-2 text-slate-200 select-none shrink-0">
-                  <GitGraph className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-                  <span className="text-[10.5px] font-semibold text-slate-200 truncate">Diagram Mermaid</span>
+                <div key={i} className="p-2 glass-control rounded-lg flex items-center gap-2 select-none shrink-0">
+                  <GitGraph className="w-3.5 h-3.5 q-text-muted shrink-0" />
+                  <span className="text-[10.5px] font-medium q-text-primary truncate">Diagram Mermaid</span>
                 </div>
               );
             }
 
             if (b.type === 'attachment') {
               return (
-                <div key={i} className="p-2 bg-[#0B172E]/80 rounded-lg border border-white/[0.08] flex items-center gap-2 text-slate-200 select-none shrink-0">
-                  <FileUp className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <div key={i} className="p-2 glass-control rounded-lg flex items-center gap-2 select-none shrink-0">
+                  <FileUp className="w-3.5 h-3.5 q-text-muted shrink-0" />
                   <div className="overflow-hidden flex-1 leading-tight">
-                    <div className="text-[10.5px] font-semibold text-slate-200 truncate">{b.name}</div>
-                    {b.size && <div className="text-[9px] text-slate-500">{b.size}</div>}
+                    <div className="text-[10.5px] font-medium q-text-primary truncate">{b.name}</div>
+                    {b.size && <div className="text-[9px] q-text-muted">{b.size}</div>}
                   </div>
                 </div>
               );
@@ -369,18 +365,18 @@ export const NoteCard: React.FC<NoteCardProps> = ({
 
             if (b.type === 'subpage') {
               return (
-                <div key={i} className="p-2 bg-[#0B172E]/80 rounded-lg border border-white/[0.08] flex items-center gap-2 text-slate-200 select-none shrink-0">
-                  <FileText className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span className="text-[10.5px] font-semibold text-slate-200 truncate">{b.title}</span>
+                <div key={i} className="p-2 glass-control rounded-lg flex items-center gap-2 select-none shrink-0">
+                  <FileText className="w-3.5 h-3.5 q-text-muted shrink-0" />
+                  <span className="text-[10.5px] font-medium q-text-primary truncate">{b.title}</span>
                 </div>
               );
             }
 
             if (b.type === 'code') {
               return (
-                <div key={i} className="p-2 bg-[#0B172E]/80 rounded-lg border border-white/[0.08] flex items-center gap-2 font-mono text-slate-200 select-none shrink-0">
-                  <Code2 className="w-3.5 h-3.5 text-violet-400 shrink-0" />
-                  <span className="text-[9.5px] text-violet-200 truncate font-mono">{b.code.slice(0, 45) || 'Code Block'}</span>
+                <div key={i} className="p-2 glass-control rounded-lg flex items-center gap-2 font-mono select-none shrink-0">
+                  <Code2 className="w-3.5 h-3.5 q-text-muted shrink-0" />
+                  <span className="text-[9.5px] q-text-secondary truncate font-mono">{b.code.slice(0, 45) || 'Code Block'}</span>
                 </div>
               );
             }
@@ -390,15 +386,15 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         )}
       </div>
 
-      {/* Bottom Inline Tags */}
-      <div className="flex items-center gap-1.5 text-[10px] text-slate-300 font-medium overflow-hidden">
+      {/* Bottom Inline Tags (Monochrome Tempered Glass) */}
+      <div className="flex items-center gap-1.5 text-[10px] font-medium overflow-hidden">
         {note.tags.slice(0, 3).map((t, i) => (
-          <span key={i} className="px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/[0.10] text-slate-200 hover:border-sky-400/40 hover:text-white transition-colors">
+          <span key={i} className="px-2 py-0.5 rounded-full glass-control q-text-secondary">
             #{t}
           </span>
         ))}
         {note.tags.length > 3 && (
-          <span className="text-slate-500">+{note.tags.length - 3}</span>
+          <span className="q-text-muted">+{note.tags.length - 3}</span>
         )}
       </div>
     </div>
