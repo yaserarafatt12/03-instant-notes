@@ -38,3 +38,47 @@ export interface AppState {
   isEditorOpen: boolean;
   isDarkMode: boolean;
 }
+
+export type CollectionColumnType =
+  | 'text'
+  | 'number'
+  | 'select'
+  | 'multi-select'
+  | 'checkbox'
+  | 'date'
+  | 'url';
+
+export interface CollectionColumnOption {
+  id: string;
+  name: string;
+  color: string;
+}
+
+export interface CollectionColumn {
+  id: string;
+  name: string;
+  type: CollectionColumnType;
+  width?: number;
+  options?: CollectionColumnOption[];
+}
+
+export interface CollectionRow {
+  id: string;
+  [columnId: string]: any;
+}
+
+export interface CollectionView {
+  id: string;
+  name: string;
+  type: 'table' | 'gallery' | 'kanban';
+}
+
+export interface CollectionData {
+  id: string;
+  title: string;
+  views: CollectionView[];
+  activeViewId: string;
+  columns: CollectionColumn[];
+  rows: CollectionRow[];
+}
+

@@ -25,25 +25,25 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     <div className="space-y-2.5 font-sans">
       {/* Search Input Box */}
       <div className="relative flex items-center">
-        <Search className="absolute left-3 w-4 h-4 text-zinc-400 pointer-events-none" />
+        <Search className="absolute left-3 w-4 h-4 text-sky-300/80 pointer-events-none" />
         <input
           type="text"
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
           placeholder="Cari catatan... (Ctrl+K)"
           aria-label="Cari catatan"
-          className="w-full pl-9 pr-9 py-1.5 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-lg text-xs font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all"
+          className="w-full pl-9 pr-9 py-1.5 glass-input rounded-full text-xs font-medium text-slate-100 placeholder:text-slate-400 focus:outline-none transition-all"
         />
         {query ? (
           <button
             onClick={() => onQueryChange('')}
             aria-label="Hapus kata kunci pencarian"
-            className="absolute right-2.5 p-0.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded"
+            className="absolute right-2.5 p-0.5 text-slate-400 hover:text-white rounded"
           >
             <X className="w-3.5 h-3.5" />
           </button>
         ) : (
-          <kbd className="absolute right-2.5 hidden sm:inline-block px-1.5 py-0.5 text-[9px] font-mono text-zinc-400 dark:text-zinc-500 bg-zinc-200/80 dark:bg-zinc-800 rounded border border-zinc-300/80 dark:border-zinc-700/60">
+          <kbd className="absolute right-2.5 hidden sm:inline-block px-1.5 py-0.5 text-[9px] font-mono text-slate-400 bg-white/[0.06] rounded border border-white/15">
             Ctrl+K
           </kbd>
         )}

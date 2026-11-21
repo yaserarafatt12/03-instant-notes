@@ -35,63 +35,32 @@ function getDB(): Promise<IDBPDatabase<InstantNotesDB>> {
   return dbPromise;
 }
 
-// Sample notes for zero-state demonstration
-export const SAMPLE_NOTES: Note[] = [
-  {
-    id: 'sample-1',
-    title: 'Rumus Fisika — Turunan & Integral Dasar',
-    content: 'Integral Tentu: ∫(x^n) dx = (1/(n+1)) * x^(n+1) + C. Kasus Khusus: ∫(1/x) dx = ln|x| + C. Turunan Sinus: d/dx (sin x) = cos x. Turunan Kosinus: d/dx (cos x) = -sin x.',
-    subject: 'Fisika',
-    tags: ['Rumus', 'Kalkulus', 'SMA'],
-    isFavorite: true,
-    isTrash: false,
-    createdAt: Date.now() - 86400000 * 2,
-    updatedAt: Date.now() - 86400000 * 2,
-  },
-  {
-    id: 'sample-2',
-    title: 'Snippet Custom Hook React — useDebounce',
-    content: 'import { useState, useEffect } from "react";\n\nexport function useDebounce<T>(value: T, delay: number): T {\n  const [debouncedValue, setDebouncedValue] = useState<T>(value);\n  useEffect(() => {\n    const handler = setTimeout(() => setDebouncedValue(value), delay);\n    return () => clearTimeout(handler);\n  }, [value, delay]);\n  return debouncedValue;\n}',
-    subject: 'Programming',
-    tags: ['React', 'TypeScript', 'CodeSnippet'],
-    isFavorite: true,
-    isTrash: false,
-    createdAt: Date.now() - 86400000 * 1,
-    updatedAt: Date.now() - 86400000 * 1,
-  },
-  {
-    id: 'sample-3',
-    title: 'Ringkasan Materi Biologi — Sintesis Protein',
-    content: 'Sintesis protein terdiri dari dua tahap utama: Transkripsi (pembentukan mRNA dari cetakan DNA di dalam inti sel) dan Translasi (pemerjemahan mRNA oleh ribosom menjadi rantai asam amino). PENTING: Kodon AUGA adalah kodon start (Metionin).',
-    subject: 'Biologi',
-    tags: ['Genetika', 'Sel', 'UTBK'],
-    isFavorite: false,
-    isTrash: false,
-    createdAt: Date.now() - 3600000 * 5,
-    updatedAt: Date.now() - 3600000 * 5,
-  },
-];
+// Sample notes set to empty array per user request
+export const SAMPLE_NOTES: Note[] = [];
 
 export async function getAllNotes(): Promise<Note[]> {
   try {
     const db = await getDB();
-    const notes = await db.getAll('notes');
-    if (notes.length === 0) {
-      // Seed with sample notes on first launch
-      for (const sample of SAMPLE_NOTES) {
-        await db.put('notes', sample);
+    let notes = await db.getAll('notes');
+    
+    // Purge any legacy sample dummy notes automatically
+    const sampleNotes = notes.filter((n) => n.id.startsWith('sample-'));
+    if (sampleNotes.length > 0) {
+      for (const s of sampleNotes) {
+        await db.delete('notes', s.id);
       }
-      return SAMPLE_NOTES;
+      notes = notes.filter((n) => !n.id.startsWith('sample-'));
     }
+
     return notes.sort((a, b) => b.updatedAt - a.updatedAt);
   } catch (error) {
     console.error('Failed to read notes from IndexedDB:', error);
     const local = localStorage.getItem('instant_notes_fallback');
     if (local) {
-      return JSON.parse(local);
+      const parsed: Note[] = JSON.parse(local);
+      return parsed.filter((n) => !n.id.startsWith('sample-'));
     }
-    localStorage.setItem('instant_notes_fallback', JSON.stringify(SAMPLE_NOTES));
-    return SAMPLE_NOTES;
+    return [];
   }
 }
 

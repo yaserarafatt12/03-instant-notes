@@ -1,26 +1,44 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   FileText,
   Star,
   Trash2,
   Plus,
-  Folder as FolderIcon,
+  FolderOpen as FoldersHeaderIcon,
+  Tag as TagIcon,
   History,
   Settings,
-  Columns2,
+  PanelLeft,
   ChevronDown,
   ChevronRight,
   Check,
+  SquarePen,
+  FilePlus,
+  FolderPlus,
+  FolderInput,
+  List,
+  CheckCircle2,
+  Paperclip,
+  Search,
+  Folder,
+  Code,
+  Hash,
+  Image as ImageIcon,
+  Home,
+  X,
 } from 'lucide-react';
 import type { FilterCategory, Note } from '../types/note';
+import { ConfirmModal } from './ConfirmModal';
+import { CreateFolderModal } from './CreateFolderModal';
+import { getFolderIconComponent } from '../lib/folderIcons';
 
 interface FilterBarProps {
   activeFilter: FilterCategory;
-  onFilterChange: (f: FilterCategory) => void;
+  onFilterChange: (filter: FilterCategory) => void;
   selectedSubject: string | null;
-  onSubjectChange: (s: string | null) => void;
+  onSubjectChange: (subject: string | null) => void;
   selectedTag: string | null;
-  onTagChange: (t: string | null) => void;
+  onTagChange: (tag: string | null) => void;
   subjects: { name: string; count: number }[];
   tags: { name: string; count: number }[];
   totalNotes: number;
@@ -28,20 +46,24 @@ interface FilterBarProps {
   trashCount: number;
   onNewNote: () => void;
   onOpenSettings: () => void;
-  onToggleSidebar?: () => void;
-  onOpenBackup?: () => void;
-  searchQuery?: string;
-  onSearchQueryChange?: (q: string) => void;
-  notes?: Note[];
-  selectedNoteId?: string | null;
-  onSelectNote?: (id: string) => void;
-  filteredNotes?: Note[];
-  onAddFolder?: (folderName: string) => void;
+  searchQuery: string;
+  onSearchQueryChange: (query: string) => void;
+  notes: Note[];
+  selectedNoteId: string | null;
+  onSelectNote: (id: string) => void;
+  filteredNotes: Note[];
+  onToggleSidebar: () => void;
+  onOpenBackup: () => void;
+  onOpenCreateFolderModal?: (parentPath?: string) => void;
+  onNewDocInFolder?: (folderPath: string) => void;
+  onRenameFolder?: (oldPath: string, newPath: string) => void;
+  onDeleteFolder?: (folderPath: string) => void;
+  onMoveFolder?: (sourceFolderPath: string, targetParentFolderPath: string) => void;
+  folderMetaMap?: Record<string, { color?: string; icon?: string }>;
 }
 
 const PINNED_TAGS_KEY = 'instant_notes_pinned_tags';
 
-// Tree interface for recursive subfolder support
 interface FolderNode {
   name: string;
   fullPath: string;
@@ -68,18 +90,39 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   notes = [],
   selectedNoteId,
   onSelectNote = () => {},
-  onAddFolder,
+  onOpenCreateFolderModal,
+  onNewDocInFolder,
+  onRenameFolder,
+  onDeleteFolder,
+  onMoveFolder,
+  folderMetaMap = {},
 }) => {
   const [isFoldersSectionCollapsed, setIsFoldersSectionCollapsed] = useState(false);
   const [isTagsCollapsed, setIsTagsCollapsed] = useState(false);
   const [isPinTagPopoverOpen, setIsPinTagPopoverOpen] = useState(false);
+  const [activeFolderMenuPath, setActiveFolderMenuPath] = useState<string | null>(null);
+  const [isMoveFolderPopoverOpen, setIsMoveFolderPopoverOpen] = useState(false);
 
-  // Track expanded folder paths for recursive tree
+  // Custom Modal States (No native window alert/confirm!)
+  const [folderToDelete, setFolderToDelete] = useState<{ path: string; name: string } | null>(null);
+  const [folderToRename, setFolderToRename] = useState<{ path: string; name: string } | null>(null);
+
   const [expandedFolderPaths, setExpandedFolderPaths] = useState<string[]>([]);
+  // Track expanded folder paths for document list limit (>4)
+  const [expandedDocListFolderPaths, setExpandedDocListFolderPaths] = useState<string[]>([]);
+
+  const toggleExpandDocListFolder = (path: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (expandedDocListFolderPaths.includes(path)) {
+      setExpandedDocListFolderPaths(expandedDocListFolderPaths.filter((p) => p !== path));
+    } else {
+      setExpandedDocListFolderPaths([...expandedDocListFolderPaths, path]);
+    }
+  };
 
   const tagPopoverRef = useRef<HTMLDivElement>(null);
+  const folderMenuRef = useRef<HTMLDivElement>(null);
 
-  // Pinned Tags State
   const [pinnedTags, setPinnedTags] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem(PINNED_TAGS_KEY);
@@ -115,33 +158,25 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       if (tagPopoverRef.current && !tagPopoverRef.current.contains(e.target as Node)) {
         setIsPinTagPopoverOpen(false);
       }
+      if (folderMenuRef.current && !folderMenuRef.current.contains(e.target as Node)) {
+        setActiveFolderMenuPath(null);
+      }
     };
     window.addEventListener('mousedown', handleClickOutside);
     return () => window.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleCreateFolderPrompt = (parentPath = '') => {
-    const promptMsg = parentPath
-      ? `Masukkan nama Subfolder di dalam '${parentPath}':`
-      : 'Masukkan nama Folder baru:';
-    const name = window.prompt(promptMsg);
-    if (name && name.trim()) {
-      const fullPath = parentPath ? `${parentPath}/${name.trim()}` : name.trim();
-      if (onAddFolder) onAddFolder(fullPath);
-      onSubjectChange(fullPath);
-      if (parentPath && !expandedFolderPaths.includes(parentPath)) {
-        setExpandedFolderPaths([...expandedFolderPaths, parentPath]);
-      }
+    if (onOpenCreateFolderModal) {
+      onOpenCreateFolderModal(parentPath);
     }
   };
 
-  // Build Hierarchical Subfolder Tree from slash-separated paths (e.g. A/e)
   const folderTree = React.useMemo(() => {
     const root = new Map<string, FolderNode>();
 
-    // Process all active notes to group into folder tree
-    notes.filter((n) => !n.isTrash).forEach((note) => {
-      const pathParts = (note.subject || 'Umum').split('/').map((p) => p.trim()).filter(Boolean);
+    notes.filter((n) => !n.isTrash && n.subject).forEach((note) => {
+      const pathParts = note.subject.split('/').map((p) => p.trim()).filter(Boolean);
       let currentMap = root;
       let accumulatedPath = '';
 
@@ -165,7 +200,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       });
     });
 
-    // Also include empty subjects from subjects prop
     subjects.forEach(({ name }) => {
       const pathParts = name.split('/').map((p) => p.trim()).filter(Boolean);
       let currentMap = root;
@@ -190,43 +224,164 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     return root;
   }, [notes, subjects]);
 
-  // Recursive Tree Component Renderer
+  const [showAllFolders, setShowAllFolders] = useState(false);
+
+  // TOC Sidebar Mode & Tabs State
+  const [sidebarView, setSidebarView] = useState<'folders' | 'toc'>('folders');
+  const [tocTab, setTocTab] = useState<'list' | 'tasks' | 'attachments' | 'search'>('list');
+  const [tocSearchQuery, setTocSearchQuery] = useState('');
+
+  // Automatically switch to TOC view when inside a note
+  useEffect(() => {
+    if (selectedNoteId) {
+      setSidebarView('toc');
+    } else {
+      setSidebarView('folders');
+    }
+  }, [selectedNoteId]);
+
+  const activeNote = useMemo(() => {
+    return notes.find((n) => n.id === selectedNoteId);
+  }, [notes, selectedNoteId]);
+
+  // Extract Table of Contents (Pages, Headings, Code blocks) from active note
+  const tocItems = useMemo(() => {
+    if (!activeNote || !activeNote.content) return [];
+    const items: { id: string; type: 'page' | 'heading' | 'code'; title: string; subpageId?: string; level?: number; rawContent?: string }[] = [];
+    const foundSubpageIds = new Set<string>();
+
+    // 1. Extract subpage blocks :::subpage{id="id" title="title"}...:::
+    const subpageRegex = /:::subpage\{id="([^"]+)" title="([^"]*)"\}[\r\n]+([\s\S]*?)[\r\n]+:::/gi;
+    let match: RegExpExecArray | null;
+    while ((match = subpageRegex.exec(activeNote.content)) !== null) {
+      const subpageId = match[1];
+      const rawTitle = match[2] ? match[2].replace(/&quot;/g, '"').replace(/\\"/g, '"') : '';
+      const title = rawTitle.trim() || 'Untitled Page';
+      const content = match[3] || '';
+      foundSubpageIds.add(subpageId);
+      items.push({
+        id: subpageId,
+        type: 'page',
+        title,
+        subpageId,
+        rawContent: content,
+      });
+    }
+
+    // 2. Extract inline markdown subpage links, headings, and code blocks line by line
+    const lines = activeNote.content.split('\n');
+    lines.forEach((line: string, index: number) => {
+      const trimmed = line.trim();
+
+      // Check subpage link: [page:subpageId|Page Title] or [Title](page:subpageId)
+      const pageMatch = trimmed.match(/\[([^\]]+)\]\(page:([^\)]+)\)/i) || trimmed.match(/\[page:([^\|]+)\|([^\]]+)\]/i);
+      if (pageMatch) {
+        const title = pageMatch[1] || pageMatch[2];
+        const subpageId = pageMatch[2] || pageMatch[1];
+        if (!foundSubpageIds.has(subpageId)) {
+          foundSubpageIds.add(subpageId);
+          items.push({ id: subpageId, type: 'page', title, subpageId });
+        }
+        return;
+      }
+
+      // Check heading (# Heading 1, ## Heading 2, etc.)
+      const headingMatch = trimmed.match(/^(#{1,6})\s+(.+)$/);
+      if (headingMatch) {
+        const level = headingMatch[1].length;
+        const title = headingMatch[2].trim();
+        items.push({ id: `line-${index}`, type: 'heading', title, level });
+        return;
+      }
+
+      // Check code block
+      if (trimmed.startsWith('```')) {
+        const lang = trimmed.slice(3).trim();
+        if (lang) {
+          items.push({ id: `line-${index}`, type: 'code', title: `Code (${lang})` });
+        }
+      }
+    });
+
+    return items;
+  }, [activeNote]);
+
+  // Extract tasks/TODO checkboxes from active note
+  const extractedTasks = useMemo(() => {
+    if (!activeNote || !activeNote.content) return [];
+    const tasks: { id: string; text: string; completed: boolean }[] = [];
+    const lines = activeNote.content.split('\n');
+    lines.forEach((line: string, idx: number) => {
+      const match = line.match(/^\s*-\s*\[([ xX])\]\s*(.+)$/);
+      if (match) {
+        tasks.push({
+          id: `task-${idx}`,
+          completed: match[1].toLowerCase() === 'x',
+          text: match[2].trim(),
+        });
+      }
+    });
+    return tasks;
+  }, [activeNote]);
+
+  // Extract attachments/images from active note
+  const extractedAttachments = useMemo(() => {
+    if (!activeNote || !activeNote.content) return [];
+    const atts: { id: string; title: string; url?: string; type: string }[] = [];
+    const lines = activeNote.content.split('\n');
+    lines.forEach((line: string, idx: number) => {
+      const imgMatch = line.match(/!\[([^\]]*)\]\(([^\)]+)\)/);
+      if (imgMatch) {
+        atts.push({ id: `att-${idx}`, title: imgMatch[1] || 'Gambar', url: imgMatch[2], type: 'image' });
+      }
+    });
+    return atts;
+  }, [activeNote]);
+
   const renderFolderNode = (node: FolderNode, depth = 0) => {
+    // Limit subfolder nesting depth to 3 levels max
+    if (depth > 2) return null;
+
     const isExpanded = expandedFolderPaths.includes(node.fullPath);
-    const hasChildren = node.children.size > 0 || node.documents.length > 0;
     const isSelected = selectedSubject?.toLowerCase() === node.fullPath.toLowerCase();
+    const isMenuOpen = activeFolderMenuPath === node.fullPath;
+
+    const meta = folderMetaMap?.[node.fullPath];
+    const CustomFolderIcon = getFolderIconComponent(meta?.icon);
+    const customColor = meta?.color || '#ffffff';
 
     return (
-      <div key={node.fullPath} className="space-y-0.5">
+      <div key={node.fullPath} className="space-y-0.5 relative">
         <div
           onClick={() => {
             onFilterChange('all');
             onSubjectChange(isSelected ? null : node.fullPath);
             onTagChange(null);
           }}
-          className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer group/item ${
+          onContextMenu={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setActiveFolderMenuPath(node.fullPath);
+          }}
+          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer group/item relative ${
             isSelected
-              ? 'bg-[#252528] text-white font-semibold'
-              : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
+              ? 'bg-white/[0.11] text-white font-semibold border border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+              : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100 border border-transparent'
           }`}
-          style={{ paddingLeft: `${depth * 12 + 8}px` }}
+          style={{ paddingLeft: `${depth * 12 + 10}px` }}
         >
           <div className="flex items-center gap-1.5 overflow-hidden">
             <button
               onClick={(e) => toggleFolderPathExpand(node.fullPath, e)}
-              className="p-0.5 text-zinc-500 hover:text-zinc-200 rounded"
+              className="p-0.5 text-slate-500 hover:text-slate-200 rounded"
             >
-              {hasChildren ? (
-                isExpanded ? (
-                  <ChevronDown className="w-3 h-3 text-zinc-400" />
-                ) : (
-                  <ChevronRight className="w-3 h-3 text-zinc-400" />
-                )
+              {isExpanded ? (
+                <ChevronDown className="w-3 h-3 text-slate-400" />
               ) : (
-                <span className="w-3 inline-block" />
+                <ChevronRight className="w-3 h-3 text-slate-400" />
               )}
             </button>
-            <FolderIcon className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+            <CustomFolderIcon className="w-3.5 h-3.5 shrink-0" style={{ color: customColor }} />
             <span className="truncate max-w-[110px]">{node.name}</span>
           </div>
 
@@ -234,40 +389,153 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleCreateFolderPrompt(node.fullPath);
+                setActiveFolderMenuPath(isMenuOpen ? null : node.fullPath);
               }}
-              className="p-0.5 text-zinc-500 hover:text-white rounded opacity-0 group-hover/item:opacity-100 transition-opacity"
-              title={`Tambah Subfolder di '${node.name}'`}
+              className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 opacity-0 group-hover/item:opacity-100 transition-opacity"
+              title="Opsi / Edit Folder"
             >
-              <Plus className="w-3 h-3" />
+              <SquarePen className="w-3.5 h-3.5" />
             </button>
-            <span className="text-xs text-zinc-500 font-normal">{node.count}</span>
           </div>
         </div>
 
-        {/* Recursive Subfolder Loop & Nested Documents */}
+        {/* Tempered Glass Folder Context Menu */}
+        {isMenuOpen && (
+          <div
+            ref={folderMenuRef}
+            onClick={(e) => e.stopPropagation()}
+            className="absolute left-6 top-8 w-44 glass-popover rounded-2xl p-1.5 z-50 space-y-0.5 font-sans"
+          >
+            <button
+              onClick={() => {
+                setFolderToRename({ path: node.fullPath, name: node.name });
+                setActiveFolderMenuPath(null);
+              }}
+              className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+            >
+              <SquarePen className="w-3.5 h-3.5 text-slate-400" />
+              <span>Edit...</span>
+            </button>
+
+            {onNewDocInFolder && (
+              <button
+                onClick={() => {
+                  onNewDocInFolder(node.fullPath);
+                  setActiveFolderMenuPath(null);
+                }}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+              >
+                <FilePlus className="w-3.5 h-3.5 text-slate-400" />
+                <span>New Doc</span>
+              </button>
+            )}
+
+            <button
+              onClick={() => {
+                handleCreateFolderPrompt(node.fullPath);
+                setActiveFolderMenuPath(null);
+              }}
+              className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+            >
+              <FolderPlus className="w-3.5 h-3.5 text-slate-400" />
+              <span>New Folder</span>
+            </button>
+
+            {/* Move Folder to Subfolder Submenu */}
+            <div className="relative">
+              <button
+                onClick={() => setIsMoveFolderPopoverOpen(!isMoveFolderPopoverOpen)}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <FolderInput className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Move to...</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+
+              {isMoveFolderPopoverOpen && (
+                <div className="absolute left-full top-0 ml-1.5 w-44 glass-popover rounded-2xl p-1.5 z-50 max-h-40 overflow-y-auto space-y-0.5 font-sans">
+                  <button
+                    onClick={() => {
+                      if (onMoveFolder) onMoveFolder(node.fullPath, '');
+                      setIsMoveFolderPopoverOpen(false);
+                      setActiveFolderMenuPath(null);
+                    }}
+                    className="w-full text-left px-2 py-1 text-xs truncate rounded-lg text-sky-300 hover:bg-white/10 font-bold"
+                  >
+                    [ Root Level ]
+                  </button>
+                  {subjects
+                    .filter((s) => s.name !== node.fullPath && !s.name.startsWith(`${node.fullPath}/`))
+                    .map(({ name }) => (
+                      <button
+                        key={name}
+                        onClick={() => {
+                          if (onMoveFolder) onMoveFolder(node.fullPath, name);
+                          setIsMoveFolderPopoverOpen(false);
+                          setActiveFolderMenuPath(null);
+                        }}
+                        className="w-full text-left px-2 py-1 text-xs truncate rounded-lg text-slate-200 hover:text-white hover:bg-white/10"
+                      >
+                        {name}
+                      </button>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            {onDeleteFolder && (
+              <button
+                onClick={() => {
+                  setFolderToDelete({ path: node.fullPath, name: node.name });
+                  setActiveFolderMenuPath(null);
+                }}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 rounded-xl transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                <span>Delete</span>
+              </button>
+            )}
+          </div>
+        )}
+
         {isExpanded && (
           <div className="space-y-0.5">
-            {/* Render Subfolders first */}
             {Array.from(node.children.values()).map((childNode) =>
               renderFolderNode(childNode, depth + 1)
             )}
 
-            {/* Render Documents in this folder */}
-            {node.documents.map((doc) => (
+            {/* Nested Documents (Max 4 visible by default) */}
+            {(expandedDocListFolderPaths.includes(node.fullPath)
+              ? node.documents
+              : node.documents.slice(0, 4)
+            ).map((doc) => (
               <button
                 key={doc.id}
                 onClick={() => onSelectNote(doc.id)}
-                className={`w-full text-left py-1 text-[11px] truncate block transition-colors ${
+                className={`w-full text-left py-1 text-[11px] truncate block rounded-lg transition-colors ${
                   selectedNoteId === doc.id
-                    ? 'text-indigo-400 font-bold bg-[#202024]'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#1a1a1d]'
+                    ? 'text-sky-300 font-bold bg-sky-400/10'
+                    : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.06]'
                 }`}
-                style={{ paddingLeft: `${(depth + 1) * 12 + 20}px` }}
+                style={{ paddingLeft: `${(depth + 1) * 12 + 22}px` }}
               >
                 {doc.title || 'Catatan Tanpa Judul'}
               </button>
             ))}
+
+            {node.documents.length > 4 && (
+              <button
+                onClick={(e) => toggleExpandDocListFolder(node.fullPath, e)}
+                className="w-full text-left py-1 text-[10px] font-semibold text-sky-400 hover:text-sky-300 hover:underline transition-colors block"
+                style={{ paddingLeft: `${(depth + 1) * 12 + 22}px` }}
+              >
+                {expandedDocListFolderPaths.includes(node.fullPath)
+                  ? 'Sembunyikan'
+                  : `Lihat semua (+${node.documents.length - 4} lagi)`}
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -275,250 +543,584 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   };
 
   return (
-    <aside className="w-full lg:w-60 shrink-0 bg-[#141416] border-r border-white/5 p-3 flex flex-col justify-between h-full select-none font-sans overflow-hidden">
-      <div className="space-y-4 overflow-y-auto flex-1 pr-1">
-        {/* 1. Clean Top Brand Header & Sidebar Close Button */}
-        <div className="flex items-center justify-between px-1 pt-0.5">
-          <h1 className="tracking-tight text-base sm:text-lg font-black text-white px-1 py-1">
-            SeeNote
-          </h1>
-
-          {onToggleSidebar && (
-            <button
-              onClick={onToggleSidebar}
-              className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-[#202024] transition-colors"
-              title="Sembunyikan Sidebar"
-            >
-              <Columns2 className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        {/* 2. New Document Action Link (Craft Style) */}
-        <button
-          onClick={onNewNote}
-          className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-zinc-300 hover:text-white hover:bg-[#202024] rounded-lg transition-colors group"
-        >
-          <Plus className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
-          <span>New Document</span>
-        </button>
-
-        {/* 3. Craft Main Nav Menu */}
-        <div className="space-y-0.5 pt-1">
-          <button
-            onClick={() => {
-              onFilterChange('all');
-              onSubjectChange(null);
-              onTagChange(null);
-            }}
-            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              activeFilter === 'all' && !selectedSubject && !selectedTag
-                ? 'bg-[#252528] text-white font-semibold'
-                : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
-            }`}
-          >
-            <div className="flex items-center gap-2.5">
-              <FileText className="w-3.5 h-3.5 opacity-80" />
-              <span>All Docs</span>
-            </div>
-            <span className="text-xs text-zinc-500 font-normal">{totalNotes}</span>
-          </button>
-
-          <button
-            onClick={() => {
-              onFilterChange('recent');
-              onSubjectChange(null);
-              onTagChange(null);
-            }}
-            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              activeFilter === 'recent'
-                ? 'bg-[#252528] text-white font-semibold'
-                : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
-            }`}
-          >
-            <div className="flex items-center gap-2.5">
-              <History className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Terakhir Dibuka</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => {
-              onFilterChange('favorites');
-              onSubjectChange(null);
-              onTagChange(null);
-            }}
-            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              activeFilter === 'favorites'
-                ? 'bg-[#252528] text-white font-semibold'
-                : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
-            }`}
-          >
-            <div className="flex items-center gap-2.5">
-              <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400/20" />
-              <span>Favorit</span>
-            </div>
-            <span className="text-xs text-zinc-500 font-normal">{favoriteCount}</span>
-          </button>
-
-          <button
-            onClick={() => {
-              onFilterChange('trash');
-              onSubjectChange(null);
-              onTagChange(null);
-            }}
-            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              activeFilter === 'trash'
-                ? 'bg-[#252528] text-white font-semibold'
-                : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
-            }`}
-          >
-            <div className="flex items-center gap-2.5">
-              <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-              <span>Tempat Sampah</span>
-            </div>
-            <span className="text-xs text-zinc-500 font-normal">{trashCount}</span>
-          </button>
-        </div>
-
-        {/* 4. Folders Section (Subfolder Recursive Loop Tree) */}
-        <div className="space-y-0.5 pt-3 group/folders">
-          <div className="flex items-center justify-between px-2 mb-1">
-            <span className="text-[11px] font-semibold text-zinc-400">Folders</span>
-            <div className="flex items-center gap-1 opacity-0 group-hover/folders:opacity-100 transition-opacity">
+    <aside className="w-full lg:w-60 shrink-0 glass-sidebar border-r px-2.5 py-3.5 flex flex-col justify-between h-full select-none font-sans overflow-hidden relative z-20">
+      <div className="space-y-4 overflow-y-auto flex-1 pr-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        {/* Render Table of Contents (TOC) View when inside a note & sidebarView === 'toc' */}
+        {selectedNoteId && sidebarView === 'toc' && activeNote ? (
+          <div className="space-y-4 flex-1 flex flex-col min-h-0">
+            {/* Row 1: Top Navigation Bar with Home Breadcrumb + PanelLeft Toggle */}
+            <div className="flex items-center justify-between px-0.5 pt-0.5 pb-1 select-none">
               <button
-                onClick={() => handleCreateFolderPrompt('')}
-                className="p-0.5 text-zinc-400 hover:text-white rounded hover:bg-[#202024] transition-colors"
-                title="Tambah Root Folder"
+                onClick={() => {
+                  onSelectNote('');
+                  onFilterChange('all');
+                  onSubjectChange(null);
+                  onTagChange(null);
+                }}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white/[0.08] hover:bg-white/[0.14] border border-white/15 hover:border-white/25 rounded-full text-xs font-semibold text-slate-100 hover:text-white transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.22)] group"
+                title="Kembali ke Beranda"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Home className="w-3.5 h-3.5 text-sky-300 group-hover:scale-105 transition-transform shrink-0" />
+                <span className="leading-none pt-[1px] font-medium">Home</span>
               </button>
-              <button
-                onClick={() => setIsFoldersSectionCollapsed(!isFoldersSectionCollapsed)}
-                className="p-0.5 text-zinc-400 hover:text-white rounded hover:bg-[#202024] transition-colors"
-                title={isFoldersSectionCollapsed ? 'Buka Folders' : 'Sembunyikan Folders'}
-              >
-                {isFoldersSectionCollapsed ? (
-                  <ChevronRight className="w-3.5 h-3.5" />
-                ) : (
-                  <ChevronDown className="w-3.5 h-3.5" />
-                )}
-              </button>
-            </div>
-          </div>
 
-          {!isFoldersSectionCollapsed && (
-            <div className="space-y-0.5">
-              {folderTree.size === 0 ? (
-                <p className="px-2 text-[10px] text-zinc-600 italic">Belum ada folder</p>
-              ) : (
-                Array.from(folderTree.values()).map((rootNode) => renderFolderNode(rootNode, 0))
+              {onToggleSidebar && (
+                <button
+                  onClick={onToggleSidebar}
+                  className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors"
+                  title="Sembunyikan Sidebar"
+                >
+                  <svg className="w-4 h-3.5 text-slate-400 hover:text-white" viewBox="0 0 20 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="1.5" y="1.5" width="17" height="13" rx="2.5" />
+                    <line x1="6.5" y1="1.5" x2="6.5" y2="14.5" />
+                  </svg>
+                </button>
               )}
             </div>
-          )}
-        </div>
 
-        {/* 5. Craft-style Tags Section (# tag format + Pinned Tags Popover) */}
-        <div className="space-y-0.5 pt-3 group/tags relative">
-          <div className="flex items-center justify-between px-2 mb-1">
-            <span className="text-[11px] font-semibold text-zinc-400">Tags</span>
-            <div className="flex items-center gap-1 opacity-0 group-hover/tags:opacity-100 transition-opacity">
+            {/* iOS 26 Liquid Glass 4-Tab Toolbar Pill Bar (List, CheckCircle, Paperclip, Search) */}
+            <div className="flex items-center justify-between liquid-pill rounded-full p-1 text-xs select-none gap-0.5">
               <button
-                onClick={() => setIsPinTagPopoverOpen(!isPinTagPopoverOpen)}
-                className="p-0.5 text-zinc-400 hover:text-white rounded hover:bg-[#202024] transition-colors"
-                title="Pilih Tag yang di-Pin"
+                onClick={() => setTocTab('list')}
+                className={`flex-1 flex justify-center py-1.5 rounded-full transition-all ${
+                  tocTab === 'list'
+                    ? 'liquid-lens-active text-white font-bold'
+                    : 'text-slate-400 hover:text-slate-100'
+                }`}
+                title="Table of Contents"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <List className={`w-3.5 h-3.5 ${tocTab === 'list' ? 'text-white stroke-[2.25]' : ''}`} />
               </button>
               <button
-                onClick={() => setIsTagsCollapsed(!isTagsCollapsed)}
-                className="p-0.5 text-zinc-400 hover:text-white rounded hover:bg-[#202024] transition-colors"
-                title={isTagsCollapsed ? 'Buka Tags' : 'Sembunyikan Tags'}
+                onClick={() => setTocTab('tasks')}
+                className={`flex-1 flex justify-center py-1.5 rounded-full transition-all ${
+                  tocTab === 'tasks'
+                    ? 'liquid-lens-active text-white font-bold'
+                    : 'text-slate-400 hover:text-slate-100'
+                }`}
+                title="Daftar Tugas (TODO)"
               >
-                {isTagsCollapsed ? (
-                  <ChevronRight className="w-3.5 h-3.5" />
-                ) : (
-                  <ChevronDown className="w-3.5 h-3.5" />
-                )}
+                <CheckCircle2 className={`w-3.5 h-3.5 ${tocTab === 'tasks' ? 'text-white stroke-[2.25]' : ''}`} />
+              </button>
+              <button
+                onClick={() => setTocTab('attachments')}
+                className={`flex-1 flex justify-center py-1.5 rounded-full transition-all ${
+                  tocTab === 'attachments'
+                    ? 'liquid-lens-active text-white font-bold'
+                    : 'text-slate-400 hover:text-slate-100'
+                }`}
+                title="Media & Lampiran"
+              >
+                <Paperclip className={`w-3.5 h-3.5 ${tocTab === 'attachments' ? 'text-white stroke-[2.25]' : ''}`} />
+              </button>
+              <button
+                onClick={() => setTocTab('search')}
+                className={`flex-1 flex justify-center py-1.5 rounded-full transition-all ${
+                  tocTab === 'search'
+                    ? 'liquid-lens-active text-white font-bold'
+                    : 'text-slate-400 hover:text-slate-100'
+                }`}
+                title="Cari kata dalam catatan"
+              >
+                <Search className={`w-3.5 h-3.5 ${tocTab === 'search' ? 'text-white stroke-[2.25]' : ''}`} />
               </button>
             </div>
-          </div>
 
-          {/* Pinned Tags Selection Popover Menu */}
-          {isPinTagPopoverOpen && (
-            <div
-              ref={tagPopoverRef}
-              className="absolute left-2 top-8 w-44 bg-[#202024] border border-white/10 rounded-xl shadow-2xl p-2 z-50 space-y-1"
+            {/* Tab 1: Table of Contents & Pages Tree */}
+            {tocTab === 'list' && (
+              <div className="space-y-2 flex-1 overflow-y-auto pr-1">
+                <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider px-1">
+                  Pages & Structure
+                </div>
+
+                {/* Root Document Title */}
+                <button
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('navigate-root-note'));
+                  }}
+                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-xs font-bold text-white truncate transition-colors text-left group cursor-pointer"
+                  title="Kembali ke Catatan Utama"
+                >
+                  <FileText className="w-3.5 h-3.5 text-indigo-400 shrink-0 group-hover:scale-110 transition-transform" />
+                  <span className="truncate">{activeNote.title || 'Catatan'}</span>
+                </button>
+                {/* TOC Items Tree (Pages & Headings) */}
+                <div className="space-y-0.5 pl-2 border-l border-white/10">
+                  {tocItems.map((item: { id: string; type: string; title: string; subpageId?: string; level?: number; rawContent?: string }) => (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        if (item.type === 'page') {
+                          window.dispatchEvent(
+                            new CustomEvent('open-subpage-from-toc', {
+                              detail: { id: item.subpageId || item.id, title: item.title, content: item.rawContent || '' },
+                            })
+                          );
+                        } else {
+                          const el = document.querySelector('.select-text');
+                          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                      }}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/10 transition-colors text-left truncate group"
+                      style={{ paddingLeft: item.level ? `${item.level * 8}px` : '8px' }}
+                    >
+                      {item.type === 'page' ? (
+                        <FileText className="w-3.5 h-3.5 text-indigo-400 shrink-0 group-hover:scale-110 transition-transform" />
+                      ) : item.type === 'heading' ? (
+                        <Hash className="w-3 h-3 text-zinc-500 shrink-0" />
+                      ) : (
+                        <Code className="w-3 h-3 text-emerald-400 shrink-0" />
+                      )}
+                      <span className="truncate">{item.title}</span>
+                    </button>
+                  ))}
+                  {tocItems.length === 0 && (
+                    <div className="text-[11px] text-zinc-500 italic px-2 py-2">
+                      Belum ada subpage atau heading...
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Tab 2: Tasks / TODOs */}
+            {tocTab === 'tasks' && (
+              <div className="space-y-1 flex-1 overflow-y-auto pr-1">
+                <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider px-1 mb-2">
+                  Daftar Tugas ({extractedTasks.length})
+                </div>
+                {extractedTasks.map((t: { id: string; text: string; completed: boolean }) => (
+                  <div key={t.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/[0.03] text-xs text-zinc-300">
+                    <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${t.completed ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                    <span className={`truncate ${t.completed ? 'line-through text-zinc-500' : ''}`}>{t.text}</span>
+                  </div>
+                ))}
+                {extractedTasks.length === 0 && (
+                  <div className="text-[11px] text-zinc-500 italic px-2 py-2">
+                    Tidak ada tugas TODO di dokumen ini.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Tab 3: Attachments */}
+            {tocTab === 'attachments' && (
+              <div className="space-y-1 flex-1 overflow-y-auto pr-1">
+                <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider px-1 mb-2">
+                  Media & Lampiran ({extractedAttachments.length})
+                </div>
+                {extractedAttachments.map((a: { id: string; title: string; url?: string; type: string }) => (
+                  <div key={a.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/[0.03] text-xs text-zinc-300">
+                    <ImageIcon className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                    <span className="truncate">{a.title}</span>
+                  </div>
+                ))}
+                {extractedAttachments.length === 0 && (
+                  <div className="text-[11px] text-zinc-500 italic px-2 py-2">
+                    Belum ada lampiran media di dokumen ini.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Tab 4: Search in Active Document */}
+            {tocTab === 'search' && (
+              <div className="space-y-2.5 flex-1 overflow-y-auto pr-1">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-sky-300/80" />
+                  <input
+                    type="text"
+                    value={tocSearchQuery}
+                    onChange={(e) => setTocSearchQuery(e.target.value)}
+                    placeholder="Cari kata dalam catatan..."
+                    autoFocus
+                    className="w-full pl-8 pr-7 py-1.5 glass-input rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none"
+                  />
+                  {tocSearchQuery && (
+                    <button
+                      onClick={() => setTocSearchQuery('')}
+                      className="absolute right-2 top-2 p-0.5 text-zinc-400 hover:text-white"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Live Matches List */}
+                {tocSearchQuery.trim() ? (
+                  <div className="space-y-1 pt-1">
+                    {(() => {
+                      const lines = activeNote.content.split('\n');
+                      const matches = lines
+                        .map((line: string, lineIdx: number) => ({ line: line.trim(), lineIdx }))
+                        .filter((item: { line: string; lineIdx: number }) => item.line.toLowerCase().includes(tocSearchQuery.toLowerCase().trim()));
+
+                      if (matches.length === 0) {
+                        return (
+                          <div className="text-[11px] text-zinc-500 italic px-1 py-2">
+                            Tidak ada kata "{tocSearchQuery}" ditemukan.
+                          </div>
+                        );
+                      }
+
+                      return matches.map((m: { line: string; lineIdx: number }) => (
+                        <button
+                          key={m.lineIdx}
+                          onClick={() => {
+                            const el = document.querySelector('.select-text');
+                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }}
+                          className="w-full text-left p-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] transition-colors text-xs text-zinc-300 truncate"
+                        >
+                          <div className="font-semibold text-white truncate text-[11px]">Baris {m.lineIdx + 1}</div>
+                          <div className="truncate text-zinc-400 text-[11px]">{m.line}</div>
+                        </button>
+                      ));
+                    })()}
+                  </div>
+                ) : (
+                  <div className="text-[11px] text-zinc-500 italic px-1 py-1">
+                    Ketik kata kunci untuk mencari kata di catatan ini.
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* 1. Clean Top Brand Header & Sidebar Close Button */}
+            <div className="flex items-center justify-between px-1 pt-0.5">
+              <h1 className="tracking-tight text-base sm:text-lg font-black px-1 py-1 bg-gradient-to-r from-white via-sky-100 to-indigo-200 bg-clip-text text-transparent">
+                SeeNote
+              </h1>
+
+              {onToggleSidebar && (
+                <button
+                  onClick={onToggleSidebar}
+                  className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors"
+                  title="Sembunyikan Sidebar"
+                >
+                  <PanelLeft className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* 2. New Document Liquid Glass CTA */}
+            <button
+              onClick={onNewNote}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-white glass-btn-primary rounded-xl transition-all active:scale-[0.98] group"
             >
-              <p className="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase tracking-wider">
-                Pilih Tag Pin
-              </p>
-              {tags.length === 0 ? (
-                <p className="text-[10px] text-zinc-500 px-2 py-1">Belum ada tag</p>
-              ) : (
-                <div className="max-h-40 overflow-y-auto space-y-0.5">
-                  {tags.map(({ name }) => {
-                    const isPinned = pinnedTags.includes(name);
-                    return (
-                      <button
-                        key={name}
-                        onClick={() => togglePinTag(name)}
-                        className={`w-full flex items-center justify-between px-2 py-1 rounded-lg text-xs transition-colors ${
-                          isPinned ? 'bg-[#2b2b32] text-white font-semibold' : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
-                        }`}
-                      >
-                        <span>#{name}</span>
-                        {isPinned && <Check className="w-3 h-3 text-indigo-400" />}
-                      </button>
-                    );
-                  })}
+              <SquarePen className="w-3.5 h-3.5 text-white transition-transform group-hover:scale-105" />
+              <span>New Document</span>
+            </button>
+
+            {/* 3. Main Nav Menu */}
+            <div className="space-y-1 pt-1">
+              <button
+                onClick={() => {
+                  onFilterChange('all');
+                  onSubjectChange(null);
+                  onTagChange(null);
+                }}
+                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                  activeFilter === 'all' && !selectedSubject && !selectedTag
+                    ? 'liquid-lens-active text-white font-semibold'
+                    : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100 border border-transparent'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <FileText className="w-3.5 h-3.5 opacity-90" />
+                  <span>All Notes</span>
+                </div>
+                <span className="text-[11px] text-slate-300/80 font-medium">{totalNotes}</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  onFilterChange('recent');
+                  onSubjectChange(null);
+                  onTagChange(null);
+                }}
+                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                  activeFilter === 'recent'
+                    ? 'bg-emerald-500/20 text-emerald-200 font-bold border border-emerald-400/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                    : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100 border border-transparent'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <History className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Terakhir Dibuka</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  onFilterChange('favorites');
+                  onSubjectChange(null);
+                  onTagChange(null);
+                }}
+                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                  activeFilter === 'favorites'
+                    ? 'bg-amber-500/20 text-amber-200 font-bold border border-amber-400/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                    : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100 border border-transparent'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400/20" />
+                  <span>Favorit</span>
+                </div>
+                <span className="text-[11px] text-slate-300/80 font-medium">{favoriteCount}</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  onFilterChange('trash');
+                  onSubjectChange(null);
+                  onTagChange(null);
+                }}
+                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                  activeFilter === 'trash'
+                    ? 'bg-rose-500/20 text-rose-200 font-semibold border border-rose-400/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                    : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100 border border-transparent'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Tempat Sampah</span>
+                </div>
+                <span className="text-[11px] text-slate-300/80 font-medium">{trashCount}</span>
+              </button>
+            </div>
+
+            {/* 4. Folders Section Header (Aligned px-2.5) */}
+            <div className="space-y-0.5 pt-3 group/folders">
+              <div className="flex items-center justify-between px-2.5 mb-1">
+                <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-2">
+                  <FoldersHeaderIcon className="w-3.5 h-3.5 text-sky-300" />
+                  <span>Folders</span>
+                </span>
+                <div className="flex items-center gap-1 opacity-0 group-hover/folders:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => handleCreateFolderPrompt('')}
+                    className="p-0.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+                    title="Tambah Root Folder"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setIsFoldersSectionCollapsed(!isFoldersSectionCollapsed)}
+                    className="p-0.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+                    title={isFoldersSectionCollapsed ? 'Buka Folders' : 'Sembunyikan Folders'}
+                  >
+                    {isFoldersSectionCollapsed ? (
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {!isFoldersSectionCollapsed && (
+                <div className="space-y-0.5">
+                  {folderTree.size === 0 ? (
+                    <p className="px-2.5 text-[10px] text-slate-500 italic">Belum ada folder</p>
+                  ) : (
+                    <>
+                      {(showAllFolders
+                        ? Array.from(folderTree.values())
+                        : Array.from(folderTree.values()).slice(0, 4)
+                      ).map((rootNode) => renderFolderNode(rootNode, 0))}
+
+                      {folderTree.size > 4 && (
+                        <button
+                          onClick={() => setShowAllFolders(!showAllFolders)}
+                          className="w-full text-left px-2.5 py-1 text-[11px] font-semibold text-sky-400 hover:text-sky-300 hover:underline transition-colors block mt-1"
+                        >
+                          {showAllFolders ? 'Sembunyikan' : `Lihat Semua (+${folderTree.size - 4} folder lagi)`}
+                        </button>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
             </div>
-          )}
 
-          {!isTagsCollapsed && (
-            <div className="space-y-0.5">
-              {tags.filter((t) => pinnedTags.includes(t.name)).length === 0 ? (
-                <p className="px-2 text-[10px] text-zinc-600 italic">Pin key tags for quick access</p>
-              ) : (
-                tags
-                  .filter((t) => pinnedTags.includes(t.name))
-                  .map(({ name }) => (
-                    <button
-                      key={name}
-                      onClick={() => {
-                        onFilterChange('all');
-                        onSubjectChange(null);
-                        onTagChange(selectedTag === name ? null : name);
-                      }}
-                      className={`w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-left ${
-                        selectedTag === name
-                          ? 'bg-[#252528] text-white font-semibold'
-                          : 'text-zinc-400 hover:bg-[#1a1a1d] hover:text-zinc-200'
-                      }`}
-                    >
-                      <span className="text-zinc-500 font-normal">#</span>
-                      <span>{name}</span>
-                    </button>
-                  ))
+            {/* 5. Tags Section Header (Aligned px-2.5) */}
+            <div className="space-y-0.5 pt-3 group/tags relative">
+              <div className="flex items-center justify-between px-2.5 mb-1">
+                <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-2">
+                  <TagIcon className="w-3.5 h-3.5 text-slate-400 rotate-90" />
+                  <span>Tags</span>
+                </span>
+                <div className="flex items-center gap-1 opacity-0 group-hover/tags:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => setIsPinTagPopoverOpen(!isPinTagPopoverOpen)}
+                    className="p-0.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+                    title="Pilih Tag yang di-Pin"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setIsTagsCollapsed(!isTagsCollapsed)}
+                    className="p-0.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+                    title={isTagsCollapsed ? 'Buka Tags' : 'Sembunyikan Tags'}
+                  >
+                    {isTagsCollapsed ? (
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Pinned Tags Selection Popover Menu */}
+              {isPinTagPopoverOpen && (
+                <div
+                  ref={tagPopoverRef}
+                  className="absolute left-2 top-8 w-44 glass-popover rounded-2xl p-2 z-50 space-y-1"
+                >
+                  <p className="text-[10px] font-bold text-slate-400 px-2 py-1 uppercase tracking-wider">
+                    Pilih Tag Pin
+                  </p>
+                  {tags.length === 0 ? (
+                    <p className="text-[10px] text-slate-500 px-2 py-1">Belum ada tag</p>
+                  ) : (
+                    <div className="max-h-40 overflow-y-auto space-y-0.5">
+                      {tags.map(({ name }) => {
+                        const isPinned = pinnedTags.includes(name);
+                        return (
+                          <button
+                            key={name}
+                            onClick={() => togglePinTag(name)}
+                            className={`w-full flex items-center justify-between px-2 py-1 rounded-xl text-xs transition-colors ${
+                              isPinned ? 'bg-white/[0.12] text-white font-semibold' : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100'
+                            }`}
+                          >
+                            <span>#{name}</span>
+                            {isPinned && <Check className="w-3 h-3 text-sky-300" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!isTagsCollapsed && (
+                <div className="space-y-0.5">
+                  {tags.filter((t) => pinnedTags.includes(t.name)).length === 0 ? (
+                    <p className="px-2 text-[10px] text-slate-500 italic">Pin key tags for quick access</p>
+                  ) : (
+                    tags
+                      .filter((t) => pinnedTags.includes(t.name))
+                      .map(({ name }) => (
+                        <button
+                          key={name}
+                          onClick={() => {
+                            onFilterChange('all');
+                            onSubjectChange(null);
+                            onTagChange(selectedTag === name ? null : name);
+                          }}
+                          className={`w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all text-left ${
+                            selectedTag === name
+                              ? 'bg-white/[0.11] text-white font-semibold border border-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                              : 'text-slate-400 hover:bg-white/[0.06] hover:text-slate-100 border border-transparent'
+                          }`}
+                        >
+                          <span className="text-sky-400/80 font-normal">#</span>
+                          <span>{name}</span>
+                        </button>
+                      ))
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
 
-      {/* 6. Craft Bottom Left Footer: Clear Icon + Text "Pengaturan" */}
-      <div className="pt-2 border-t border-white/5 shrink-0 flex items-center justify-between px-1">
-        <button
-          onClick={onOpenSettings}
-          className="flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-[#202024] rounded-lg transition-colors"
-          title="Pengaturan"
-        >
-          <Settings className="w-4 h-4 text-zinc-400" />
-          <span>Pengaturan</span>
-        </button>
-      </div>
+      {/* Wide & Prominent iOS 26 Liquid Glass Floating Bottom Dock Switcher */}
+      {selectedNoteId && (
+        <div className="pt-2 pb-1 flex justify-center z-30 shrink-0 select-none w-full px-0.5">
+          <div className="w-full liquid-pill rounded-full p-1 flex items-center gap-1">
+            <button
+              onClick={() => setSidebarView('folders')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-full text-xs font-bold transition-all ${
+                sidebarView === 'folders'
+                  ? 'liquid-lens-active text-white'
+                  : 'text-slate-400 hover:text-white hover:bg-white/10'
+              }`}
+              title="Navigasi Folder & Catatan Global"
+            >
+              <Folder className={`w-3.5 h-3.5 shrink-0 ${sidebarView === 'folders' ? 'text-white stroke-[2.25]' : ''}`} />
+              <span>Folders</span>
+            </button>
+            <button
+              onClick={() => setSidebarView('toc')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-full text-xs font-bold transition-all ${
+                sidebarView === 'toc'
+                  ? 'liquid-lens-active text-white'
+                  : 'text-slate-400 hover:text-white hover:bg-white/10'
+              }`}
+              title="Navigasi Page & Subpage Dokumen"
+            >
+              <FileText className={`w-3.5 h-3.5 shrink-0 ${sidebarView === 'toc' ? 'text-white stroke-[2.25]' : ''}`} />
+              <span>Page</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 6. Bottom Left Footer (Only in Folders view) */}
+      {sidebarView !== 'toc' && (
+        <div className="pt-2 border-t border-white/10 shrink-0 flex items-center justify-between px-1">
+          <button
+            onClick={onOpenSettings}
+            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/[0.08] rounded-xl transition-colors"
+            title="Pengaturan"
+          >
+            <Settings className="w-4 h-4 text-slate-400" />
+            <span>Pengaturan</span>
+          </button>
+        </div>
+      )}
+
+      {/* Craft Delete Folder Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!folderToDelete}
+        onClose={() => setFolderToDelete(null)}
+        onConfirm={() => {
+          if (folderToDelete && onDeleteFolder) {
+            onDeleteFolder(folderToDelete.path);
+          }
+        }}
+        title={`Delete ${folderToDelete?.name || ''}`}
+        message="Documents inside the folder will not be deleted."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
+
+      {/* Rich Edit Folder Modal (Matching Create Folder Concept) */}
+      <CreateFolderModal
+        isOpen={!!folderToRename}
+        onClose={() => setFolderToRename(null)}
+        isEditMode={true}
+        initialName={folderToRename?.name || ''}
+        initialIcon={folderMetaMap?.[folderToRename?.path || '']?.icon || 'folder'}
+        initialColor={folderMetaMap?.[folderToRename?.path || '']?.color || '#6366f1'}
+        onFolderCreated={(newFolderTitle, _color, _icon) => {
+          if (folderToRename && onRenameFolder) {
+            const parts = folderToRename.path.split('/');
+            parts[parts.length - 1] = newFolderTitle;
+            const newPath = parts.join('/');
+            onRenameFolder(folderToRename.path, newPath);
+            if (selectedSubject === folderToRename.path) onSubjectChange(newPath);
+          }
+        }}
+      />
     </aside>
   );
 };

@@ -39,10 +39,11 @@ const MOCK_NOTES: Note[] = [
 ];
 
 describe('InstantSearch Engine Tests (FR-200 Matrix)', () => {
-  it('returns all active (non-trash) notes when query is empty (FR-201)', () => {
+  it('returns all notes (including trash) when query is empty — caller handles trash filtering (FR-201)', () => {
     const results = searchNotes(MOCK_NOTES, '');
-    expect(results.length).toBe(2);
-    expect(results.some((r) => r.note.id === '3')).toBe(false);
+    expect(results.length).toBe(3);
+    // Trash note IS included — App.tsx filters trash upstream via filteredNotes memo
+    expect(results.some((r) => r.note.id === '3')).toBe(true);
   });
 
   it('matches keyword in title with higher priority score (FR-202 & FR-206)', () => {

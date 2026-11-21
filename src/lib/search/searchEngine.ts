@@ -44,27 +44,52 @@ function levenshteinDistance(a: string, b: string): number {
  * - Levenshtein Fuzzy Search tolerance (FR-209) for typos (e.g. 'phyics' -> 'physics')
  */
 
+export function sanitizeSnippetText(rawContent: string): string {
+  if (!rawContent) return 'Belum ada konten catatan.';
+
+  let text = rawContent
+    // Strip :::attachment{...} :::subpage{...} :::code{...} :::mermaid{...} blocks
+    .replace(/:::(?:attachment|subpage|code|mermaid)\{[\s\S]*?:::/g, '')
+    // Strip code blocks ```mermaid...``` or ```lang...```
+    .replace(/```[\s\S]*?```/g, '')
+    // Strip inline backticks `code`
+    .replace(/`([^`]+)`/g, '$1')
+    // Strip markdown headers #
+    .replace(/^#{1,6}\s+/gm, '')
+    // Strip HTML markup
+    .replace(/<[^>]*>/g, '')
+    // Strip bold/italic markdown **, *, ~~, _
+    .replace(/[*~_]/g, '')
+    // Compress multiple spaces/newlines to single space
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return text || 'Catatan berisi lampiran / media.';
+}
+
 export function searchNotes(notes: Note[], query: string): SearchResult[] {
   const trimmed = query.trim().toLowerCase();
   if (!trimmed) {
-    return notes
-      .filter((n) => !n.isTrash)
-      .map((note) => ({
+    return notes.map((note) => {
+      const cleanContent = sanitizeSnippetText(note.content);
+      return {
         note,
         score: 1,
         matchedTitle: false,
         matchedSubject: false,
         matchedTag: false,
-        snippet: note.content.slice(0, 120) + (note.content.length > 120 ? '...' : ''),
-      }));
+        snippet: cleanContent.slice(0, 120) + (cleanContent.length > 120 ? '...' : ''),
+      };
+    });
   }
 
   const terms = trimmed.split(/\s+/).filter(Boolean);
   const results: SearchResult[] = [];
 
   for (const note of notes) {
+    const cleanContent = sanitizeSnippetText(note.content);
     const titleLower = note.title.toLowerCase();
-    const contentLower = note.content.toLowerCase();
+    const contentLower = cleanContent.toLowerCase();
     const subjectLower = note.subject.toLowerCase();
     const tagsLower = note.tags.map((t) => t.toLowerCase());
 
@@ -146,10 +171,10 @@ export function searchNotes(notes: Note[], query: string): SearchResult[] {
       let snippet = '';
       if (matchedContent && firstMatchIndex !== -1) {
         const start = Math.max(0, firstMatchIndex - 30);
-        const end = Math.min(note.content.length, firstMatchIndex + 90);
-        snippet = (start > 0 ? '...' : '') + note.content.slice(start, end) + (end < note.content.length ? '...' : '');
+        const end = Math.min(cleanContent.length, firstMatchIndex + 90);
+        snippet = (start > 0 ? '...' : '') + cleanContent.slice(start, end) + (end < cleanContent.length ? '...' : '');
       } else {
-        snippet = note.content.slice(0, 120) + (note.content.length > 120 ? '...' : '');
+        snippet = cleanContent.slice(0, 120) + (cleanContent.length > 120 ? '...' : '');
       }
 
       results.push({

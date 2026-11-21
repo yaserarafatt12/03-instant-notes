@@ -53,59 +53,59 @@ export const ExportImportModal: React.FC<ExportImportModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm font-sans select-none">
-      <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-2xl space-y-5">
-        <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
-          <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#020612]/75 backdrop-blur-md font-sans select-none">
+      <div className="w-full max-w-md glass-panel rounded-3xl p-6 space-y-5">
+        <div className="flex items-center justify-between pb-3 border-b border-white/10">
+          <h2 className="text-base font-bold text-white">
             Cadangkan &amp; Pemulihan Data
           </h2>
-          <button onClick={onClose} className="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+          <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="space-y-3.5">
           {/* Export Box */}
-          <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 space-y-2">
-            <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100 font-semibold text-xs">
-              <Download className="w-4 h-4 text-indigo-500" />
+          <div className="p-4 rounded-2xl border border-white/10 bg-[#071123]/70 space-y-2">
+            <div className="flex items-center gap-2 text-white font-semibold text-xs">
+              <Download className="w-4 h-4 text-sky-400" />
               <span>Ekspor Cadangan (JSON)</span>
             </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+            <p className="text-xs text-slate-400 leading-relaxed">
               Unduh {notes.length} catatan dalam format JSON untuk disimpan di komputer lo.
             </p>
             <button
               onClick={handleExportDownload}
-              className="w-full mt-2 py-2 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl transition-all shadow-xs"
+              className="w-full mt-2 py-2 px-4 glass-btn-primary text-white font-semibold text-xs rounded-full transition-all"
             >
               Unduh Backup JSON
             </button>
           </div>
 
           {/* Import Box */}
-          <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 space-y-2">
-            <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100 font-semibold text-xs">
-              <Upload className="w-4 h-4 text-emerald-500" />
+          <div className="p-4 rounded-2xl border border-white/10 bg-[#071123]/70 space-y-2">
+            <div className="flex items-center gap-2 text-white font-semibold text-xs">
+              <Upload className="w-4 h-4 text-emerald-400" />
               <span>Impor Data Catatan</span>
             </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+            <p className="text-xs text-slate-400 leading-relaxed">
               Pilih berkas JSON cadangan untuk memulihkan data catatan.
             </p>
-            <label className="block w-full text-center py-2 px-4 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-semibold text-xs rounded-xl transition-all cursor-pointer">
+            <label className="block w-full text-center py-2 px-4 bg-white/[0.08] hover:bg-white/[0.15] border border-white/15 text-slate-100 font-semibold text-xs rounded-full transition-all cursor-pointer">
               <span>Pilih File JSON</span>
               <input type="file" accept=".json" onChange={handleFileUpload} className="hidden" />
             </label>
           </div>
 
           {importStatus && (
-            <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs rounded-xl">
+            <div className="flex items-center gap-2 p-3 bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs rounded-xl">
               <FileCheck className="w-4 h-4 shrink-0" />
               <span>{importStatus}</span>
             </div>
           )}
 
           {errorMsg && (
-            <div className="flex items-center gap-2 p-3 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs rounded-xl">
+            <div className="flex items-center gap-2 p-3 bg-rose-500/15 border border-rose-400/30 text-rose-300 text-xs rounded-xl">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>

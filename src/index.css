@@ -2,10 +2,16 @@
 @import "tailwindcss";
 
 @layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
-    background-color: #1e1e22;
-    color: #f8f9fa;
+    background-color: #060d1c;
+    color: #f1f5f9;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -13,31 +19,193 @@
 
 /* Light mode overrides */
 .light body {
-  background-color: #f8fafc;
+  background-color: #eef3fb;
   color: #0f172a;
 }
 
-/* Craft & ChatGPT Popover & Depth Styling */
+/* ============================================================================
+ * Midnight Navy Tempered Glass & iOS 26 Liquid Glass Design System
+ * ============================================================================ */
+
+/* Ambient Midnight Navy Backdrop */
+.midnight-ambient-bg {
+  background-color: #060d1c;
+  background-image:
+    radial-gradient(ellipse 70% 55% at 12% 8%, rgba(56, 189, 248, 0.13) 0%, transparent 62%),
+    radial-gradient(ellipse 60% 50% at 88% 14%, rgba(99, 102, 241, 0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 72% 92%, rgba(139, 92, 246, 0.11) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 40% at 18% 88%, rgba(14, 165, 233, 0.08) 0%, transparent 58%);
+}
+
+/* Tempered Glass Sidebar */
+.glass-sidebar {
+  background: linear-gradient(180deg, rgba(12, 25, 48, 0.84) 0%, rgba(8, 17, 35, 0.88) 100%);
+  backdrop-filter: blur(28px) saturate(165%);
+  -webkit-backdrop-filter: blur(28px) saturate(165%);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Tempered Glass Header Bar */
+.glass-header {
+  background: linear-gradient(180deg, rgba(12, 25, 48, 0.72) 0%, rgba(10, 21, 42, 0.60) 100%);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+/* Tempered Glass Panel (Modals, Dialogs & Sheets) */
+.glass-panel {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.0) 42%),
+    rgba(12, 25, 48, 0.84);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    inset 0 -1px 0 rgba(56, 189, 248, 0.08),
+    0 24px 64px rgba(2, 6, 23, 0.72);
+}
+
+/* Tempered Glass Card (Note Cards, Dashboard Cards, List Rows) */
+.glass-card {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.075) 0%, rgba(255, 255, 255, 0.0) 48%),
+    rgba(12, 25, 48, 0.72);
+  backdrop-filter: blur(22px) saturate(165%);
+  -webkit-backdrop-filter: blur(22px) saturate(165%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 12px 32px rgba(2, 6, 23, 0.45);
+}
+
+.glass-card:hover {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.01) 50%),
+    rgba(16, 33, 64, 0.82);
+  border-color: rgba(125, 211, 252, 0.34);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.30),
+    0 18px 42px rgba(2, 6, 23, 0.58),
+    0 0 24px rgba(56, 189, 248, 0.12);
+}
+
+/* Tempered Glass Editor Sheet */
+.glass-editor-sheet {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0.0) 24%),
+    rgba(12, 25, 48, 0.76);
+  backdrop-filter: blur(28px) saturate(165%);
+  -webkit-backdrop-filter: blur(28px) saturate(165%);
+  border-top: 1px solid rgba(255, 255, 255, 0.20);
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 -8px 44px rgba(2, 6, 23, 0.52);
+}
+
+/* iOS 26 Liquid Glass Floating Pill / Segmented Control Shell */
+.liquid-pill {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.02) 100%),
+    rgba(11, 24, 46, 0.78);
+  backdrop-filter: blur(22px) saturate(200%) brightness(1.06);
+  -webkit-backdrop-filter: blur(22px) saturate(200%) brightness(1.06);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.30),
+    inset 0 -1px 0 rgba(56, 189, 248, 0.14),
+    0 12px 32px rgba(2, 6, 23, 0.55);
+}
+
+/* iOS 26 Liquid Glass Active Lens Bubble */
+.liquid-lens-active {
+  background:
+    radial-gradient(ellipse 85% 65% at 50% 15%, rgba(255, 255, 255, 0.28) 0%, transparent 65%),
+    linear-gradient(180deg, rgba(56, 189, 248, 0.34) 0%, rgba(99, 102, 241, 0.34) 100%);
+  backdrop-filter: blur(12px) saturate(220%) brightness(1.14);
+  -webkit-backdrop-filter: blur(12px) saturate(220%) brightness(1.14);
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  box-shadow:
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.58),
+    inset 0 -1px 2px rgba(56, 189, 248, 0.38),
+    0 4px 16px rgba(56, 189, 248, 0.22);
+}
+
+/* Frosted Popover / Context Menu */
+.glass-popover {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.0) 45%),
+    rgba(11, 23, 44, 0.92);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 20px 52px rgba(2, 6, 23, 0.72);
+}
+
+/* Recessed Glass Input */
+.glass-input {
+  background: rgba(6, 14, 30, 0.72);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    inset 0 2px 5px rgba(2, 6, 23, 0.45),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.glass-input:focus {
+  border-color: rgba(56, 189, 248, 0.55);
+  box-shadow:
+    inset 0 2px 5px rgba(2, 6, 23, 0.45),
+    0 0 0 3px rgba(56, 189, 248, 0.16);
+}
+
+/* Luminous Liquid Glass Primary Button */
+.glass-btn-primary {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.0) 55%),
+    linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.48),
+    0 8px 22px rgba(56, 189, 248, 0.26);
+}
+
+.glass-btn-primary:hover {
+  filter: brightness(1.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.58),
+    0 10px 28px rgba(56, 189, 248, 0.34);
+}
+
+/* Legacy class compatibility mapped to Midnight Navy Tempered Glass */
 .craft-bg-base {
-  background-color: #1e1e22;
+  background-color: #060d1c;
 }
 
 .craft-bg-sidebar {
-  background-color: #18181c;
+  background-color: rgba(11, 22, 43, 0.85);
 }
 
 .craft-bg-card {
-  background-color: #27272d;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(12, 25, 48, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .craft-bg-card:hover {
-  background-color: #303038;
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  background: rgba(16, 33, 64, 0.82);
+  border-color: rgba(125, 211, 252, 0.32);
+  box-shadow: 0 14px 36px rgba(2, 6, 23, 0.5);
 }
 
-/* Custom sleek scrollbar */
+/* Custom sleek translucent scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -46,9 +214,109 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(148, 163, 184, 0.22);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(125, 211, 252, 0.42);
+}
+
+/* Luminous Translucent Selection Highlight */
+::selection {
+  background-color: rgba(56, 189, 248, 0.28) !important;
+  color: inherit !important;
+  text-shadow: none !important;
+}
+
+::-moz-selection {
+  background-color: rgba(56, 189, 248, 0.28) !important;
+  color: inherit !important;
+  text-shadow: none !important;
+}
+
+img::selection {
+  background-color: rgba(56, 189, 248, 0.16) !important;
+}
+
+/* Craft & Notion Style Paragraph Spacing vs Soft Wrap */
+.rich-text-editor {
+  line-height: 1.55;
+}
+
+.rich-text-editor br {
+  display: block;
+  content: "";
+  margin-top: 6px;
+}
+
+/* Prism Dark Theme Code Syntax Highlighting */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #64748b;
+  font-style: italic;
+}
+
+.token.punctuation {
+  color: #94a3b8;
+}
+
+.token.namespace {
+  opacity: 0.7;
+}
+
+.token.property,
+.token.tag,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #fb7185;
+}
+
+.token.boolean,
+.token.number {
+  color: #fb923c;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #4ade80;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: #38bdf8;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #c084fc;
+}
+
+.token.function,
+.token.class-name {
+  color: #60a5fa;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: #fbbf24;
+}
+
+.token.important,
+.token.bold {
+  font-weight: bold;
+}
+.token.italic {
+  font-style: italic;
 }

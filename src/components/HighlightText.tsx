@@ -21,7 +21,7 @@ export const HighlightText: React.FC<HighlightTextProps> = ({ text, query, class
         terms.some((term) => term.toLowerCase() === part.toLowerCase()) ? (
           <mark
             key={index}
-            className="bg-amber-300 dark:bg-amber-500/40 text-amber-950 dark:text-amber-200 px-1 py-0.5 rounded font-medium"
+            className="bg-sky-400/25 text-sky-100 px-0.5 rounded-sm font-semibold border border-sky-300/40"
           >
             {part}
           </mark>
