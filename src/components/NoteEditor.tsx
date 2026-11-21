@@ -4964,10 +4964,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           {!isSidebarOpen && onToggleSidebar && (
             <button
               onClick={onToggleSidebar}
-              className="p-1.5 text-zinc-400 hover:text-zinc-200 rounded-lg hover:bg-white/10 transition-colors shrink-0 mr-1 flex items-center"
+              className="p-2 rounded-xl glass-control shrink-0 mr-1 flex items-center"
               title="Tampilkan Sidebar Navigasi Kiri"
             >
-              <svg className="w-4 h-3.5 text-zinc-400" viewBox="0 0 20 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-4 h-3.5" viewBox="0 0 20 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="1.5" y="1.5" width="17" height="13" rx="2.5" />
                 <line x1="6.5" y1="1.5" x2="6.5" y2="14.5" />
               </svg>
@@ -5034,13 +5034,13 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
         {/* Right: Top Right Editor Actions */}
         <div className="flex items-center gap-2 shrink-0 ml-auto z-10">
-          {/* Undo / Redo Liquid Glass Pill */}
-          <div className="flex items-center liquid-pill rounded-full p-0.5 gap-0.5">
+          {/* Undo / Redo Tempered Glass Pill */}
+          <div className="flex items-center glass-control rounded-full p-0.5 gap-0.5">
             <button
               onClick={handleUndo}
               disabled={historyIndexRef.current <= 0}
               aria-label="Undo / Batalkan"
-              className="p-1.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-full transition-colors disabled:opacity-25 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+              className="p-1.5 q-text-secondary hover:q-text-primary hover:bg-white/10 rounded-full transition-colors disabled:opacity-25 disabled:hover:bg-transparent"
               title="Batalkan / Undo (Ctrl+Z)"
             >
               <Undo2 className="w-3.5 h-3.5" />
@@ -5049,7 +5049,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               onClick={handleRedo}
               disabled={historyIndexRef.current >= historyRef.current.length - 1}
               aria-label="Redo / Ulangi"
-              className="p-1.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-full transition-colors disabled:opacity-25 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+              className="p-1.5 q-text-secondary hover:q-text-primary hover:bg-white/10 rounded-full transition-colors disabled:opacity-25 disabled:hover:bg-transparent"
               title="Ulangi / Redo (Ctrl+Y atau Ctrl+Shift+Z)"
             >
               <Redo2 className="w-3.5 h-3.5" />
@@ -5060,20 +5060,20 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           <button
             onClick={() => setIsVersionHistoryOpen(true)}
             aria-label="Log Riwayat Versi"
-            className="p-1.5 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+            className="p-2 glass-control rounded-xl transition-all"
             title="Log Riwayat Versi / Restore Progress"
           >
-            <History className="w-4 h-4" />
+            <History className="w-3.5 h-3.5" />
           </button>
 
           {/* PanelRight Toggle Icon (At the Very Corner / Paling Pojok Kanan) */}
           <button
             onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
             aria-label="Toggle Sidebar Kanan"
-            className={`p-1.5 rounded-xl transition-all border ${
+            className={`p-2 rounded-xl transition-all border ${
               isRightSidebarOpen
-                ? 'liquid-lens-active text-white'
-                : 'text-slate-300 hover:text-white hover:bg-white/10 border-transparent'
+                ? 'liquid-lens-active q-text-primary'
+                : 'glass-control'
             }`}
             title={isRightSidebarOpen ? 'Tutup Sidebar Kanan' : 'Buka Sidebar Kanan (Craft Panel)'}
           >
@@ -5597,7 +5597,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           <aside className="w-56 sm:w-60 glass-sidebar border-t border-l rounded-tl-3xl px-3 py-3 flex flex-col justify-between shrink-0 overflow-y-auto animate-in slide-in-from-right duration-200 select-none font-sans relative">
             <div className="space-y-4">
               {/* True iOS 26 Liquid Glass Sliding Lens Panel Tabs */}
-              <div className="pt-0.5">
+              <div className="py-1.5 overflow-visible">
                 <LiquidSegmentedControl
                   fullWidth
                   size="xs"

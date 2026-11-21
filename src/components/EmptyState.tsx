@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, FileText, Star, ShieldCheck, Zap, Search, Trash2, Clock } from 'lucide-react';
+import { Plus, FileText, Star, History, Search, Trash2, Clock, Folder } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
 
 interface EmptyStateProps {
@@ -93,7 +93,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ type, onNewNote, languag
           {isEn ? 'No notes here yet' : 'Belum ada catatan di sini'}
         </p>
         <p className="text-xs q-text-muted mt-1">
-          {isEn ? 'Capture ideas, checklists, code snippets, or documents offline.' : 'Mulai catat ide, daftar tugas, atau dokumen secara instan dan offline.'}
+          {isEn ? 'Create your first note to start writing.' : 'Buat catatan pertamamu untuk mulai menulis.'}
         </p>
       </div>
       <button
@@ -113,17 +113,12 @@ export const DashboardEmptyEditor: React.FC<{ onNewNote: () => void }> = ({ onNe
       <div className="max-w-2xl w-full space-y-10">
         {/* Main Title & Minimal Brand Header */}
         <div className="space-y-4 flex flex-col items-center">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full liquid-pill">
-            <BrandLogo />
-            <span className="text-[11px] q-text-muted font-medium pl-1 border-l q-border">
-              Offline-first Notes
-            </span>
-          </div>
+          <BrandLogo />
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight q-text-primary leading-tight">
             Apa yang ingin kamu catat hari ini?
           </h2>
           <p className="text-xs sm:text-sm q-text-muted leading-relaxed max-w-md mx-auto">
-            Catatan pribadi 100% lokal &amp; offline. Tulis dokumen, daftar tugas, atau ide instan tanpa loading.
+            Ruang tulis yang tenang untuk dokumen, ide, dan catatan harian.
           </p>
         </div>
 
@@ -144,28 +139,28 @@ export const DashboardEmptyEditor: React.FC<{ onNewNote: () => void }> = ({ onNe
                 Buat Catatan Baru
               </h3>
               <p className="text-xs q-text-muted mt-1 leading-relaxed">
-                Tulis dokumen, catatan cepat, atau ide baru secara instan.
+                Tulis dokumen, catatan cepat, atau ide baru.
               </p>
             </div>
           </button>
 
           <div className="p-5 rounded-2xl glass-card flex flex-col justify-between space-y-4">
             <div className="w-10 h-10 rounded-xl glass-control flex items-center justify-center">
-              <Zap className="w-5 h-5 q-text-primary" />
+              <Search className="w-5 h-5 q-text-primary" />
             </div>
             <div>
               <h3 className="text-sm font-semibold q-text-primary tracking-tight">
-                Pencarian Instan
+                Pencarian Cepat
               </h3>
               <p className="text-xs q-text-muted mt-1 leading-relaxed">
-                Akses dan cari catatan dalam hitungan milidetik di IndexedDB lokal.
+                Temukan catatan, folder, atau tag dengan kata kunci apa saja.
               </p>
             </div>
           </div>
 
           <div className="p-5 rounded-2xl glass-card flex flex-col justify-between space-y-4">
             <div className="w-10 h-10 rounded-xl glass-control flex items-center justify-center">
-              <Star className="w-5 h-5 q-text-primary" />
+              <Folder className="w-5 h-5 q-text-primary" />
             </div>
             <div>
               <h3 className="text-sm font-semibold q-text-primary tracking-tight">
@@ -179,14 +174,14 @@ export const DashboardEmptyEditor: React.FC<{ onNewNote: () => void }> = ({ onNe
 
           <div className="p-5 rounded-2xl glass-card flex flex-col justify-between space-y-4">
             <div className="w-10 h-10 rounded-xl glass-control flex items-center justify-center">
-              <ShieldCheck className="w-5 h-5 q-text-primary" />
+              <History className="w-5 h-5 q-text-primary" />
             </div>
             <div>
               <h3 className="text-sm font-semibold q-text-primary tracking-tight">
-                Privasi 100% Lokal
+                Riwayat &amp; Cadangan
               </h3>
               <p className="text-xs q-text-muted mt-1 leading-relaxed">
-                Semua data tersimpan aman di perangkat Anda tanpa server cloud.
+                Pulihkan versi sebelumnya atau ekspor catatan kapan saja.
               </p>
             </div>
           </div>

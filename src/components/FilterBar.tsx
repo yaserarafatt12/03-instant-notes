@@ -584,18 +584,20 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             </div>
 
             {/* True iOS 26 Liquid Glass 4-Tab Sliding Lens Toolbar */}
-            <LiquidSegmentedControl
-              fullWidth
-              size="xs"
-              value={tocTab}
-              onChange={setTocTab}
-              options={[
-                { value: 'list', icon: <List className="w-3.5 h-3.5" />, title: isEn ? 'Outline' : 'Daftar Isi' },
-                { value: 'tasks', icon: <CheckCircle2 className="w-3.5 h-3.5" />, title: isEn ? 'Tasks' : 'Daftar Tugas' },
-                { value: 'attachments', icon: <Paperclip className="w-3.5 h-3.5" />, title: isEn ? 'Media & Files' : 'Media & Lampiran' },
-                { value: 'search', icon: <Search className="w-3.5 h-3.5" />, title: isEn ? 'Find in Note' : 'Cari dalam Catatan' },
-              ]}
-            />
+            <div className="py-1 overflow-visible">
+              <LiquidSegmentedControl
+                fullWidth
+                size="xs"
+                value={tocTab}
+                onChange={setTocTab}
+                options={[
+                  { value: 'list', icon: <List className="w-3.5 h-3.5" />, title: isEn ? 'Outline' : 'Daftar Isi' },
+                  { value: 'tasks', icon: <CheckCircle2 className="w-3.5 h-3.5" />, title: isEn ? 'Tasks' : 'Daftar Tugas' },
+                  { value: 'attachments', icon: <Paperclip className="w-3.5 h-3.5" />, title: isEn ? 'Media & Files' : 'Media & Lampiran' },
+                  { value: 'search', icon: <Search className="w-3.5 h-3.5" />, title: isEn ? 'Find in Note' : 'Cari dalam Catatan' },
+                ]}
+              />
+            </div>
 
             {/* Tab 1: Table of Contents & Pages Tree */}
             {tocTab === 'list' && (
