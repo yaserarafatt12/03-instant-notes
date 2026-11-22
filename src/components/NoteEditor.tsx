@@ -295,7 +295,7 @@ const DropIndicatorLine: React.FC<DropIndicatorProps> = ({ position = 'before' }
       position === 'before' ? '-top-1' : '-bottom-1'
     }`}
   >
-    <div className="w-full h-[2.5px] rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
+    <div className="w-full h-[2.5px] rounded-full bg-gradient-to-r from-white/35 via-white/95 to-white/35 shadow-[0_0_12px_rgba(255,255,255,0.45)]" />
   </div>
 );
 
@@ -730,10 +730,10 @@ const CodeBlockRenderer: React.FC<{
         }}
         onDragStart={(e) => onDragStart(idx, e)}
         onDragEnd={onDragEnd}
-        className="absolute -left-7 top-1/2 -translate-y-1/2 text-zinc-600 group-hover/block:text-zinc-400 cursor-grab opacity-0 group-hover/block:opacity-100 transition-opacity z-10 p-1 hover:bg-white/10 rounded"
+        className="absolute -left-7 top-2 w-6 h-6 text-white/40 group-hover/block:text-white/80 hover:text-white cursor-grab active:cursor-grabbing opacity-0 group-hover/block:opacity-100 transition-all z-10 hover:bg-white/10 rounded-lg flex items-center justify-center"
         title="Klik untuk seleksi / geser Code Block"
       >
-        <GripVertical className="w-5 h-5" />
+        <GripVertical className="w-4 h-4" />
       </div>
 
       <div
@@ -893,19 +893,19 @@ const MermaidBlockRenderer: React.FC<{
           }}
           onDragStart={(e) => onDragStart(idx, e)}
           onDragEnd={onDragEnd}
-          className="absolute -left-7 top-1/2 -translate-y-1/2 text-zinc-600 group-hover/block:text-zinc-400 cursor-grab opacity-0 group-hover/block:opacity-100 transition-opacity z-10 p-1 hover:bg-white/10 rounded"
+          className="absolute -left-7 top-2 w-6 h-6 text-white/40 group-hover/block:text-white/80 hover:text-white cursor-grab active:cursor-grabbing opacity-0 group-hover/block:opacity-100 transition-all z-10 hover:bg-white/10 rounded-lg flex items-center justify-center"
           title="Klik untuk seleksi / geser Mermaid Diagram"
         >
-          <GripVertical className="w-5 h-5" />
+          <GripVertical className="w-4 h-4" />
         </div>
 
         <div
           data-mmd-id={block.data.id}
           className={`relative group/mmdcard rounded-2xl glass-card transition-all overflow-hidden ${
           isSelected
-            ? 'ring-1 ring-[#38BDF8]/55 !border-[#38BDF8]/65'
+            ? 'ring-1 ring-white/45 !border-white/40 bg-white/[0.08]'
             : isAllSelected
-            ? 'ring-1 ring-[#38BDF8]/35 !border-[#38BDF8]/45'
+            ? 'ring-1 ring-white/30 !border-white/30'
             : ''
         }`}>
           {/* Seamless Top Toolbar */}
@@ -1660,6 +1660,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       target.tagName === 'BUTTON' ||
       target.closest('button') ||
       target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
+      target.tagName === 'SELECT' ||
+      target.closest('[contenteditable="true"]') ||
+      target.closest('[draggable="true"]') ||
       target.closest('.floating-selection-toolbar') ||
       target.closest('.block-action-menu')
     ) {
@@ -1687,7 +1691,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       const width = Math.abs(currentX - startX);
       const height = Math.abs(currentY - startY);
 
-      if (width > 6 || height > 6 || isDraggingMarqueeRef.current) {
+      if (width > 8 || height > 8 || isDraggingMarqueeRef.current) {
         if (!isDraggingMarqueeRef.current) {
           isDraggingMarqueeRef.current = true;
           window.getSelection()?.removeAllRanges();
@@ -1699,18 +1703,19 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         const y = Math.min(currentY, startY);
         setDragSelectRect({ x, y, width, height });
 
-        // Overlap detection across all block elements
-        const blockElements = document.querySelectorAll('.group\\/tblock');
+        // Precise overlap detection using explicit data-block-idx (>4px intersection required)
+        const blockElements = container.querySelectorAll('[data-block-idx]');
         const newlySelected: number[] = [];
-        blockElements.forEach((el, idx) => {
+        blockElements.forEach((el) => {
+          const idxAttr = el.getAttribute('data-block-idx');
+          if (idxAttr === null) return;
+          const idx = Number(idxAttr);
+          if (!Number.isFinite(idx)) return;
+
           const rect = el.getBoundingClientRect();
-          const overlap = !(
-            rect.right < x ||
-            rect.left > x + width ||
-            rect.bottom < y ||
-            rect.top > y + height
-          );
-          if (overlap) {
+          const overlapX = Math.min(rect.right, x + width) - Math.max(rect.left, x);
+          const overlapY = Math.min(rect.bottom, y + height) - Math.max(rect.top, y);
+          if (overlapX > 4 && overlapY > 4) {
             newlySelected.push(idx);
           }
         });
@@ -4152,14 +4157,15 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             />
           )}
           
-          {/* 6-dot grip — in outer left gutter (outside card box) */}
+          {/* 6-dot grip — symmetrical left gutter rail */}
           <div
             draggable
             onDragStart={(e) => handleDragStartBlock(idx, e)}
             onDragEnd={handleDragEnd}
-            className="absolute -left-7 top-1/2 -translate-y-1/2 text-zinc-600 group-hover/block:text-zinc-400 cursor-grab opacity-0 group-hover/block:opacity-100 transition-opacity z-10"
+            className="absolute -left-7 top-2 w-6 h-6 text-white/40 group-hover/block:text-white/80 hover:text-white cursor-grab active:cursor-grabbing opacity-0 group-hover/block:opacity-100 transition-all z-10 hover:bg-white/10 rounded-lg flex items-center justify-center"
+            title="Klik untuk seleksi / geser Subpage"
           >
-            <GripVertical className="w-5 h-5" />
+            <GripVertical className="w-4 h-4" />
           </div>
 
           {/* LAYOUT VARIANT 1: SMALL (Uniform Fixed Width - Matching File Attachment Small) */}
@@ -4526,14 +4532,15 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               />
             )}
             
-            {/* Drag grip handle — outer left margin gutter */}
+            {/* Drag grip handle — symmetrical left gutter rail */}
             <div
               draggable
               onDragStart={(e) => handleDragStartBlock(idx, e)}
               onDragEnd={handleDragEnd}
-              className="absolute -left-7 top-1/2 -translate-y-1/2 opacity-0 group-hover/block:opacity-100 transition-opacity text-zinc-400 cursor-grab z-20"
+              className="absolute -left-7 top-2 w-6 h-6 opacity-0 group-hover/block:opacity-100 transition-all text-white/40 group-hover/block:text-white/80 hover:text-white hover:bg-white/10 rounded-lg cursor-grab active:cursor-grabbing z-20 flex items-center justify-center"
+              title="Geser Gambar"
             >
-              <GripVertical className="w-5 h-5" />
+              <GripVertical className="w-4 h-4" />
             </div>
 
             <div
@@ -4598,7 +4605,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             {/* Corner Drag Resize Handle */}
             <div
               onMouseDown={(e) => handleImageResize(att.id, e)}
-              className="absolute -bottom-1.5 -right-1.5 w-4 h-4 bg-indigo-500 border-2 border-white rounded-full cursor-se-resize opacity-0 group-hover/block:opacity-100 transition-opacity shadow-lg z-30 flex items-center justify-center hover:scale-125"
+              className="absolute -bottom-1.5 -right-1.5 w-4 h-4 bg-white/90 border-2 border-[#0B1830] rounded-full cursor-se-resize opacity-0 group-hover/block:opacity-100 transition-opacity shadow-lg z-30 flex items-center justify-center hover:scale-125"
               title="Tarik untuk ubah ukuran gambar"
             />
           </div>
@@ -4626,14 +4633,15 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             />
           )}
           
-          {/* Drag grip handle */}
+          {/* Drag grip handle — symmetrical left gutter rail */}
           <div
             draggable
             onDragStart={(e) => handleDragStartBlock(idx, e)}
             onDragEnd={handleDragEnd}
-            className="absolute -left-7 top-1/2 -translate-y-1/2 text-zinc-600 group-hover/block:text-zinc-400 cursor-grab opacity-0 group-hover/block:opacity-100 transition-opacity z-10"
+            className="absolute -left-7 top-2 w-6 h-6 text-white/40 group-hover/block:text-white/80 hover:text-white cursor-grab active:cursor-grabbing opacity-0 group-hover/block:opacity-100 transition-all z-10 hover:bg-white/10 rounded-lg flex items-center justify-center"
+            title="Geser Attachment"
           >
-            <GripVertical className="w-5 h-5" />
+            <GripVertical className="w-4 h-4" />
           </div>
 
           {/* LAYOUT VARIANT 1: SMALL (Uniform Fixed Width - Matching Subpage Small) */}
@@ -5401,8 +5409,11 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   elements.push(
                     <div
                       key={block.id}
-                      className={`group/tblock relative transition-colors w-full leading-[25px] my-[2px] px-1 py-0.5 rounded-md border border-transparent ${
-                        isSelected ? 'bg-indigo-500/[0.05] text-white' : ''
+                      data-block-idx={idx}
+                      className={`group/tblock relative transition-all w-full leading-[25px] my-[2px] px-1.5 py-0.5 rounded-lg border ${
+                        isSelected
+                          ? 'bg-white/[0.09] border-white/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] text-white'
+                          : 'border-transparent hover:bg-white/[0.025]'
                       } ${draggedBlockIdx === idx ? 'opacity-30 scale-[0.98]' : ''}`}
                       onDragOver={(e) => handleDragOverBlock(idx, e)}
                       onDrop={(e) => handleDropOnBlock(idx, e)}
@@ -5414,9 +5425,9 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                         />
                       )}
 
-                      {/* 6-dot Grip Handle - Mathematically Centered via Flexbox Line Height */}
+                      {/* 6-dot Grip Handle — Identical -left-7 w-6 h-6 Rail */}
                       <div
-                        className={`absolute -left-6 top-0 h-[30px] flex items-center select-none transition-all duration-75 z-20 ${
+                        className={`absolute -left-7 top-[1px] w-6 h-[28px] flex items-center justify-center select-none transition-all duration-75 z-20 ${
                           isSelected
                             ? 'opacity-100'
                             : 'opacity-0 group-hover/tblock:opacity-100'
@@ -5443,10 +5454,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                           }}
                           onDragStart={(e) => handleDragStartBlock(idx, e)}
                           onDragEnd={handleDragEnd}
-                          className="p-1 text-zinc-500 hover:text-zinc-300 hover:bg-white/10 rounded cursor-grab active:cursor-grabbing transition-colors flex items-center justify-center"
+                          className="w-6 h-6 text-white/45 hover:text-white hover:bg-white/10 rounded-lg cursor-grab active:cursor-grabbing transition-colors flex items-center justify-center"
                           title="Klik (atau Shift+Klik) untuk seleksi / geser blok"
                         >
-                          <GripVertical className="w-3.5 h-3.5" />
+                          <GripVertical className="w-4 h-4" />
                         </div>
                       </div>
 
@@ -5555,9 +5566,12 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   elements.push(
                     <div
                       key={`media-${idx}`}
+                      data-block-idx={idx}
                       onClick={(e) => { e.stopPropagation(); setSelectedBlockIndices([idx]); }}
-                      className={`group/tblock relative my-1 rounded-xl transition-colors border border-transparent ${
-                        selectedBlockIndices.includes(idx) ? 'bg-indigo-500/[0.05]' : ''
+                      className={`group/tblock relative my-1 rounded-xl transition-colors border ${
+                        selectedBlockIndices.includes(idx)
+                          ? 'bg-white/[0.08] border-white/25'
+                          : 'border-transparent'
                       }`}
                     >
                       {renderSingleMediaBlock(block, idx)}
@@ -6039,7 +6053,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       {/* Marquee Drag Selection Box Overlay */}
       {dragSelectRect && (
         <div
-          className="fixed z-50 pointer-events-none bg-white/[0.08] border border-white/30 rounded-xl"
+          className="fixed z-50 pointer-events-none bg-white/[0.08] border border-white/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] rounded-xl"
           style={{
             left: `${dragSelectRect.x}px`,
             top: `${dragSelectRect.y}px`,
