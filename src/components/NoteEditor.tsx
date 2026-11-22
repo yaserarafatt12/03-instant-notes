@@ -1135,6 +1135,151 @@ function htmlToMarkdown(html: string): string {
   return parseNode(temp).replace(/^\n/, '');
 }
 
+function parsePastedHtmlToMarkdown(htmlData: string): string {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlData, 'text/html');
+
+  // Strip out UI buttons, SVGs, action bars (Copy, Share, Like, Dislike, 3-dots, etc.)
+  doc.querySelectorAll('svg, button, nav, footer, script, style, form, iframe, [aria-hidden="true"], [role="button"]').forEach((node) => node.remove());
+
+  function walk(node: Node, listDepth = 0): string {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return node.textContent || '';
+    }
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      const tag = el.tagName.toLowerCase();
+
+      // Fenced code blocks (<pre><code>...</code></pre>)
+      if (tag === 'pre') {
+        const codeEl = el.querySelector('code');
+        const langMatch = codeEl?.className.match(/language-([a-zA-Z0-9_-]+)/);
+        const lang = langMatch?.[1] || 'auto';
+        const rawCode = (codeEl?.textContent || el.textContent || '').replace(/^\n+|\n+$/g, '');
+        return `\n\`\`\`${lang}\n${rawCode}\n\`\`\`\n`;
+      }
+
+      if (tag === 'ul') {
+        const items = Array.from(el.children)
+          .filter((c) => c.tagName.toLowerCase() === 'li')
+          .map((li) => walk(li, listDepth + 1))
+          .join('');
+        return listDepth === 0 ? `\n${items}\n` : `\n${items}`;
+      }
+
+      if (tag === 'ol') {
+        let num = 1;
+        const items = Array.from(el.children)
+          .filter((c) => c.tagName.toLowerCase() === 'li')
+          .map((li) => {
+            const indent = '  '.repeat(Math.max(0, listDepth));
+            const inner = Array.from(li.childNodes).map((c) => walk(c, listDepth + 1)).join('').trim();
+            return `\n${indent}${num++}. ${inner}`;
+          })
+          .join('');
+        return listDepth === 0 ? `\n${items}\n` : `\n${items}`;
+      }
+
+      if (tag === 'li') {
+        const indent = '  '.repeat(Math.max(0, listDepth - 1));
+        const inner = Array.from(el.childNodes).map((c) => walk(c, listDepth)).join('').trim();
+        return inner ? `\n${indent}• ${inner}` : '';
+      }
+
+      const children = Array.from(el.childNodes).map((c) => walk(c, listDepth)).join('');
+
+      if (!children.trim() && !['br', 'hr'].includes(tag)) {
+        return '';
+      }
+
+      if (tag === 'b' || tag === 'strong') {
+        return `**${children.trim()}**`;
+      }
+      if (tag === 'i' || tag === 'em') {
+        return `*${children.trim()}*`;
+      }
+      if (tag === 'u') {
+        return `<u>${children.trim()}</u>`;
+      }
+      if (tag === 's' || tag === 'del' || tag === 'strike') {
+        return `~~${children.trim()}~~`;
+      }
+      if (tag === 'code') {
+        return `\`${children.trim()}\``;
+      }
+      if (tag === 'mark') {
+        return `==${children.trim()}==`;
+      }
+      if (/^h[1-6]$/.test(tag)) {
+        return `\n**${children.trim()}**\n`;
+      }
+      if (tag === 'p' || tag === 'div' || tag === 'blockquote') {
+        return `\n${children.trim()}\n`;
+      }
+      if (tag === 'br') {
+        return '\n';
+      }
+
+      return children;
+    }
+    return '';
+  }
+
+  const result = walk(doc.body);
+  return result.replace(/\n{3,}/g, '\n\n').trim();
+}
+
+function parsePastedTextToChronoBlocks(rawText: string): ChronoBlock[] {
+  const normalized = rawText.replace(/\r\n/g, '\n');
+  const blocks: ChronoBlock[] = [];
+  const fenceRegex = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
+  let lastIdx = 0;
+  let match: RegExpExecArray | null;
+  let counter = 0;
+
+  const pushTextLines = (segment: string) => {
+    const lines = segment.split('\n');
+    for (const line of lines) {
+      let cleaned = line;
+      const headingMatch = cleaned.match(/^#{1,6}\s+(.+)$/);
+      if (headingMatch) {
+        cleaned = `**${headingMatch[1].trim()}**`;
+      } else {
+        cleaned = cleaned.replace(/^(\s*)[-*+]\s+/, '$1• ');
+      }
+      blocks.push({
+        type: 'text',
+        id: `t-paste-${Date.now()}-${counter++}`,
+        content: cleaned,
+      });
+    }
+  };
+
+  while ((match = fenceRegex.exec(normalized)) !== null) {
+    const before = normalized.slice(lastIdx, match.index).replace(/\n$/, '');
+    if (before.trim()) {
+      pushTextLines(before);
+    }
+    blocks.push({
+      type: 'code',
+      id: `code-${Date.now()}-${counter++}`,
+      data: {
+        id: `code-${Date.now()}-${counter++}`,
+        lang: match[1] || 'auto',
+        code: match[2].replace(/\n$/, ''),
+      },
+    });
+    lastIdx = match.index + match[0].length;
+  }
+
+  const tail = normalized.slice(lastIdx).replace(/^\n/, '');
+  if (tail || blocks.length === 0) {
+    pushTextLines(tail);
+  }
+
+  return blocks;
+}
+
 interface RichTextBlockProps {
   id?: string;
   content: string;
@@ -1150,6 +1295,7 @@ interface RichTextBlockProps {
   onMergeWithPreviousBlock?: () => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
+  onPasteMultiLine?: (rawText: string) => void;
 }
 
 const RichTextBlock: React.FC<RichTextBlockProps> = ({
@@ -1167,6 +1313,7 @@ const RichTextBlock: React.FC<RichTextBlockProps> = ({
   onMergeWithPreviousBlock,
   onDragOver,
   onDrop,
+  onPasteMultiLine,
 }) => {
   const localRef = useRef<HTMLDivElement | null>(null);
   const isTypingRef = useRef(false);
@@ -1223,67 +1370,6 @@ const RichTextBlock: React.FC<RichTextBlockProps> = ({
     }
     if (onBlur) onBlur();
   };
-
-function parsePastedHtmlToMarkdown(htmlData: string): string {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(htmlData, 'text/html');
-
-  // Strip out UI buttons, SVGs, action bars (Copy, Share, Like, Dislike, 3-dots, etc.)
-  doc.querySelectorAll('svg, button, nav, footer, script, style, form, iframe, [aria-hidden="true"], [role="button"]').forEach((node) => node.remove());
-
-  function walk(node: Node): string {
-    if (node.nodeType === Node.TEXT_NODE) {
-      return node.textContent || '';
-    }
-    if (node.nodeType === Node.ELEMENT_NODE) {
-      const el = node as HTMLElement;
-      const tag = el.tagName.toLowerCase();
-
-      const children = Array.from(el.childNodes).map(walk).join('');
-
-      if (!children.trim() && !['br', 'hr'].includes(tag)) {
-        return '';
-      }
-
-      if (tag === 'b' || tag === 'strong') {
-        return `**${children.trim()}**`;
-      }
-      if (tag === 'i' || tag === 'em') {
-        return `*${children.trim()}*`;
-      }
-      if (tag === 'u') {
-        return `<u>${children.trim()}</u>`;
-      }
-      if (tag === 's' || tag === 'del' || tag === 'strike') {
-        return `~~${children.trim()}~~`;
-      }
-      if (tag === 'code') {
-        return `\`${children.trim()}\``;
-      }
-      if (tag === 'mark') {
-        return `==${children.trim()}==`;
-      }
-      if (tag === 'h1' || tag === 'h2' || tag === 'h3') {
-        return `\n\n### ${children.trim()}\n\n`;
-      }
-      if (tag === 'li') {
-        return `\n- ${children.trim()}`;
-      }
-      if (tag === 'p' || tag === 'div' || tag === 'blockquote') {
-        return `\n\n${children.trim()}\n\n`;
-      }
-      if (tag === 'br') {
-        return '\n';
-      }
-
-      return children;
-    }
-    return '';
-  }
-
-  const result = walk(doc.body);
-  return result.replace(/\n{3,}/g, '\n\n').trim();
-}
 
   // Handle Ctrl+V Paste of Images and HTML -> Sanitize junk SVG/button elements from AI chats/web
   const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
@@ -1346,22 +1432,24 @@ function parsePastedHtmlToMarkdown(htmlData: string): string {
       }
     }
 
-    // 3. HTML Paste from Web Pages (ChatGPT, Claude, Blogs, StackOverflow)
-    // Preserves bold, italic, and paragraph breaks while stripping junk buttons, SVGs, 3-dots!
-    if (htmlData) {
-      e.preventDefault();
-      const cleanedMd = parsePastedHtmlToMarkdown(htmlData);
+    // 3. HTML or Multi-Line Plain Text Paste (ChatGPT, Antigravity, Claude, VS Code, Notepad)
+    const plainText = clipboardData.getData('text/plain');
+    const resolvedText = htmlData ? (parsePastedHtmlToMarkdown(htmlData) || plainText) : plainText;
 
-      if (cleanedMd) {
-        const cleanHtml = markdownToHtml(cleanedMd);
-        document.execCommand('insertHTML', false, cleanHtml);
-      } else {
-        const plainText = clipboardData.getData('text/plain');
-        if (plainText) {
-          document.execCommand('insertText', false, plainText);
-        }
+    if (resolvedText) {
+      const hasMultipleLines = resolvedText.includes('\n') || resolvedText.includes('```');
+      if (hasMultipleLines && onPasteMultiLine) {
+        e.preventDefault();
+        onPasteMultiLine(resolvedText);
+        return;
       }
-      return;
+
+      if (htmlData) {
+        e.preventDefault();
+        const cleanHtml = markdownToHtml(resolvedText);
+        document.execCommand('insertHTML', false, cleanHtml);
+        return;
+      }
     }
   };
 
@@ -2531,16 +2619,13 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         return; // Let native / RichTextBlock onPaste handle focused inputs
       }
 
-      const pastedText = e.clipboardData?.getData('text/plain');
-      if (!pastedText) return;
+      const htmlData = e.clipboardData?.getData('text/html');
+      const plainText = e.clipboardData?.getData('text/plain') || '';
+      const resolvedText = htmlData ? (parsePastedHtmlToMarkdown(htmlData) || plainText) : plainText;
+      if (!resolvedText) return;
 
       e.preventDefault();
-      const lines = pastedText.split(/\r?\n/);
-      const newBlocks: ChronoBlock[] = lines.map((line, i) => ({
-        type: 'text',
-        id: `t-paste-${Date.now()}-${i}`,
-        content: line,
-      }));
+      const newBlocks = parsePastedTextToChronoBlocks(resolvedText);
 
       const updated = [...parsedChronologicalBlocks];
       if (selectedBlockIndicesRef.current.length > 0) {
@@ -5707,6 +5792,19 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                         onMergeWithPreviousBlock={() => handleMergeBlockWithPrevious(idx)}
                         onDragOver={(e) => handleDragOverBlock(idx, e)}
                         onDrop={(e) => handleDropOnBlock(idx, e)}
+                        onPasteMultiLine={(rawText) => {
+                          const pastedBlocks = parsePastedTextToChronoBlocks(rawText);
+                          if (pastedBlocks.length === 0) return;
+                          const updated = [...parsedChronologicalBlocks];
+                          const currentBlock = updated[idx];
+                          const isCurrentEmpty = currentBlock?.type === 'text' && !currentBlock.content.trim();
+                          if (isCurrentEmpty) {
+                            updated.splice(idx, 1, ...pastedBlocks);
+                          } else {
+                            updated.splice(idx + 1, 0, ...pastedBlocks);
+                          }
+                          reassembleAndSaveBlocks(updated);
+                        }}
                         placeholder={
                           idx === 0
                             ? activeSubPage
