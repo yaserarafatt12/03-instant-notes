@@ -482,7 +482,7 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
           {/* View Tabs Bar + Search Bar */}
           <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
             {/* View Selector Tabs */}
-            <div className="flex items-center gap-1 bg-[#071123]/75 p-1 rounded-full border border-white/10 shadow-inner">
+            <div className="flex items-center gap-1 bg-white/[0.05] p-1 rounded-full border border-white/[0.12]">
               {collection.views.map((v) => {
                 const isActive = v.id === activeView.id;
                 return (
@@ -529,21 +529,21 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                   >
                     <button
                       onClick={() => handleAddView('table')}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-white/10 hover:text-sky-200 text-slate-200 text-left transition-colors"
+                      className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-white/10 hover:text-white text-slate-200 text-left transition-colors"
                     >
                       <TableIcon className="w-3.5 h-3.5" />
                       <span>Table</span>
                     </button>
                     <button
                       onClick={() => handleAddView('gallery')}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-white/10 hover:text-sky-200 text-slate-200 text-left transition-colors"
+                      className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-white/10 hover:text-white text-slate-200 text-left transition-colors"
                     >
                       <LayoutGrid className="w-3.5 h-3.5" />
                       <span>Gallery</span>
                     </button>
                     <button
                       onClick={() => handleAddView('kanban')}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-white/10 hover:text-sky-200 text-slate-200 text-left transition-colors"
+                      className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-white/10 hover:text-white text-slate-200 text-left transition-colors"
                     >
                       <KanbanIcon className="w-3.5 h-3.5" />
                       <span>Kanban</span>
@@ -556,7 +556,7 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
             {/* In-database Search Filter */}
             {isSearchOpen && (
               <div className="flex items-center gap-1.5 glass-input rounded-full px-2.5 py-1 animate-in fade-in duration-150">
-                <Search className="w-3.5 h-3.5 text-sky-400/80" />
+                <Search className="w-3.5 h-3.5 text-white/60" />
                 <input
                   type="text"
                   value={searchQuery}
@@ -580,7 +580,7 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
           <div className="overflow-x-auto w-full select-text">
             <table className="w-full text-left border-collapse min-w-[500px]">
               <thead>
-                <tr className="border-b border-white/10 bg-[#071123]/65 text-xs font-semibold text-slate-400 select-none">
+                <tr className="border-b border-white/10 bg-white/[0.04] text-xs font-semibold text-slate-400 select-none">
                   {/* Row Index Column */}
                   <th className="w-12 px-3 py-2 text-center text-zinc-500 font-mono border-r border-white/5">
                     #
@@ -598,7 +598,7 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                         className="flex items-center justify-between gap-1.5 cursor-pointer hover:text-white transition-colors"
                       >
                         <div className="flex items-center gap-1.5 truncate">
-                          <span className="text-indigo-400">{getColumnTypeIcon(col.type)}</span>
+                          <span className="text-white/70">{getColumnTypeIcon(col.type)}</span>
                           <span className="truncate">{col.name}</span>
                         </div>
                         <ChevronDown className="w-3 h-3 opacity-0 group-hover/th:opacity-100 transition-opacity" />
@@ -632,7 +632,7 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                                   key={t}
                                   onClick={() => handleChangeColumnType(col.id, t)}
                                   className={`flex items-center gap-1.5 px-2 py-1 rounded text-[11px] capitalize text-left transition-colors ${
-                                    col.type === t ? 'bg-indigo-500/20 text-indigo-300 font-bold' : 'hover:bg-white/5'
+                                    col.type === t ? 'bg-white/[0.14] text-white font-bold' : 'hover:bg-white/5'
                                   }`}
                                 >
                                   {getColumnTypeIcon(t, 'w-3 h-3')}
@@ -664,7 +664,7 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                       {/* Column Resize Handle */}
                       <div
                         onMouseDown={(e) => handleColumnResizeStart(col.id, e)}
-                        className="absolute right-0 top-0 bottom-0 w-1.5 hover:w-2 hover:bg-indigo-500/80 cursor-col-resize transition-all z-10"
+                        className="absolute right-0 top-0 bottom-0 w-1.5 hover:w-2 hover:bg-white/40 cursor-col-resize transition-all z-10"
                         title="Tarik untuk mengubah lebar kolom"
                       />
                     </th>
@@ -693,7 +693,7 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                             <button
                               key={t}
                               onClick={() => handleAddColumn(t, '')}
-                              className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-white/10 hover:text-sky-200 text-slate-200 capitalize transition-colors"
+                              className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-white/10 hover:text-white text-slate-200 capitalize transition-colors"
                             >
                               {getColumnTypeIcon(t)}
                               <span>{t}</span>
@@ -737,7 +737,7 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                           onClick={() => setActiveCell({ rowId: row.id, colId: col.id })}
                           className={`px-3 py-1.5 border-r border-white/5 relative transition-all ${
                             isFocused
-                              ? 'ring-2 ring-indigo-500/80 bg-[#1c1d29] z-20 shadow-sm'
+                              ? 'ring-1 ring-white/45 bg-white/[0.08] z-20 shadow-sm'
                               : 'hover:bg-white/[0.04]'
                           }`}
                         >
@@ -760,7 +760,7 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                               />
                               {isFocused && (
                                 <button
-                                  className="text-zinc-500 hover:text-indigo-400 p-0.5"
+                                  className="text-zinc-500 hover:text-white p-0.5"
                                   title="Quick action"
                                 >
                                   <ArrowRight className="w-3.5 h-3.5" />
@@ -831,13 +831,13 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                                           setSelectMenuCell(null);
                                         }}
                                         className={`w-full flex items-center justify-between px-2 py-1 rounded-md text-left transition-colors ${
-                                          cellVal === opt.id ? 'bg-indigo-500/20 font-semibold' : 'hover:bg-white/5'
+                                          cellVal === opt.id ? 'bg-white/[0.12] font-semibold' : 'hover:bg-white/5'
                                         }`}
                                       >
                                         <span className={`px-2 py-0.5 rounded text-[11px] border ${opt.color}`}>
                                           {opt.name}
                                         </span>
-                                        {cellVal === opt.id && <Check className="w-3 h-3 text-indigo-400" />}
+                                        {cellVal === opt.id && <Check className="w-3 h-3 text-white" />}
                                       </button>
                                     ))}
                                     {cellVal && (
@@ -860,7 +860,7 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                                       value={newOptionInput}
                                       onChange={(e) => setNewOptionInput(e.target.value)}
                                       placeholder="Opsi baru..."
-                                      className="bg-[#14151b] border border-white/10 rounded px-1.5 py-0.5 text-xs text-white w-full focus:outline-none"
+                                      className="bg-white/[0.07] border border-white/[0.16] rounded px-1.5 py-0.5 text-xs text-white w-full focus:outline-none"
                                       onKeyDown={(e) => {
                                         if (e.key === 'Enter') {
                                           e.preventDefault();
@@ -870,7 +870,7 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                                     />
                                     <button
                                       onClick={() => handleAddOption(col.id, newOptionInput)}
-                                      className="p-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded"
+                                      className="p-1 bg-white/15 hover:bg-white/25 text-white rounded border border-white/20"
                                     >
                                       <Plus className="w-3 h-3" />
                                     </button>
@@ -887,7 +887,7 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                                 type="checkbox"
                                 checked={Boolean(cellVal)}
                                 onChange={(e) => handleCellChange(row.id, col.id, e.target.checked)}
-                                className="w-4 h-4 rounded border-white/20 bg-[#1c1d25] text-indigo-600 focus:ring-0 cursor-pointer"
+                                className="w-4 h-4 rounded border-white/25 bg-white/[0.08] accent-white focus:ring-0 cursor-pointer"
                               />
                             </div>
                           )}
@@ -921,14 +921,14 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                                 onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
                                 onKeyDown={(e) => handleCellKeyDown(e, rowIdx, colIdx)}
                                 placeholder="https://..."
-                                className="w-full bg-transparent border-none focus:outline-none text-indigo-400 text-xs placeholder-zinc-600 truncate py-0.5"
+                                className="w-full bg-transparent border-none focus:outline-none text-white/85 underline decoration-white/30 text-xs placeholder-zinc-600 truncate py-0.5"
                               />
                               {cellVal && (
                                 <a
                                   href={cellVal.startsWith('http') ? cellVal : `https://${cellVal}`}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="text-zinc-500 hover:text-indigo-300"
+                                  className="text-zinc-500 hover:text-white"
                                 >
                                   <Link2 className="w-3 h-3" />
                                 </a>
@@ -955,12 +955,12 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
             </table>
 
             {/* Bottom Add Row Bar */}
-            <div className="flex items-center justify-between px-3 py-2 bg-[#071123]/75 border-t border-white/10 select-none">
+            <div className="flex items-center justify-between px-3 py-2 bg-white/[0.03] border-t border-white/10 select-none">
               <button
                 onClick={handleAddRow}
-                className="flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-sky-300 transition-colors py-1 px-2 rounded-lg hover:bg-white/[0.06]"
+                className="flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition-colors py-1 px-2 rounded-lg hover:bg-white/[0.06]"
               >
-                <Plus className="w-3.5 h-3.5 text-sky-400" />
+                <Plus className="w-3.5 h-3.5 text-white/75" />
                 <span>Baris Baru</span>
               </button>
               <span className="text-[11px] text-slate-400 font-mono">
@@ -1021,9 +1021,9 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
             {/* Add Item Card */}
             <button
               onClick={handleAddRow}
-              className="flex flex-col items-center justify-center p-4 border border-dashed border-white/15 hover:border-sky-400/45 rounded-2xl text-slate-400 hover:text-white bg-[#071123]/55 hover:bg-[#0D1E3B]/70 transition-all min-h-[90px] gap-1"
+              className="flex flex-col items-center justify-center p-4 border border-dashed border-white/15 hover:border-white/35 rounded-2xl text-slate-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] transition-all min-h-[90px] gap-1"
             >
-              <Plus className="w-4 h-4 text-sky-400" />
+              <Plus className="w-4 h-4 text-white/75" />
               <span className="text-xs font-semibold">Tambah Item</span>
             </button>
           </div>
@@ -1045,7 +1045,7 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                 return (
                   <div
                     key={opt.id}
-                    className="w-64 shrink-0 bg-[#071123]/70 border border-white/10 rounded-2xl p-3 flex flex-col justify-between space-y-2.5"
+                    className="w-64 shrink-0 bg-white/[0.04] border border-white/10 rounded-2xl p-3 flex flex-col justify-between space-y-2.5"
                   >
                     <div className="flex items-center justify-between border-b border-white/10 pb-2">
                       <span className={`px-2 py-0.5 rounded-md text-xs font-bold border ${opt.color}`}>
@@ -1061,7 +1061,7 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                         return (
                           <div
                             key={r.id}
-                            className="bg-[#0D1C36]/85 hover:bg-[#13284C]/90 border border-white/15 rounded-xl p-2.5 shadow-sm space-y-1 cursor-pointer transition-colors"
+                            className="bg-white/[0.06] hover:bg-white/[0.10] border border-white/12 rounded-xl p-2.5 shadow-sm space-y-1 cursor-pointer transition-colors"
                           >
                             <p className="text-xs font-semibold text-slate-100">{titleVal}</p>
                           </div>
@@ -1075,9 +1075,9 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                         const newRow: CollectionRow = { id: newRowId, [selectCol.id]: opt.id };
                         updateAndSave({ ...collection, rows: [...collection.rows, newRow] });
                       }}
-                      className="w-full flex items-center justify-center gap-1 py-1.5 rounded-xl border border-dashed border-white/15 hover:border-sky-400/45 text-xs text-slate-400 hover:text-white transition-colors"
+                      className="w-full flex items-center justify-center gap-1 py-1.5 rounded-xl border border-dashed border-white/15 hover:border-white/35 text-xs text-slate-400 hover:text-white transition-colors"
                     >
-                      <Plus className="w-3.5 h-3.5 text-sky-400" />
+                      <Plus className="w-3.5 h-3.5 text-white/75" />
                       <span>Tambah Kartu</span>
                     </button>
                   </div>

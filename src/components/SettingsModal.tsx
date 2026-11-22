@@ -124,7 +124,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Left Modal Sidebar */}
-        <div className="w-full md:w-56 glass-recessed p-3 border-b md:border-b-0 md:border-r q-border flex flex-col justify-between shrink-0">
+        <div className="w-full md:w-56 bg-white/[0.04] p-3 border-b md:border-b-0 md:border-r q-border flex flex-col justify-between shrink-0">
           <div className="space-y-1">
             <div className="flex items-center justify-between px-2 py-2 mb-2">
               <span className="text-sm font-bold q-text-primary tracking-tight flex items-center gap-2">
@@ -151,7 +151,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'q-text-accent' : 'q-text-muted'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'q-text-muted'}`} />
                   <span>{label}</span>
                 </button>
               );
@@ -250,10 +250,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       className={`p-4 rounded-2xl border text-center space-y-2 transition-all ${
                         active
                           ? 'liquid-lens-active q-text-primary font-semibold'
-                          : 'glass-recessed q-text-secondary hover:q-text-primary'
+                          : 'bg-white/[0.05] border-white/[0.12] hover:bg-white/[0.09] q-text-secondary hover:q-text-primary'
                       }`}
                     >
-                      <Icon className={`w-5 h-5 mx-auto ${active ? 'q-text-accent' : 'q-text-muted'}`} />
+                      <Icon className={`w-5 h-5 mx-auto ${active ? 'text-white' : 'q-text-muted'}`} />
                       <p className="text-xs font-semibold">{label}</p>
                     </button>
                   );
@@ -275,11 +275,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-xs font-semibold transition-all ${
                     settings.language === 'id'
                       ? 'liquid-lens-active q-text-primary'
-                      : 'glass-recessed q-text-secondary hover:q-text-primary'
+                      : 'bg-white/[0.05] border-white/[0.12] hover:bg-white/[0.09] q-text-secondary hover:q-text-primary'
                   }`}
                 >
                   <span>Bahasa Indonesia</span>
-                  {settings.language === 'id' && <Check className="w-4 h-4 q-text-accent" />}
+                  {settings.language === 'id' && <Check className="w-4 h-4 text-white" />}
                 </button>
 
                 <button
@@ -287,11 +287,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-xs font-semibold transition-all ${
                     settings.language === 'en'
                       ? 'liquid-lens-active q-text-primary'
-                      : 'glass-recessed q-text-secondary hover:q-text-primary'
+                      : 'bg-white/[0.05] border-white/[0.12] hover:bg-white/[0.09] q-text-secondary hover:q-text-primary'
                   }`}
                 >
                   <span>English (US)</span>
-                  {settings.language === 'en' && <Check className="w-4 h-4 q-text-accent" />}
+                  {settings.language === 'en' && <Check className="w-4 h-4 text-white" />}
                 </button>
               </div>
             </div>
@@ -332,7 +332,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </h3>
 
               <div className="space-y-3">
-                <div className="p-4 rounded-2xl glass-recessed space-y-2">
+                <div className="p-4 rounded-2xl bg-white/[0.05] border border-white/[0.12] space-y-2">
                   <div className="flex items-center gap-2 q-text-primary font-semibold text-xs">
                     <Download className="w-4 h-4 q-text-muted" />
                     <span>
@@ -352,7 +352,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </button>
                 </div>
 
-                <div className="p-4 rounded-2xl glass-recessed space-y-2">
+                <div className="p-4 rounded-2xl bg-white/[0.05] border border-white/[0.12] space-y-2">
                   <div className="flex items-center gap-2 q-text-primary font-semibold text-xs">
                     <Upload className="w-4 h-4 q-text-muted" />
                     <span>{isEn ? 'Import Backup' : 'Impor Data Catatan'}</span>
@@ -364,7 +364,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
 
                 {importStatus && (
-                  <p className="text-xs q-text-accent font-semibold">{importStatus}</p>
+                  <p className="text-xs text-white font-semibold">{importStatus}</p>
                 )}
                 {errorMsg && (
                   <p className="text-xs text-rose-400 font-semibold">{errorMsg}</p>

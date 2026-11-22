@@ -561,7 +561,7 @@ const LineNumberedEditor: React.FC<{
   return (
     <div
       onClick={() => textareaRef.current?.focus({ preventScroll: true })}
-      className="flex w-full bg-[#0B172E]/80 hover:bg-[#122446]/90 rounded-xl border border-white/10 hover:border-white/15 overflow-hidden font-mono text-xs shadow-md relative group/editor cursor-text min-h-[56px] transition-colors"
+      className="flex w-full bg-white/[0.04] hover:bg-white/[0.06] rounded-xl border border-white/[0.12] hover:border-white/20 overflow-hidden font-mono text-xs shadow-md relative group/editor cursor-text min-h-[56px] transition-colors"
     >
       {/* Left Line Numbers Column with Clean Vertical Divider */}
       <div className="py-3 px-3 bg-transparent border-r border-white/10 text-zinc-500/80 select-none text-right font-mono text-xs leading-relaxed shrink-0 min-w-[34px]">
@@ -620,7 +620,7 @@ const LineNumberedEditor: React.FC<{
           spellCheck={false}
           rows={lineCount}
           style={{ tabSize: 2 }}
-          className="w-full p-3 m-0 bg-transparent font-mono text-xs text-zinc-100 caret-indigo-400 focus:outline-none resize-none leading-relaxed whitespace-pre overflow-x-auto block selection:bg-indigo-500/35 selection:text-white placeholder:text-zinc-500 placeholder:italic border-0 min-h-[48px]"
+          className="w-full p-3 m-0 bg-transparent font-mono text-xs text-zinc-100 caret-white focus:outline-none resize-none leading-relaxed whitespace-pre overflow-x-auto block selection:bg-white/20 selection:text-white placeholder:text-zinc-500 placeholder:italic border-0 min-h-[48px]"
         />
       </div>
     </div>
@@ -742,9 +742,9 @@ const CodeBlockRenderer: React.FC<{
         data-code-id={block.data.id}
         className={`relative group/codecard rounded-xl transition-all ${
         isSelected
-          ? 'ring-1 ring-indigo-500/40 border border-indigo-500/50 shadow-md shadow-indigo-500/5'
+          ? 'ring-1 ring-white/40 border border-white/40 shadow-md'
           : isAllSelected
-          ? 'ring-1 ring-indigo-500/30 border border-indigo-500/40'
+          ? 'ring-1 ring-white/30 border border-white/30'
           : 'border border-transparent'
       }`}>
         {/* Minimal Overlay Action Toolbar (Appears Top Right on Hover - Copy & Delete & Auto Lang Badge) */}
@@ -756,7 +756,7 @@ const CodeBlockRenderer: React.FC<{
                 e.stopPropagation();
                 setIsLangMenuOpen(!isLangMenuOpen);
               }}
-              className="text-[10px] font-semibold text-zinc-300 hover:text-white bg-[#071123]/85/95 hover:bg-[#32333f] px-2 py-1 rounded-lg border border-white/10 hover:border-indigo-500/30 uppercase tracking-wider transition-all flex items-center gap-1 shadow-xs"
+              className="text-[10px] font-semibold text-zinc-300 hover:text-white glass-control px-2 py-1 rounded-lg uppercase tracking-wider transition-all flex items-center gap-1 shadow-xs"
               title="Pilih Bahasa Pemrograman"
             >
               <span>{detectedLang}</span>
@@ -767,7 +767,7 @@ const CodeBlockRenderer: React.FC<{
             {isLangMenuOpen && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 top-7 w-36 max-h-56 bg-[#071123]/85 border border-white/15 rounded-xl shadow-2xl overflow-y-auto py-1 text-xs z-50 animate-in fade-in slide-in-from-top-1 duration-150"
+                className="absolute right-0 top-7 w-36 max-h-56 glass-popover rounded-xl overflow-y-auto py-1 text-xs z-50 animate-in fade-in slide-in-from-top-1 duration-150"
               >
                 {POPULAR_LANGUAGES.map((l) => (
                   <button
@@ -778,8 +778,8 @@ const CodeBlockRenderer: React.FC<{
                       onUpdateCode(block.data.id, nextLang || 'auto', localCode);
                       setIsLangMenuOpen(false);
                     }}
-                    className={`w-full text-left px-3 py-1.5 hover:bg-indigo-600/20 hover:text-white transition-colors flex items-center justify-between ${
-                      (selectedLang === l.id || (!selectedLang && l.id === 'auto')) ? 'text-indigo-400 font-bold bg-indigo-500/10' : 'text-zinc-300'
+                    className={`w-full text-left px-3 py-1.5 hover:bg-white/10 hover:text-white transition-colors flex items-center justify-between ${
+                      (selectedLang === l.id || (!selectedLang && l.id === 'auto')) ? 'text-white font-bold bg-white/[0.12]' : 'text-zinc-300'
                     }`}
                   >
                     <span>{l.label}</span>
@@ -792,14 +792,14 @@ const CodeBlockRenderer: React.FC<{
 
           <button
             onClick={handleCopy}
-            className="p-1 bg-[#071123]/85/95 hover:bg-[#32333f] border border-white/10 hover:border-white/20 rounded-lg text-zinc-400 hover:text-white transition-all shadow-xs"
+            className="p-1 glass-control rounded-lg text-zinc-400 hover:text-white transition-all shadow-xs"
             title="Copy Kode"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
           <button
             onClick={() => onDeleteBlock(block.data.id)}
-            className="p-1 bg-[#071123]/85/95 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/30 rounded-lg text-zinc-400 hover:text-rose-400 transition-all shadow-xs"
+            className="p-1 glass-control hover:bg-rose-500/20 hover:border-rose-500/30 rounded-lg text-zinc-400 hover:text-rose-400 transition-all shadow-xs"
             title="Hapus Code Block"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -997,7 +997,7 @@ const MermaidBlockRenderer: React.FC<{
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-indigo-600/30 border border-indigo-500/40 rounded-lg text-indigo-400">
+              <div className="p-1.5 glass-control rounded-lg text-white">
                 <GitGraph className="w-4 h-4" />
               </div>
               <div>
@@ -1008,7 +1008,7 @@ const MermaidBlockRenderer: React.FC<{
 
             {/* Zoom Controls & Action Buttons */}
             <div className="flex items-center gap-2">
-              <div className="flex items-center bg-[#1c1d25] border border-white/10 rounded-xl p-1 gap-1">
+              <div className="flex items-center glass-control rounded-xl p-1 gap-1">
                 <button
                   onClick={() => setZoomLevel((z) => Math.max(0.4, z - 0.2))}
                   className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
@@ -1037,10 +1037,10 @@ const MermaidBlockRenderer: React.FC<{
 
               <button
                 onClick={handleCopy}
-                className="flex items-center gap-1.5 px-3 py-2 bg-[#1c1d25] hover:bg-[#282934] border border-white/10 rounded-xl text-xs font-semibold text-zinc-200 hover:text-white transition-all"
+                className="flex items-center gap-1.5 px-3 py-2 glass-control rounded-xl text-xs font-semibold text-zinc-200 hover:text-white transition-all"
                 title="Salin Kode"
               >
-                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                {copied ? <Check className="w-4 h-4 text-white" /> : <Copy className="w-4 h-4" />}
                 <span>{copied ? 'Tersalin' : 'Salin Kode'}</span>
               </button>
 
@@ -1061,7 +1061,7 @@ const MermaidBlockRenderer: React.FC<{
           >
             <div
               style={{ transform: `scale(${zoomLevel})`, transition: 'transform 0.15s ease-out' }}
-              className="origin-center w-full max-w-6xl min-h-[500px] flex items-center justify-center p-6 bg-[#14151b] rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
+              className="origin-center w-full max-w-6xl min-h-[500px] flex items-center justify-center p-6 glass-panel rounded-2xl overflow-hidden"
             >
               <MermaidRenderer code={localCode} isFullscreen />
             </div>
@@ -4271,8 +4271,8 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               </div>
 
               {/* Overlapping Floating Page Icon */}
-              <div className="relative -mt-6 ml-5 z-10 w-12 h-12 rounded-xl bg-[#15161c] border-2 border-white/15 shadow-xl flex items-center justify-center text-white group-hover/craftcard:scale-105 group-hover/craftcard:border-indigo-400/50 transition-all">
-                <FileText className="w-5 h-5 text-indigo-300 stroke-[2.25] drop-shadow-[0_0_10px_rgba(129,140,248,0.5)]" />
+              <div className="relative -mt-6 ml-5 z-10 w-12 h-12 rounded-xl glass-control border-2 border-white/20 shadow-xl flex items-center justify-center text-white group-hover/craftcard:scale-105 group-hover/craftcard:border-white/40 transition-all">
+                <FileText className="w-5 h-5 text-white stroke-[2.1]" />
               </div>
 
               {/* Card Body */}
@@ -4298,10 +4298,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                       handleUpdateSubpageTitle(sub.id, e.target.value);
                       setEditingSubpageId(null);
                     }}
-                    className="w-full bg-transparent border-b border-indigo-500/60 pb-1 outline-none text-base font-extrabold text-white placeholder:text-zinc-500 focus:outline-none"
+                    className="w-full bg-transparent border-b border-white/45 pb-1 outline-none text-base font-extrabold text-white placeholder:text-zinc-500 focus:outline-none"
                   />
                 ) : (
-                  <h3 className="text-base font-extrabold text-white tracking-tight group-hover/craftcard:text-indigo-200 transition-colors">
+                  <h3 className="text-base font-extrabold text-white tracking-tight group-hover/craftcard:text-white transition-colors">
                     {sub.title || 'Page Tanpa Judul'}
                   </h3>
                 )}
@@ -4317,13 +4317,13 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                 {/* Footer Metadata & Document Portal Affordance */}
                 <div className="pt-3 mt-1 flex items-center justify-between border-t border-white/[0.08] text-[11px] text-zinc-400 font-medium">
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-indigo-300 font-semibold">
+                    <span className="px-2 py-0.5 rounded-md bg-white/[0.06] border border-white/10 text-white/80 font-semibold">
                       📄 {wordCountSub} Kata
                     </span>
                     <span>•</span>
                     <span className="text-zinc-400">Sub-halaman</span>
                   </div>
-                  <span className="text-indigo-400 group-hover/craftcard:translate-x-0.5 transition-transform inline-flex items-center gap-1 font-semibold text-xs">
+                  <span className="text-white/80 group-hover/craftcard:text-white group-hover/craftcard:translate-x-0.5 transition-all inline-flex items-center gap-1 font-semibold text-xs">
                     Buka Halaman <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
                   </span>
                 </div>
@@ -4347,10 +4347,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               }}
               className={`relative p-3 rounded-xl cursor-pointer transition-all shadow-md flex items-center gap-3 select-none border w-full ${
                 selectedBlockIndices.includes(idx)
-                  ? 'ring-2 ring-indigo-500/70 border-indigo-500/80 bg-[#13284C]/90 text-white'
+                  ? 'ring-1 ring-white/45 border-white/40 bg-white/[0.10] text-white'
                   : isAllSelected
-                  ? 'ring-1 ring-indigo-500/50 border-indigo-500/80 bg-[#13284C]/90 text-white'
-                  : 'bg-[#0B172E]/80 hover:bg-[#122446]/90 border-white/10'
+                  ? 'ring-1 ring-white/30 border-white/30 bg-white/[0.08] text-white'
+                  : 'glass-card'
               }`}
             >
               <CraftPageBadge />
@@ -4417,7 +4417,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           {isMenuOpen && (
             <div
               onClick={(e) => e.stopPropagation()}
-              className="absolute right-2 top-10 z-50 w-44 bg-[#0B172E]/95 border border-white/10 rounded-2xl shadow-2xl p-1.5 text-xs animate-in fade-in slide-in-from-top-1 duration-150 select-none"
+              className="absolute right-2 top-10 z-50 w-44 glass-popover rounded-2xl p-1.5 text-xs animate-in fade-in slide-in-from-top-1 duration-150 select-none"
             >
               {/* Display Mode Option 1: Small */}
               <button
@@ -4426,7 +4426,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   setActiveSubpageMenuId(null);
                 }}
                 className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl transition-colors text-left ${
-                  subLayout === 'small' ? 'bg-indigo-600/20 text-indigo-300 font-bold' : 'text-zinc-300 hover:bg-white/10'
+                  subLayout === 'small' ? 'liquid-lens-active text-white font-semibold' : 'text-zinc-300 hover:bg-white/10'
                 }`}
               >
                 <LayoutList className="w-3.5 h-3.5 text-zinc-400" />
@@ -4440,7 +4440,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   setActiveSubpageMenuId(null);
                 }}
                 className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl transition-colors text-left ${
-                  subLayout === 'regular' ? 'bg-indigo-600/20 text-indigo-300 font-bold' : 'text-zinc-300 hover:bg-white/10'
+                  subLayout === 'regular' ? 'liquid-lens-active text-white font-semibold' : 'text-zinc-300 hover:bg-white/10'
                 }`}
               >
                 <Square className="w-3.5 h-3.5 text-zinc-400" />
@@ -4454,7 +4454,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   setActiveSubpageMenuId(null);
                 }}
                 className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl transition-colors text-left ${
-                  subLayout === 'card' ? 'bg-indigo-600/20 text-indigo-300 font-bold' : 'text-zinc-300 hover:bg-white/10'
+                  subLayout === 'card' ? 'liquid-lens-active text-white font-semibold' : 'text-zinc-300 hover:bg-white/10'
                 }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5 text-zinc-400" />
@@ -4471,7 +4471,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                 }}
                 className="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-white/10 text-zinc-300 transition-colors text-left"
               >
-                <FileText className="w-3.5 h-3.5 text-indigo-400" />
+                <FileText className="w-3.5 h-3.5 text-white/75" />
                 <span>Open Page</span>
               </button>
 
@@ -4717,8 +4717,8 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               onClick={() => setPreviewAttachment(att)}
               className={`relative p-3 rounded-xl cursor-pointer transition-all shadow-md flex items-center gap-3 select-none border w-full ${
                 isAllSelected
-                  ? 'ring-2 ring-indigo-500/70 border-indigo-500/80 bg-[#13284C]/90 text-white'
-                  : 'bg-[#0B172E]/80 hover:bg-[#122446]/90 border-white/10'
+                  ? 'ring-1 ring-white/45 border-white/40 bg-white/[0.10] text-white'
+                  : 'glass-card'
               }`}
             >
               <CraftFileTypeBadge mime={att.mime} name={att.name} />
@@ -4757,7 +4757,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           {isMenuOpen && (
             <div
               onClick={(e) => e.stopPropagation()}
-              className="absolute right-2 top-10 z-40 w-44 bg-[#0B172E]/95 border border-white/10 rounded-2xl shadow-2xl p-1.5 text-xs animate-in fade-in slide-in-from-top-1 duration-150 select-none"
+              className="absolute right-2 top-10 z-40 w-44 glass-popover rounded-2xl p-1.5 text-xs animate-in fade-in slide-in-from-top-1 duration-150 select-none"
             >
               {/* Display Mode Option 1: Small */}
               <button
@@ -4766,7 +4766,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   setActiveAttachmentMenuId(null);
                 }}
                 className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl transition-colors text-left ${
-                  layoutMode === 'small' ? 'bg-indigo-600/20 text-indigo-300 font-bold' : 'text-zinc-300 hover:bg-white/10'
+                  layoutMode === 'small' ? 'liquid-lens-active text-white font-semibold' : 'text-zinc-300 hover:bg-white/10'
                 }`}
               >
                 <LayoutList className="w-3.5 h-3.5 text-zinc-400" />
@@ -4780,7 +4780,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   setActiveAttachmentMenuId(null);
                 }}
                 className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl transition-colors text-left ${
-                  layoutMode === 'regular' ? 'bg-indigo-600/20 text-indigo-300 font-bold' : 'text-zinc-300 hover:bg-white/10'
+                  layoutMode === 'regular' ? 'liquid-lens-active text-white font-semibold' : 'text-zinc-300 hover:bg-white/10'
                 }`}
               >
                 <Square className="w-3.5 h-3.5 text-zinc-400" />
@@ -4794,7 +4794,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   setActiveAttachmentMenuId(null);
                 }}
                 className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl transition-colors text-left ${
-                  layoutMode === 'card' ? 'bg-indigo-600/20 text-indigo-300 font-bold' : 'text-zinc-300 hover:bg-white/10'
+                  layoutMode === 'card' ? 'liquid-lens-active text-white font-semibold' : 'text-zinc-300 hover:bg-white/10'
                 }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5 text-zinc-400" />
@@ -5231,7 +5231,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                 onClick={() => applyFormatting('`')}
                 className={`px-1.5 py-1 rounded-full transition-all flex items-center justify-center ${
                   activeFormats.code
-                    ? 'liquid-lens-active q-text-accent'
+                    ? 'liquid-lens-active text-white'
                     : 'q-text-secondary hover:q-text-primary hover:bg-white/10'
                 }`}
                 title="Inline Code (Kode Pill)"
@@ -5244,7 +5244,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                 onClick={() => applyFormatting('$')}
                 className={`px-1.5 py-1 rounded-full transition-all flex items-center justify-center ${
                   activeFormats.math
-                    ? 'liquid-lens-active q-text-accent'
+                    ? 'liquid-lens-active text-white'
                     : 'q-text-secondary hover:q-text-primary hover:bg-white/10'
                 }`}
                 title="Persamaan Matematika (Math Equation)"
@@ -5813,7 +5813,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               {activeRightTab === 'style' && (
                 <div className="space-y-4">
                   <p className="text-[10px] q-text-muted font-semibold px-1">Tipografi Dokumen</p>
-                  <div className="p-3 glass-recessed rounded-xl space-y-1">
+                  <div className="p-3 bg-white/[0.05] border border-white/[0.12] rounded-xl space-y-1">
                     <p className="text-xs font-semibold q-text-primary">Font Utama</p>
                     <p className="text-xs q-text-muted">Inter — Clean Sans</p>
                   </div>
@@ -5826,16 +5826,16 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   <div className="space-y-2">
                     <p className="text-[10px] font-semibold q-text-muted uppercase tracking-wider">Statistik</p>
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="glass-recessed p-2.5 rounded-xl">
+                      <div className="bg-white/[0.05] border border-white/[0.12] p-2.5 rounded-xl">
                         <p className="q-text-muted text-[10px]">Kata</p>
                         <p className="text-base font-bold q-text-primary mt-0.5 tracking-tight">{wordCount}</p>
                       </div>
-                      <div className="glass-recessed p-2.5 rounded-xl">
+                      <div className="bg-white/[0.05] border border-white/[0.12] p-2.5 rounded-xl">
                         <p className="q-text-muted text-[10px]">Karakter</p>
                         <p className="text-base font-bold q-text-primary mt-0.5 tracking-tight">{charCount}</p>
                       </div>
                     </div>
-                    <div className="glass-recessed p-2.5 rounded-xl flex items-center justify-between text-xs">
+                    <div className="bg-white/[0.05] border border-white/[0.12] p-2.5 rounded-xl flex items-center justify-between text-xs">
                       <span className="q-text-muted text-[11px]">Waktu Baca</span>
                       <span className="font-semibold q-text-primary">{readingTimeMinutes} mnt</span>
                     </div>
@@ -5965,7 +5965,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                 <iframe
                   src={previewAttachment.url}
                   title={previewAttachment.name}
-                  className="w-full h-[50vh] rounded-xl border q-border glass-recessed q-text-primary p-4 font-mono text-xs"
+                  className="w-full h-[50vh] rounded-xl border q-border bg-white/[0.04] q-text-primary p-4 font-mono text-xs"
                 />
               ) : (
                 <div className="text-center py-12 space-y-4">
@@ -6020,7 +6020,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       {/* Marquee Drag Selection Box Overlay */}
       {dragSelectRect && (
         <div
-          className="fixed z-50 pointer-events-none bg-[#38BDF8]/[0.08] border border-[#38BDF8]/30 rounded-xl"
+          className="fixed z-50 pointer-events-none bg-white/[0.08] border border-white/30 rounded-xl"
           style={{
             left: `${dragSelectRect.x}px`,
             top: `${dragSelectRect.y}px`,
@@ -6033,7 +6033,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       {/* Multi-Block Selection Floating Liquid Glass Action Bar */}
       {selectedBlockIndices.length > 1 && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 liquid-pill rounded-full px-5 py-2 flex items-center gap-3 z-50 text-xs font-semibold q-text-primary animate-in fade-in slide-in-from-bottom-3 duration-150">
-          <div className="flex items-center gap-2 pr-3 border-r q-border q-text-accent font-semibold">
+          <div className="flex items-center gap-2 pr-3 border-r q-border text-white font-semibold">
             <GripVertical className="w-4 h-4" />
             <span>{selectedBlockIndices.length} Blok Terpilih</span>
           </div>

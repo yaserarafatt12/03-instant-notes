@@ -73,7 +73,7 @@ export const ExportImportModal: React.FC<ExportImportModalProps> = ({
 
         <div className="space-y-3.5">
           {/* Export Box */}
-          <div className="p-4 rounded-2xl glass-recessed space-y-2">
+          <div className="p-4 rounded-2xl bg-white/[0.05] border border-white/[0.12] space-y-2">
             <div className="flex items-center gap-2 q-text-primary font-semibold text-xs">
               <Download className="w-4 h-4 q-text-muted" />
               <span>Ekspor Cadangan (JSON)</span>
@@ -90,7 +90,7 @@ export const ExportImportModal: React.FC<ExportImportModalProps> = ({
           </div>
 
           {/* Import Box */}
-          <div className="p-4 rounded-2xl glass-recessed space-y-2">
+          <div className="p-4 rounded-2xl bg-white/[0.05] border border-white/[0.12] space-y-2">
             <div className="flex items-center gap-2 q-text-primary font-semibold text-xs">
               <Upload className="w-4 h-4 q-text-muted" />
               <span>Impor Data Catatan</span>
@@ -105,7 +105,7 @@ export const ExportImportModal: React.FC<ExportImportModalProps> = ({
           </div>
 
           {importStatus && (
-            <div className="flex items-center gap-2 p-3 glass-control q-text-accent text-xs rounded-xl">
+            <div className="flex items-center gap-2 p-3 glass-control text-white text-xs rounded-xl">
               <FileCheck className="w-4 h-4 shrink-0" />
               <span>{importStatus}</span>
             </div>

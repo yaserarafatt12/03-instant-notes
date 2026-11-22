@@ -753,7 +753,7 @@ export function App() {
               }`}
               title={isEn ? 'Select Multiple Notes' : 'Pilih Beberapa Catatan'}
             >
-              <CheckSquare className={`w-3.5 h-3.5 ${isSelectionMode ? 'q-text-accent' : ''}`} />
+              <CheckSquare className={`w-3.5 h-3.5 ${isSelectionMode ? 'text-white' : ''}`} />
               <span>
                 {isSelectionMode
                   ? selectedNoteIds.length > 0
@@ -794,7 +794,7 @@ export function App() {
                       }`}
                     >
                       <span>{sortLabels[opt]}</span>
-                      {settings.defaultSort === opt && <Check className="w-3.5 h-3.5 q-text-accent" />}
+                      {settings.defaultSort === opt && <Check className="w-3.5 h-3.5 text-white" />}
                     </button>
                   ))}
                 </div>
@@ -956,7 +956,7 @@ export function App() {
                     }}
                     className={`p-4 rounded-2xl cursor-pointer flex items-center justify-between transition-all glass-card ${
                       selectedNoteIds.includes(note.id)
-                        ? '!border-[#38BDF8]/65 ring-1 ring-[#38BDF8]/40'
+                        ? '!border-white/45 ring-1 ring-white/25'
                         : ''
                     }`}
                   >
@@ -965,8 +965,8 @@ export function App() {
                         <div
                           className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all ${
                             selectedNoteIds.includes(note.id)
-                              ? 'bg-[#38BDF8] border-[#38BDF8] text-[#071124]'
-                              : 'border-white/25 glass-recessed'
+                              ? 'bg-white border-white text-[#071124]'
+                              : 'border-white/25 bg-white/[0.06]'
                           }`}
                         >
                           {selectedNoteIds.includes(note.id) && <Check className="w-3 h-3" />}
@@ -996,7 +996,7 @@ export function App() {
       {isSelectionMode && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 liquid-pill rounded-full animate-in slide-in-from-bottom duration-200 font-sans">
           <div className="flex items-center gap-2 pr-3 border-r q-border text-xs font-semibold q-text-primary">
-            <CheckCircle2 className="w-4 h-4 q-text-accent" />
+            <CheckCircle2 className="w-4 h-4 text-white" />
             <span>{selectedNoteIds.length} {isEn ? 'selected' : 'dipilih'}</span>
           </div>
 
@@ -1036,7 +1036,7 @@ export function App() {
                 disabled={selectedNoteIds.length === 0}
                 className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-white/10 disabled:opacity-40 q-text-secondary hover:q-text-primary text-xs font-semibold rounded-full transition-colors"
               >
-                <Star className={`w-3.5 h-3.5 ${isAllSelectedFavorite ? 'fill-current q-text-accent' : ''}`} />
+                <Star className={`w-3.5 h-3.5 ${isAllSelectedFavorite ? 'fill-current text-white' : ''}`} />
                 <span>
                   {isAllSelectedFavorite
                     ? isEn ? 'Unfavorite' : 'Hapus Favorit'
@@ -1100,7 +1100,7 @@ export function App() {
           <span>{isEn ? 'Note moved to Trash.' : 'Catatan dipindahkan ke tempat sampah.'}</span>
           <button
             onClick={handleUndoTrash}
-            className="flex items-center gap-1 q-text-accent hover:underline font-semibold"
+            className="flex items-center gap-1 text-white hover:underline font-semibold"
           >
             <Undo2 className="w-3.5 h-3.5" />
             <span>{isEn ? 'Undo' : 'Batalkan'}</span>

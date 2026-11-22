@@ -326,17 +326,17 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         </div>
       </div>
 
-      {/* Middle Recessed Document Preview */}
-      <div className="flex-1 my-3 glass-recessed rounded-xl p-3 overflow-hidden text-left flex flex-col justify-start gap-1.5">
+      {/* Middle Document Preview (Clean Card Surface Hierarchy) */}
+      <div className="flex-1 my-3 py-1 overflow-hidden text-left flex flex-col justify-start gap-1.5">
         {miniBlocks.length === 0 ? (
-          <p className="text-[11px] q-text-muted italic select-none">
+          <p className="text-[12px] q-text-muted italic select-none">
             Belum ada konten catatan.
           </p>
         ) : (
           miniBlocks.slice(0, 3).map((b, i) => {
             if (b.type === 'text') {
               return (
-                <p key={i} className="text-[11px] q-text-secondary font-normal leading-relaxed line-clamp-3 select-none">
+                <p key={i} className="text-[12px] q-text-secondary font-normal leading-relaxed line-clamp-3 select-none">
                   <HighlightText text={b.text} query={searchQuery} />
                 </p>
               );
@@ -344,20 +344,20 @@ export const NoteCard: React.FC<NoteCardProps> = ({
 
             if (b.type === 'mermaid') {
               return (
-                <div key={i} className="p-2 glass-control rounded-lg flex items-center gap-2 select-none shrink-0">
-                  <GitGraph className="w-3.5 h-3.5 q-text-muted shrink-0" />
-                  <span className="text-[10.5px] font-medium q-text-primary truncate">Diagram Mermaid</span>
+                <div key={i} className="px-2.5 py-1.5 bg-white/[0.06] border border-white/[0.12] rounded-lg flex items-center gap-2 select-none shrink-0">
+                  <GitGraph className="w-3.5 h-3.5 text-white/70 shrink-0" />
+                  <span className="text-[11px] font-medium q-text-primary truncate">Diagram Mermaid</span>
                 </div>
               );
             }
 
             if (b.type === 'attachment') {
               return (
-                <div key={i} className="p-2 glass-control rounded-lg flex items-center gap-2 select-none shrink-0">
-                  <FileUp className="w-3.5 h-3.5 q-text-muted shrink-0" />
+                <div key={i} className="px-2.5 py-1.5 bg-white/[0.06] border border-white/[0.12] rounded-lg flex items-center gap-2 select-none shrink-0">
+                  <FileUp className="w-3.5 h-3.5 text-white/70 shrink-0" />
                   <div className="overflow-hidden flex-1 leading-tight">
-                    <div className="text-[10.5px] font-medium q-text-primary truncate">{b.name}</div>
-                    {b.size && <div className="text-[9px] q-text-muted">{b.size}</div>}
+                    <div className="text-[11px] font-medium q-text-primary truncate">{b.name}</div>
+                    {b.size && <div className="text-[9.5px] q-text-muted">{b.size}</div>}
                   </div>
                 </div>
               );
@@ -365,18 +365,18 @@ export const NoteCard: React.FC<NoteCardProps> = ({
 
             if (b.type === 'subpage') {
               return (
-                <div key={i} className="p-2 glass-control rounded-lg flex items-center gap-2 select-none shrink-0">
-                  <FileText className="w-3.5 h-3.5 q-text-muted shrink-0" />
-                  <span className="text-[10.5px] font-medium q-text-primary truncate">{b.title}</span>
+                <div key={i} className="px-2.5 py-1.5 bg-white/[0.06] border border-white/[0.12] rounded-lg flex items-center gap-2 select-none shrink-0">
+                  <FileText className="w-3.5 h-3.5 text-white/70 shrink-0" />
+                  <span className="text-[11px] font-medium q-text-primary truncate">{b.title}</span>
                 </div>
               );
             }
 
             if (b.type === 'code') {
               return (
-                <div key={i} className="p-2 glass-control rounded-lg flex items-center gap-2 font-mono select-none shrink-0">
-                  <Code2 className="w-3.5 h-3.5 q-text-muted shrink-0" />
-                  <span className="text-[9.5px] q-text-secondary truncate font-mono">{b.code.slice(0, 45) || 'Code Block'}</span>
+                <div key={i} className="px-2.5 py-1.5 bg-white/[0.06] border border-white/[0.12] rounded-lg flex items-center gap-2 font-mono select-none shrink-0">
+                  <Code2 className="w-3.5 h-3.5 text-white/70 shrink-0" />
+                  <span className="text-[10px] q-text-secondary truncate font-mono">{b.code.slice(0, 45) || 'Code Block'}</span>
                 </div>
               );
             }

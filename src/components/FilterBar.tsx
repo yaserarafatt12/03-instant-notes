@@ -353,7 +353,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
     const meta = folderMetaMap?.[node.fullPath];
     const CustomFolderIcon = getFolderIconComponent(meta?.icon);
-    const customColor = meta?.color;
 
     return (
       <div key={node.fullPath} className="space-y-0.5 relative">
@@ -387,8 +386,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               )}
             </button>
             <CustomFolderIcon
-              className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'q-text-accent' : 'q-text-muted'}`}
-              style={customColor && customColor !== '#ffffff' ? { color: customColor } : undefined}
+              className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-white' : 'text-white/55'}`}
             />
             <span className="truncate max-w-[110px]">{node.name}</span>
           </div>
@@ -470,7 +468,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                       setIsMoveFolderPopoverOpen(false);
                       setActiveFolderMenuPath(null);
                     }}
-                    className="w-full text-left px-2 py-1 text-xs truncate rounded-lg text-sky-300 hover:bg-white/10 font-bold"
+                    className="w-full text-left px-2 py-1 text-xs truncate rounded-lg text-white hover:bg-white/10 font-bold"
                   >
                     [ Root Level ]
                   </button>
@@ -524,7 +522,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 onClick={() => onSelectNote(doc.id)}
                 className={`w-full text-left py-1 text-[11px] truncate block rounded-lg transition-colors ${
                   selectedNoteId === doc.id
-                    ? 'text-sky-300 font-bold bg-sky-400/10'
+                    ? 'text-white font-semibold bg-white/[0.12]'
                     : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.06]'
                 }`}
                 style={{ paddingLeft: `${(depth + 1) * 12 + 22}px` }}
@@ -536,7 +534,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             {node.documents.length > 4 && (
               <button
                 onClick={(e) => toggleExpandDocListFolder(node.fullPath, e)}
-                className="w-full text-left py-1 text-[10px] font-semibold text-sky-400 hover:text-sky-300 hover:underline transition-colors block"
+                className="w-full text-left py-1 text-[10px] font-semibold text-white/75 hover:text-white hover:underline transition-colors block"
                 style={{ paddingLeft: `${(depth + 1) * 12 + 22}px` }}
               >
                 {expandedDocListFolderPaths.includes(node.fullPath)
@@ -614,7 +612,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                   className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.10] text-xs font-semibold q-text-primary truncate transition-colors text-left group cursor-pointer border q-border"
                   title={isEn ? 'Back to Main Note' : 'Kembali ke Catatan Utama'}
                 >
-                  <FileText className="w-3.5 h-3.5 q-text-accent shrink-0" />
+                  <FileText className="w-3.5 h-3.5 text-white shrink-0" />
                   <span className="truncate">{activeNote.title || (isEn ? 'Untitled Note' : 'Catatan Tanpa Judul')}</span>
                 </button>
                 {/* TOC Items Tree (Pages & Headings) */}
@@ -664,7 +662,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 </div>
                 {extractedTasks.map((t: { id: string; text: string; completed: boolean }) => (
                   <div key={t.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/[0.04] text-xs q-text-secondary">
-                    <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${t.completed ? 'q-text-accent' : 'q-text-muted'}`} />
+                    <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${t.completed ? 'text-white' : 'q-text-muted'}`} />
                     <span className={`truncate ${t.completed ? 'line-through q-text-muted' : ''}`}>{t.text}</span>
                   </div>
                 ))}
@@ -700,7 +698,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             {tocTab === 'search' && (
               <div className="space-y-2.5 flex-1 overflow-y-auto pr-1">
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-sky-300/80" />
+                  <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-white/55" />
                   <input
                     type="text"
                     value={tocSearchQuery}
@@ -785,7 +783,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               <span>{isEn ? 'New Note' : 'Catatan Baru'}</span>
             </button>
 
-            {/* 3. Main Nav Menu (Strict Monochrome + Restrained Accent) */}
+              {/* 3. Main Nav Menu (Strict Monochrome) */}
             <div className="space-y-1 pt-1">
               <button
                 onClick={() => {
@@ -795,12 +793,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 }}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
                   activeFilter === 'all' && !selectedSubject && !selectedTag
-                    ? 'liquid-lens-active q-text-primary font-semibold'
-                    : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
+                    ? 'liquid-lens-active text-white font-semibold'
+                    : 'q-text-secondary hover:bg-white/[0.06] hover:text-white border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <FileText className={`w-3.5 h-3.5 ${activeFilter === 'all' && !selectedSubject && !selectedTag ? 'q-text-accent' : 'q-text-muted'}`} />
+                  <FileText className={`w-3.5 h-3.5 ${activeFilter === 'all' && !selectedSubject && !selectedTag ? 'text-white' : 'text-white/55'}`} />
                   <span>{isEn ? 'All Notes' : 'Semua Catatan'}</span>
                 </div>
                 <span className="text-[11px] q-text-muted font-medium">{totalNotes}</span>
@@ -814,12 +812,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 }}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
                   activeFilter === 'recent'
-                    ? 'liquid-lens-active q-text-primary font-semibold'
-                    : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
+                    ? 'liquid-lens-active text-white font-semibold'
+                    : 'q-text-secondary hover:bg-white/[0.06] hover:text-white border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <History className={`w-3.5 h-3.5 ${activeFilter === 'recent' ? 'q-text-accent' : 'q-text-muted'}`} />
+                  <History className={`w-3.5 h-3.5 ${activeFilter === 'recent' ? 'text-white' : 'text-white/55'}`} />
                   <span>{isEn ? 'Recently Opened' : 'Baru Dibuka'}</span>
                 </div>
               </button>
@@ -832,12 +830,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 }}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
                   activeFilter === 'favorites'
-                    ? 'liquid-lens-active q-text-primary font-semibold'
-                    : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
+                    ? 'liquid-lens-active text-white font-semibold'
+                    : 'q-text-secondary hover:bg-white/[0.06] hover:text-white border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Star className={`w-3.5 h-3.5 ${activeFilter === 'favorites' ? 'q-text-accent fill-current' : 'q-text-muted'}`} />
+                  <Star className={`w-3.5 h-3.5 ${activeFilter === 'favorites' ? 'text-white fill-current' : 'text-white/55'}`} />
                   <span>{isEn ? 'Favorites' : 'Favorit'}</span>
                 </div>
                 <span className="text-[11px] q-text-muted font-medium">{favoriteCount}</span>
@@ -851,12 +849,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 }}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
                   activeFilter === 'trash'
-                    ? 'liquid-lens-active q-text-primary font-semibold'
-                    : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
+                    ? 'liquid-lens-active text-white font-semibold'
+                    : 'q-text-secondary hover:bg-white/[0.06] hover:text-white border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Trash2 className={`w-3.5 h-3.5 ${activeFilter === 'trash' ? 'q-text-accent' : 'q-text-muted'}`} />
+                  <Trash2 className={`w-3.5 h-3.5 ${activeFilter === 'trash' ? 'text-white' : 'text-white/55'}`} />
                   <span>{isEn ? 'Trash' : 'Tempat Sampah'}</span>
                 </div>
                 <span className="text-[11px] q-text-muted font-medium">{trashCount}</span>
@@ -906,7 +904,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                       {folderTree.size > 4 && (
                         <button
                           onClick={() => setShowAllFolders(!showAllFolders)}
-                          className="w-full text-left px-2.5 py-1 text-[11px] font-semibold q-text-accent hover:underline transition-colors block mt-1"
+                          className="w-full text-left px-2.5 py-1 text-[11px] font-semibold text-white/80 hover:text-white hover:underline transition-colors block mt-1"
                         >
                           {showAllFolders
                             ? isEn ? 'Show less' : 'Sembunyikan'
@@ -972,7 +970,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                             }`}
                           >
                             <span>#{name}</span>
-                            {isPinned && <Check className="w-3 h-3 q-text-accent" />}
+                            {isPinned && <Check className="w-3 h-3 text-white" />}
                           </button>
                         );
                       })}
@@ -1004,7 +1002,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                               : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
                           }`}
                         >
-                          <span className={selectedTag === name ? 'q-text-accent' : 'q-text-muted'}>#</span>
+                          <span className={selectedTag === name ? 'text-white' : 'q-text-muted'}>#</span>
                           <span>{name}</span>
                         </button>
                       ))

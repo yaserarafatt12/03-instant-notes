@@ -1,52 +1,53 @@
 import React from 'react';
 
 interface BrandLogoProps {
-  compact?: boolean;
+  size?: 'sm' | 'md';
+  showWordmark?: boolean;
 }
 
-export const BrandLogo: React.FC<BrandLogoProps> = ({ compact = false }) => {
-  return (
-    <div className="inline-flex items-center gap-2.5 select-none group">
-      {/* Bespoke Tempered-Glass Squircle with Architectural Folded-Sheet + Precision Nib Emblem */}
-      <div className="w-7 h-7 rounded-[9px] brand-squircle flex items-center justify-center shrink-0 relative overflow-hidden">
-        {/* Top Specular Edge */}
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-1 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/55 to-transparent"
-        />
+export const BrandLogo: React.FC<BrandLogoProps> = ({
+  size = 'md',
+  showWordmark = true,
+}) => {
+  const boxSize = size === 'sm' ? 'w-7 h-7 rounded-lg' : 'w-8 h-8 rounded-xl';
+  const iconSize = size === 'sm' ? 14 : 16;
 
+  return (
+    <div className="flex items-center gap-2.5 select-none">
+      <div
+        className={`${boxSize} brand-squircle flex items-center justify-center shrink-0`}
+        aria-hidden="true"
+      >
         <svg
-          className="w-[17px] h-[17px] q-text-primary relative z-10"
-          viewBox="0 0 20 20"
+          width={iconSize}
+          height={iconSize}
+          viewBox="0 0 24 24"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
         >
-          {/* Architectural Chamfered Sheet Silhouette */}
           <path
-            d="M5 2.75H11.6L15.75 6.9V15.5C15.75 16.4665 14.9665 17.25 14 17.25H5.75C4.7835 17.25 4 16.4665 4 15.5V3.75C4 3.19772 4.44772 2.75 5 2.75Z"
-            stroke="currentColor"
-            strokeWidth="1.45"
+            d="M6.5 4.25H13.75L17.75 8.25V19.75C17.75 20.4404 17.1904 21 16.5 21H6.5C5.80964 21 5.25 20.4404 5.25 19.75V5.5C5.25 4.80964 5.80964 4.25 6.5 4.25Z"
+            stroke="#FFFFFF"
+            strokeWidth="1.75"
             strokeLinejoin="round"
           />
-          {/* Crisp Geometric Fold Facet */}
           <path
-            d="M11.35 2.75V6.35C11.35 6.79183 11.7082 7.15 12.15 7.15H15.75"
-            stroke="currentColor"
-            strokeWidth="1.35"
+            d="M13.5 4.25V8.5H17.75"
+            stroke="#FFFFFF"
+            strokeWidth="1.65"
+            strokeLinecap="round"
             strokeLinejoin="round"
           />
-          {/* Precision Pen-Nib / Spark Mark */}
           <path
-            d="M9.5 8.8L10.45 10.95L12.6 11.9L10.45 12.85L9.5 15L8.55 12.85L6.4 11.9L8.55 10.95L9.5 8.8Z"
-            fill="#38BDF8"
-            fillOpacity="0.95"
+            d="M8.5 12.25H14.5M8.5 15.75H12.5"
+            stroke="rgba(255,255,255,0.78)"
+            strokeWidth="1.65"
+            strokeLinecap="round"
           />
         </svg>
       </div>
-
-      {!compact && (
-        <span className="text-[15px] font-bold tracking-[-0.03em] q-text-primary leading-none">
+      {showWordmark && (
+        <span className="text-[15px] font-semibold tracking-tight text-white/95 leading-none">
           SeeNote
         </span>
       )}

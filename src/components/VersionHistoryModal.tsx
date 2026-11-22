@@ -60,14 +60,14 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
             logs.map((log, idx) => (
               <div
                 key={log.id}
-                className="p-3.5 glass-recessed rounded-2xl transition-all flex items-start justify-between gap-3 group"
+                className="p-3.5 bg-white/[0.05] border border-white/[0.12] rounded-2xl transition-all flex items-start justify-between gap-3 group"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 text-xs font-semibold q-text-secondary">
                     <Clock className="w-3.5 h-3.5 q-text-muted" />
                     <span>{new Date(log.timestamp).toLocaleString('id-ID')}</span>
                     {idx === 0 && (
-                      <span className="px-2 py-0.5 glass-control q-text-accent text-[10px] rounded-full font-semibold">
+                      <span className="px-2 py-0.5 glass-control text-white text-[10px] rounded-full font-semibold">
                         Terbaru
                       </span>
                     )}
@@ -99,7 +99,7 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-3 glass-recessed border-t q-border flex items-center justify-between text-[11px] q-text-muted px-4">
+        <div className="p-3 bg-white/[0.04] border-t q-border flex items-center justify-between text-[11px] q-text-muted px-4">
           <span>Otomatis menyimpan hingga 20 versi terakhir.</span>
           <button
             onClick={onClose}

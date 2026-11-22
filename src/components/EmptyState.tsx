@@ -132,7 +132,7 @@ export const DashboardEmptyEditor: React.FC<{ onNewNote: () => void }> = ({ onNe
               <div className="w-10 h-10 rounded-xl glass-control flex items-center justify-center group-hover:scale-105 transition-transform">
                 <FileText className="w-5 h-5 q-text-primary" />
               </div>
-              <span className="text-[10px] q-text-muted font-mono glass-recessed px-2 py-1 rounded-md">Ctrl+N</span>
+              <span className="text-[10px] q-text-muted font-mono bg-white/[0.06] border border-white/[0.12] px-2 py-1 rounded-md">Ctrl+N</span>
             </div>
             <div>
               <h3 className="text-sm font-semibold q-text-primary tracking-tight">
