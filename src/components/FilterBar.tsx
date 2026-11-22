@@ -35,6 +35,11 @@ import { LiquidSegmentedControl } from './LiquidSegmentedControl';
 import { LiquidVerticalNav } from './LiquidVerticalNav';
 import { getFolderIconComponent } from '../lib/folderIcons';
 
+const SIDEBAR_WIDTH_STORAGE_KEY = 'seenote_sidebar_width';
+const MIN_SIDEBAR_WIDTH = 220;
+const MAX_SIDEBAR_WIDTH = 420;
+const DEFAULT_SIDEBAR_WIDTH = 280;
+
 interface FilterBarProps {
   activeFilter: FilterCategory;
   onFilterChange: (filter: FilterCategory) => void;
@@ -171,6 +176,55 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     window.addEventListener('mousedown', handleClickOutside);
     return () => window.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const asideRef = useRef<HTMLElement>(null);
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    try {
+      const saved = Number(localStorage.getItem(SIDEBAR_WIDTH_STORAGE_KEY));
+      if (Number.isFinite(saved) && saved >= MIN_SIDEBAR_WIDTH && saved <= MAX_SIDEBAR_WIDTH) {
+        return saved;
+      }
+    } catch {
+      // ignore storage errors
+    }
+    return DEFAULT_SIDEBAR_WIDTH;
+  });
+  const [isResizing, setIsResizing] = useState(false);
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    let latestWidth = sidebarWidth;
+    const handleMouseMove = (e: MouseEvent) => {
+      const leftEdge = asideRef.current?.getBoundingClientRect().left ?? 12;
+      const nextWidth = Math.round(
+        Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, e.clientX - leftEdge))
+      );
+      latestWidth = nextWidth;
+      setSidebarWidth(nextWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      try {
+        localStorage.setItem(SIDEBAR_WIDTH_STORAGE_KEY, String(latestWidth));
+      } catch {
+        // ignore storage errors
+      }
+    };
+
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
 
   const handleCreateFolderPrompt = (parentPath = '') => {
     if (onOpenCreateFolderModal) {
@@ -389,7 +443,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <CustomFolderIcon
               className={`w-[17px] h-[17px] shrink-0 ${isSelected ? 'text-white' : 'text-white/60'}`}
             />
-            <span className="truncate max-w-[140px]">{node.name}</span>
+            <span className="truncate flex-1 min-w-0">{node.name}</span>
           </div>
 
           <div className="flex items-center gap-1">
@@ -550,7 +604,44 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   };
 
   return (
-    <aside className="w-full lg:w-[264px] shrink-0 glass-sidebar lg:my-3 lg:ml-3 lg:h-[calc(100%-1.5rem)] lg:rounded-3xl px-3.5 py-4 flex flex-col justify-between h-full select-none font-sans overflow-hidden relative z-20">
+    <aside
+      ref={asideRef}
+      style={{ ['--sidebar-width' as string]: `${sidebarWidth}px` }}
+      className={`w-full lg:w-[var(--sidebar-width)] shrink-0 glass-sidebar lg:my-3 lg:ml-3 lg:h-[calc(100%-1.5rem)] lg:rounded-3xl px-3.5 py-4 flex flex-col justify-between h-full select-none font-sans overflow-hidden relative z-20 ${
+        isResizing ? 'transition-none' : 'transition-[width] duration-150 ease-out'
+      }`}
+    >
+      {/* Desktop Right-Edge Resize Handle (Min 220px, Default 280px, Max 420px) */}
+      <div
+        onMouseDown={(e) => {
+          e.preventDefault();
+          setIsResizing(true);
+        }}
+        onDoubleClick={() => {
+          setSidebarWidth(DEFAULT_SIDEBAR_WIDTH);
+          try {
+            localStorage.setItem(SIDEBAR_WIDTH_STORAGE_KEY, String(DEFAULT_SIDEBAR_WIDTH));
+          } catch {
+            // ignore
+          }
+        }}
+        role="separator"
+        aria-orientation="vertical"
+        aria-label={isEn ? 'Resize sidebar' : 'Ubah lebar sidebar'}
+        aria-valuemin={MIN_SIDEBAR_WIDTH}
+        aria-valuemax={MAX_SIDEBAR_WIDTH}
+        aria-valuenow={sidebarWidth}
+        title={isEn ? 'Drag to resize sidebar (Double-click to reset)' : 'Tarik kanan/kiri untuk ubah lebar (Klik ganda untuk reset)'}
+        className="hidden lg:flex absolute top-5 bottom-5 right-0 w-2.5 cursor-col-resize items-center justify-center group/resize z-40"
+      >
+        <div
+          className={`w-[3px] rounded-full transition-all duration-150 ${
+            isResizing
+              ? 'h-16 bg-white/55 shadow-[0_0_10px_rgba(255,255,255,0.35)]'
+              : 'h-10 bg-white/0 group-hover/resize:bg-white/30'
+          }`}
+        />
+      </div>
       <div className="space-y-5 overflow-y-auto flex-1 pr-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {/* Render Table of Contents (TOC) View when inside a note & sidebarView === 'toc' */}
         {selectedNoteId && sidebarView === 'toc' && activeNote ? (
