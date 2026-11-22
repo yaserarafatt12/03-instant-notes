@@ -46,6 +46,7 @@ import {
   ZoomOut,
   RotateCcw,
   Search,
+  FilePlus,
 } from 'lucide-react';
 import mermaid from 'mermaid';
 
@@ -1647,12 +1648,55 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
   const [activeBlockMenuIdx, setActiveBlockMenuIdx] = useState<number | null>(null);
 
   // Marquee Drag Selection State (Matching Screenshots 2 & 3 - Continuous Auto-Scroll & Infinite Drag)
-  const [dragSelectRect, setDragSelectRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const marqueeBoxRef = useRef<HTMLDivElement>(null);
+  const selectedBlockIndicesRef = useRef<number[]>([]);
   const dragStartPos = useRef<{ x: number; y: number; scrollTop: number } | null>(null);
   const isMouseDownRef = useRef(false);
   const isDraggingMarqueeRef = useRef(false);
   const lastMousePos = useRef<{ x: number; y: number } | null>(null);
   const autoScrollRaf = useRef<number | null>(null);
+  const [blocksCopiedFeedback, setBlocksCopiedFeedback] = useState(false);
+
+  useEffect(() => {
+    selectedBlockIndicesRef.current = selectedBlockIndices;
+  }, [selectedBlockIndices]);
+
+  // Support Ctrl+C / Cmd+C & Escape when multiple blocks are selected
+  useEffect(() => {
+    if (selectedBlockIndices.length === 0) return;
+
+    const handleKeyDownSelected = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedBlockIndices([]);
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
+        const nativeSelection = window.getSelection()?.toString();
+        if (nativeSelection) return; // Let native text copy handle active text selection
+
+        e.preventDefault();
+        const sorted = [...selectedBlockIndicesRef.current].sort((a, b) => a - b);
+        const text = sorted
+          .map((i) => {
+            const blk = parsedChronologicalBlocks[i];
+            if (!blk) return '';
+            if (blk.type === 'text') return blk.content;
+            if (blk.type === 'code') return blk.data.code;
+            if (blk.type === 'mermaid') return blk.data.code;
+            if (blk.type === 'subpage') return blk.data.title;
+            if (blk.type === 'attachment') return blk.data.name;
+            return '';
+          })
+          .join('\n');
+        navigator.clipboard?.writeText(text);
+        setBlocksCopiedFeedback(true);
+        setTimeout(() => setBlocksCopiedFeedback(false), 1400);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDownSelected);
+    return () => window.removeEventListener('keydown', handleKeyDownSelected);
+  }, [selectedBlockIndices.length]);
 
   const handleMouseDownCanvas = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -1680,6 +1724,12 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
   };
 
   useEffect(() => {
+    const hideMarqueeBox = () => {
+      if (marqueeBoxRef.current) {
+        marqueeBoxRef.current.style.display = 'none';
+      }
+    };
+
     const updateSelection = (currentX: number, currentY: number) => {
       if (!dragStartPos.current || !canvasScrollRef.current) return;
 
@@ -1701,7 +1751,15 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
         const x = Math.min(currentX, startX);
         const y = Math.min(currentY, startY);
-        setDragSelectRect({ x, y, width, height });
+
+        // Update marquee box directly on DOM for 120fps zero-stutter dragging
+        if (marqueeBoxRef.current) {
+          marqueeBoxRef.current.style.display = 'block';
+          marqueeBoxRef.current.style.left = `${x}px`;
+          marqueeBoxRef.current.style.top = `${y}px`;
+          marqueeBoxRef.current.style.width = `${width}px`;
+          marqueeBoxRef.current.style.height = `${height}px`;
+        }
 
         // Precise overlap detection using explicit data-block-idx (>4px intersection required)
         const blockElements = container.querySelectorAll('[data-block-idx]');
@@ -1719,13 +1777,21 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             newlySelected.push(idx);
           }
         });
-        setSelectedBlockIndices(newlySelected);
+
+        // Only update React state when selected indices actually change
+        const prev = selectedBlockIndicesRef.current;
+        if (
+          prev.length !== newlySelected.length ||
+          prev.some((val, i) => val !== newlySelected[i])
+        ) {
+          selectedBlockIndicesRef.current = newlySelected;
+          setSelectedBlockIndices(newlySelected);
+        }
       }
     };
 
     const autoScrollLoop = () => {
       if (!isMouseDownRef.current || !lastMousePos.current || !canvasScrollRef.current) {
-        if (autoScrollRaf.current) cancelAnimationFrame(autoScrollRaf.current);
         autoScrollRaf.current = null;
         return;
       }
@@ -1736,48 +1802,31 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       const mouseX = lastMousePos.current.x;
 
       let scrollDelta = 0;
-      const topThreshold = containerRect.top + 70;
-      const bottomThreshold = containerRect.bottom - 70;
+      const topThreshold = containerRect.top + 64;
+      const bottomThreshold = containerRect.bottom - 64;
 
       if (mouseY < topThreshold) {
-        const intensity = Math.min(1, (topThreshold - mouseY) / 70);
-        scrollDelta = -Math.round(4 + intensity * 26);
+        const intensity = Math.min(1, (topThreshold - mouseY) / 64);
+        scrollDelta = -Math.round(4 + intensity * 20);
       } else if (mouseY > bottomThreshold) {
-        const intensity = Math.min(1, (mouseY - bottomThreshold) / 70);
-        scrollDelta = Math.round(4 + intensity * 26);
+        const intensity = Math.min(1, (mouseY - bottomThreshold) / 64);
+        scrollDelta = Math.round(4 + intensity * 20);
       }
 
       if (scrollDelta !== 0 && isDraggingMarqueeRef.current) {
         container.scrollTop += scrollDelta;
         updateSelection(mouseX, mouseY);
-      }
-
-      autoScrollRaf.current = requestAnimationFrame(autoScrollLoop);
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isMouseDownRef.current || !dragStartPos.current) return;
-      if ((e.buttons & 1) !== 1) {
-        isMouseDownRef.current = false;
-        isDraggingMarqueeRef.current = false;
-        setDragSelectRect(null);
-        if (autoScrollRaf.current) cancelAnimationFrame(autoScrollRaf.current);
-        return;
-      }
-
-      lastMousePos.current = { x: e.clientX, y: e.clientY };
-      updateSelection(e.clientX, e.clientY);
-
-      if (!autoScrollRaf.current) {
         autoScrollRaf.current = requestAnimationFrame(autoScrollLoop);
+      } else {
+        autoScrollRaf.current = null;
       }
     };
 
-    const handleMouseUp = () => {
+    const cancelMarquee = () => {
       isMouseDownRef.current = false;
       dragStartPos.current = null;
       lastMousePos.current = null;
-      setDragSelectRect(null);
+      hideMarqueeBox();
       if (autoScrollRaf.current) {
         cancelAnimationFrame(autoScrollRaf.current);
         autoScrollRaf.current = null;
@@ -1787,12 +1836,34 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       }, 60);
     };
 
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isMouseDownRef.current || !dragStartPos.current) return;
+      if ((e.buttons & 1) !== 1) {
+        cancelMarquee();
+        return;
+      }
+
+      lastMousePos.current = { x: e.clientX, y: e.clientY };
+      updateSelection(e.clientX, e.clientY);
+
+      if (!autoScrollRaf.current && canvasScrollRef.current) {
+        const rect = canvasScrollRef.current.getBoundingClientRect();
+        if (e.clientY < rect.top + 64 || e.clientY > rect.bottom - 64) {
+          autoScrollRaf.current = requestAnimationFrame(autoScrollLoop);
+        }
+      }
+    };
+
     window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mouseup', cancelMarquee);
+    window.addEventListener('blur', cancelMarquee);
+    window.addEventListener('dragstart', cancelMarquee);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mouseup', cancelMarquee);
+      window.removeEventListener('blur', cancelMarquee);
+      window.removeEventListener('dragstart', cancelMarquee);
       if (autoScrollRaf.current) cancelAnimationFrame(autoScrollRaf.current);
     };
   }, []);
@@ -5406,14 +5477,26 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
                   const isSelected = selectedBlockIndices.includes(idx);
 
+                  const isPrevSelected = selectedBlockIndices.includes(idx - 1);
+                  const isNextSelected = selectedBlockIndices.includes(idx + 1);
+                  const selectedRadiusClass = isSelected
+                    ? !isPrevSelected && !isNextSelected
+                      ? 'rounded-lg'
+                      : !isPrevSelected && isNextSelected
+                      ? 'rounded-t-lg rounded-b-none'
+                      : isPrevSelected && isNextSelected
+                      ? 'rounded-none'
+                      : 'rounded-b-lg rounded-t-none'
+                    : 'rounded-lg';
+
                   elements.push(
                     <div
                       key={block.id}
                       data-block-idx={idx}
-                      className={`group/tblock relative transition-all w-full leading-[25px] my-[2px] px-1.5 py-0.5 rounded-lg border ${
+                      className={`group/tblock relative transition-colors duration-75 w-full leading-[25px] px-1.5 py-[3px] ${selectedRadiusClass} ${
                         isSelected
-                          ? 'bg-white/[0.09] border-white/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] text-white'
-                          : 'border-transparent hover:bg-white/[0.025]'
+                          ? 'bg-white/[0.08] text-white'
+                          : 'hover:bg-white/[0.025]'
                       } ${draggedBlockIdx === idx ? 'opacity-30 scale-[0.98]' : ''}`}
                       onDragOver={(e) => handleDragOverBlock(idx, e)}
                       onDrop={(e) => handleDropOnBlock(idx, e)}
@@ -6050,32 +6133,52 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       )}
 
 
-      {/* Marquee Drag Selection Box Overlay */}
-      {dragSelectRect && (
-        <div
-          className="fixed z-50 pointer-events-none bg-white/[0.08] border border-white/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] rounded-xl"
-          style={{
-            left: `${dragSelectRect.x}px`,
-            top: `${dragSelectRect.y}px`,
-            width: `${dragSelectRect.width}px`,
-            height: `${dragSelectRect.height}px`,
-          }}
-        />
-      )}
+      {/* Marquee Drag Selection Box Overlay (Direct DOM 120fps) */}
+      <div
+        ref={marqueeBoxRef}
+        style={{ display: 'none' }}
+        className="fixed z-50 pointer-events-none bg-white/[0.07] border border-white/25 rounded-xl"
+      />
 
       {/* Multi-Block Selection Floating Liquid Glass Action Bar */}
       {selectedBlockIndices.length > 1 && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 liquid-pill rounded-full px-5 py-2 flex items-center gap-3 z-50 text-xs font-semibold q-text-primary animate-in fade-in slide-in-from-bottom-3 duration-150">
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 liquid-pill rounded-full px-5 py-2 flex items-center gap-2.5 z-50 text-xs font-semibold q-text-primary animate-in fade-in slide-in-from-bottom-3 duration-150">
           <div className="flex items-center gap-2 pr-3 border-r q-border text-white font-semibold">
             <GripVertical className="w-4 h-4" />
             <span>{selectedBlockIndices.length} Blok Terpilih</span>
           </div>
           <button
+            onClick={() => {
+              const sorted = [...selectedBlockIndices].sort((a, b) => a - b);
+              const text = sorted
+                .map((i) => {
+                  const blk = parsedChronologicalBlocks[i];
+                  if (!blk) return '';
+                  if (blk.type === 'text') return blk.content;
+                  if (blk.type === 'code') return blk.data.code;
+                  if (blk.type === 'mermaid') return blk.data.code;
+                  if (blk.type === 'subpage') return blk.data.title;
+                  if (blk.type === 'attachment') return blk.data.name;
+                  return '';
+                })
+                .filter((line) => line !== undefined)
+                .join('\n');
+              navigator.clipboard?.writeText(text);
+              setBlocksCopiedFeedback(true);
+              setTimeout(() => setBlocksCopiedFeedback(false), 1400);
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full hover:bg-white/10 q-text-secondary hover:q-text-primary transition-colors"
+            title="Salin Teks Blok Terpilih (Ctrl+C)"
+          >
+            {blocksCopiedFeedback ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5 q-text-muted" />}
+            <span>{blocksCopiedFeedback ? 'Tersalin!' : 'Salin'}</span>
+          </button>
+          <button
             onClick={handleDuplicateSelectedBlocks}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full hover:bg-white/10 q-text-secondary hover:q-text-primary transition-colors"
             title="Duplikat Semua Blok Terpilih"
           >
-            <Copy className="w-3.5 h-3.5 q-text-muted" />
+            <FilePlus className="w-3.5 h-3.5 q-text-muted" />
             <span>Duplikat</span>
           </button>
           <button
