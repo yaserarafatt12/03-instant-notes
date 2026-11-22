@@ -550,7 +550,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   };
 
   return (
-    <aside className="w-full lg:w-[268px] shrink-0 glass-sidebar border-r px-3.5 py-4 flex flex-col justify-between h-full select-none font-sans overflow-hidden relative z-20">
+    <aside className="w-full lg:w-[264px] shrink-0 glass-sidebar lg:my-3 lg:ml-3 lg:h-[calc(100%-1.5rem)] lg:rounded-3xl px-3.5 py-4 flex flex-col justify-between h-full select-none font-sans overflow-hidden relative z-20">
       <div className="space-y-5 overflow-y-auto flex-1 pr-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {/* Render Table of Contents (TOC) View when inside a note & sidebarView === 'toc' */}
         {selectedNoteId && sidebarView === 'toc' && activeNote ? (

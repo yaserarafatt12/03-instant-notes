@@ -682,39 +682,41 @@ export function App() {
 
       {/* 2. Main Content View Area */}
       <div className="flex-1 flex flex-col h-full relative z-10 overflow-hidden bg-transparent">
-        {/* Prominent Top Header Bar (Only visible in Gallery View, hidden when editing a note) */}
+        {/* Transparent Floating Top Action Bar (Single Unified Canvas — No Dark Header Strip) */}
         {!selectedNoteId && (
-          <header className="h-16 glass-header px-6 flex items-center justify-between z-20 shrink-0 select-none">
-          <div className="flex items-center gap-3">
-            {!isSidebarOpen && !isFocusMode && (
-              <div className="flex items-center gap-2.5">
-                <button
-                  onClick={() => setIsSidebarOpen(true)}
-                  className="p-2 rounded-xl glass-control"
-                  title={isEn ? 'Open Sidebar' : 'Buka Sidebar'}
-                >
-                  <svg className="w-4 h-3.5" viewBox="0 0 20 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="1.5" y="1.5" width="17" height="13" rx="2.5" />
-                    <line x1="6.5" y1="1.5" x2="6.5" y2="14.5" />
-                  </svg>
-                </button>
-                <BrandLogo />
-              </div>
-            )}
+          <header className="h-[68px] glass-header px-6 sm:px-9 pt-2 flex items-center justify-between gap-4 z-20 shrink-0 select-none">
+          {((!isSidebarOpen && !isFocusMode) || selectedNoteId) && (
+            <div className="flex items-center gap-3 shrink-0">
+              {!isSidebarOpen && !isFocusMode && (
+                <div className="flex items-center gap-2.5">
+                  <button
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="p-2 rounded-xl glass-control"
+                    title={isEn ? 'Open Sidebar' : 'Buka Sidebar'}
+                  >
+                    <svg className="w-4 h-3.5" viewBox="0 0 20 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="1.5" y="1.5" width="17" height="13" rx="2.5" />
+                      <line x1="6.5" y1="1.5" x2="6.5" y2="14.5" />
+                    </svg>
+                  </button>
+                  <BrandLogo />
+                </div>
+              )}
 
-            {selectedNoteId && (
-              <button
-                onClick={() => setSelectedNoteId(null)}
-                className="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-xl glass-control"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>{isEn ? 'Back to Notes' : 'Kembali ke Catatan'}</span>
-              </button>
-            )}
-          </div>
+              {selectedNoteId && (
+                <button
+                  onClick={() => setSelectedNoteId(null)}
+                  className="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-xl glass-control"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>{isEn ? 'Back to Notes' : 'Kembali ke Catatan'}</span>
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Prominent Floating Tempered Glass Search Bar */}
-          <div className="flex-1 max-w-lg mx-6 relative hidden sm:block">
+          <div className="flex-1 max-w-lg relative hidden sm:block">
             <Search className="absolute left-3.5 top-2.5 w-4 h-4 q-text-muted pointer-events-none" />
             <input
               type="text"
@@ -846,7 +848,7 @@ export function App() {
             onFilterChange={setActiveFilter}
           />
         ) : (
-          <div className="flex-1 overflow-y-auto px-6 py-7 sm:px-9 sm:py-8 space-y-6">
+          <div className="flex-1 overflow-y-auto px-6 pt-4 pb-8 sm:px-9 sm:pt-5 space-y-6">
             {/* Clean Stage View Header (No redundant divider line) */}
             <div className="flex items-center justify-between px-0.5">
               <div className="flex items-center gap-3 pl-0.5">
