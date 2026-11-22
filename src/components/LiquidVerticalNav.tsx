@@ -327,14 +327,14 @@ export function LiquidVerticalNav<T extends string>({
                     : 'linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.10) 100%)'
                   : isLight
                     ? 'rgba(10, 17, 40, 0.08)'
-                    : 'rgba(255, 255, 255, 0.13)',
+                    : 'linear-gradient(180deg, rgba(255, 255, 255, 0.21) 0%, rgba(255, 255, 255, 0.12) 100%)',
                 boxShadow: isHolding
                   ? isLight
                     ? 'inset 0 1.5px 2px rgba(255,255,255,0.95), 0 6px 18px rgba(0,0,0,0.10), 0 0 0 1px rgba(10,17,40,0.12)'
                     : 'inset 0 1.5px 2px rgba(255,255,255,0.55), inset 0 -1px 3px rgba(255,255,255,0.18), 0 8px 22px rgba(0,0,0,0.34), 0 0 0 1px rgba(255,255,255,0.30)'
                   : isLight
                     ? 'inset 0 1px 0 rgba(255,255,255,0.8), 0 0 0 1px rgba(10,17,40,0.08)'
-                    : 'inset 0 1px 0 rgba(255,255,255,0.22), 0 2px 10px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.16)',
+                    : 'inset 0 1px 1px rgba(255,255,255,0.30), 0 2px 10px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.20)',
               }}
             />
           </div>

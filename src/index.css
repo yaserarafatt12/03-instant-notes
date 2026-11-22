@@ -254,27 +254,27 @@ body::after {
     0 12px 32px rgba(10, 17, 40, 0.08);
 }
 
-/* Tempered Glass Monochrome Control / Icon Box (Unified with LiquidSegmentedControl Smoky Glass) */
+/* Tempered Glass Monochrome Control / Icon Box (Luminous Translucent Glass Buttons) */
 .glass-control {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0%, rgba(28, 32, 40, 0.52) 100%);
-  backdrop-filter: blur(24px) saturate(110%);
-  -webkit-backdrop-filter: blur(24px) saturate(110%);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: rgba(255, 255, 255, 0.92);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(44, 52, 66, 0.38) 100%);
+  backdrop-filter: blur(24px) saturate(120%) brightness(1.06);
+  -webkit-backdrop-filter: blur(24px) saturate(120%) brightness(1.06);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.95);
   box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.20),
-    inset 0 -1px 1px rgba(255, 255, 255, 0.04),
-    0 6px 18px rgba(0, 0, 0, 0.26);
+    inset 0 1px 1px rgba(255, 255, 255, 0.26),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.05),
+    0 6px 18px rgba(0, 0, 0, 0.22);
   transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 160ms ease, box-shadow 180ms ease;
 }
 
 .glass-control:hover {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(36, 42, 52, 0.58) 100%);
-  border-color: rgba(255, 255, 255, 0.26);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.20) 0%, rgba(56, 66, 84, 0.44) 100%);
+  border-color: rgba(255, 255, 255, 0.30);
   color: #ffffff;
   box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.26),
-    0 8px 22px rgba(0, 0, 0, 0.32);
+    inset 0 1px 1px rgba(255, 255, 255, 0.32),
+    0 8px 22px rgba(0, 0, 0, 0.28);
 }
 
 .light .glass-control {
@@ -330,12 +330,12 @@ body::after {
 
 /* iOS 26 Liquid Glass Active Refractive Lens Bubble (Strict Monochrome Quest Style) */
 .liquid-lens-active {
-  background: rgba(255, 255, 255, 0.13);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.12) 100%);
+  backdrop-filter: blur(18px) saturate(140%) brightness(1.08);
+  -webkit-backdrop-filter: blur(18px) saturate(140%) brightness(1.08);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 1px 1px rgba(255, 255, 255, 0.32),
     0 4px 12px rgba(0, 0, 0, 0.18);
 }
 
@@ -415,26 +415,26 @@ body::after {
     0 0 0 3px rgba(0, 163, 255, 0.16);
 }
 
-/* Crisp Quest Primary CTA Button (Smoky Liquid Glass CTA) */
+/* Crisp Quest Primary CTA Button (Luminous Translucent Glass CTA) */
 .glass-btn-primary {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(44, 50, 62, 0.60) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.12) 100%);
   color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  backdrop-filter: blur(24px) saturate(115%);
-  -webkit-backdrop-filter: blur(24px) saturate(115%);
+  border: 1px solid rgba(255, 255, 255, 0.30);
+  backdrop-filter: blur(24px) saturate(125%) brightness(1.08);
+  -webkit-backdrop-filter: blur(24px) saturate(125%) brightness(1.08);
   box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.28),
-    inset 0 -1px 1px rgba(255, 255, 255, 0.05),
-    0 6px 18px rgba(0, 0, 0, 0.26);
+    inset 0 1px 1px rgba(255, 255, 255, 0.38),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.08),
+    0 6px 18px rgba(0, 0, 0, 0.22);
   transition: background 160ms ease, border-color 160ms ease, transform 140ms ease, box-shadow 180ms ease;
 }
 
 .glass-btn-primary:hover {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(54, 62, 76, 0.66) 100%);
-  border-color: rgba(255, 255, 255, 0.34);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.30) 0%, rgba(255, 255, 255, 0.16) 100%);
+  border-color: rgba(255, 255, 255, 0.40);
   box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.36),
-    0 8px 22px rgba(0, 0, 0, 0.32);
+    inset 0 1px 1px rgba(255, 255, 255, 0.46),
+    0 8px 22px rgba(0, 0, 0, 0.28);
 }
 
 .light .glass-btn-primary {

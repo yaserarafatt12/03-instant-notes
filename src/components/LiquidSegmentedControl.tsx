@@ -404,14 +404,14 @@ export function LiquidSegmentedControl<T extends string>({
                     : 'radial-gradient(120% 100% at 50% 0%, rgba(255,255,255,0.28) 0%, rgba(210,218,230,0.16) 55%, rgba(255,255,255,0.10) 100%)'
                   : isLight
                     ? 'rgba(10, 17, 40, 0.08)'
-                    : 'rgba(255, 255, 255, 0.16)',
+                    : 'linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.13) 100%)',
                 boxShadow: isHolding
                   ? isLight
                     ? 'inset 0 2px 3px rgba(255,255,255,0.95), inset 0 -2px 4px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.14), 0 0 0 1px rgba(255,255,255,0.8)'
                     : 'inset 0 2px 3px rgba(255,255,255,0.72), inset 0 -2px 5px rgba(255,255,255,0.22), inset 2px 0 4px rgba(255,255,255,0.24), inset -2px 0 4px rgba(200,210,230,0.20), 0 10px 28px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.36)'
                   : isLight
                     ? 'inset 0 1px 1px rgba(255,255,255,0.7)'
-                    : 'inset 0 1px 1px rgba(255,255,255,0.22)',
+                    : 'inset 0 1px 1px rgba(255,255,255,0.30), 0 2px 8px rgba(0,0,0,0.16)',
               }}
             >
               {/* Full-bleed Top Specular Sheen (only when holding — no inner oval sticker) */}
