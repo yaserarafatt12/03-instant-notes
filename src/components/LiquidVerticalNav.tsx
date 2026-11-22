@@ -287,9 +287,9 @@ export function LiquidVerticalNav<T extends string>({
         isLight
           ? undefined
           : {
-              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(22, 26, 34, 0.48) 100%)',
-              backdropFilter: 'blur(20px) saturate(110%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(110%)',
+              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(15, 29, 56, 0.46) 100%)',
+              backdropFilter: 'blur(20px) saturate(125%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(125%)',
             }
       }
     >

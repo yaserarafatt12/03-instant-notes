@@ -353,7 +353,7 @@ export function LiquidSegmentedControl<T extends string>({
           style={{
             background: isLight
               ? 'rgba(255, 255, 255, 0.72)'
-              : 'linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0%, rgba(28, 32, 40, 0.52) 100%)',
+              : 'linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(16, 32, 62, 0.48) 100%)',
           }}
         />
         <div
