@@ -2450,6 +2450,41 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         // Focused on canvas / outside block -> select all blocks in note!
         e.preventDefault();
         selectAllDocumentBlocks();
+      } else if ((e.ctrlKey || e.metaKey) && ['b', 'i', 'u', 'e'].includes(e.key.toLowerCase())) {
+        const activeEl = document.activeElement as HTMLElement | null;
+        if (activeEl && activeEl.isContentEditable) {
+          e.preventDefault();
+          const key = e.key.toLowerCase();
+          if (key === 'b') applyFormatting('**');
+          else if (key === 'i') applyFormatting('*');
+          else if (key === 'u') applyFormatting('<u>');
+          else if (key === 'e') applyFormatting('`');
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 's') {
+        const activeEl = document.activeElement as HTMLElement | null;
+        if (activeEl && activeEl.isContentEditable) {
+          e.preventDefault();
+          applyFormatting('~~');
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'x' && selectedBlockIndices.length > 0) {
+        const nativeSelection = window.getSelection()?.toString();
+        if (nativeSelection) return;
+        e.preventDefault();
+        const sorted = [...selectedBlockIndicesRef.current].sort((a, b) => a - b);
+        const text = sorted
+          .map((i) => {
+            const blk = parsedChronologicalBlocks[i];
+            if (!blk) return '';
+            if (blk.type === 'text') return blk.content;
+            if (blk.type === 'code') return blk.data.code;
+            if (blk.type === 'mermaid') return blk.data.code;
+            if (blk.type === 'subpage') return blk.data.title;
+            if (blk.type === 'attachment') return blk.data.name;
+            return '';
+          })
+          .join('\n');
+        navigator.clipboard?.writeText(text);
+        handleDeleteSelectedBlocks();
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c' && isAllSelected) {
         // Ctrl+C / Cmd+C Copy full note content when all selected
         e.preventDefault();
@@ -2485,11 +2520,51 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       }
     };
 
+    const handleGlobalPaste = (e: ClipboardEvent) => {
+      const activeEl = document.activeElement as HTMLElement | null;
+      const activeTag = activeEl?.tagName?.toLowerCase();
+      if (
+        activeTag === 'input' ||
+        activeTag === 'textarea' ||
+        activeEl?.isContentEditable
+      ) {
+        return; // Let native / RichTextBlock onPaste handle focused inputs
+      }
+
+      const pastedText = e.clipboardData?.getData('text/plain');
+      if (!pastedText) return;
+
+      e.preventDefault();
+      const lines = pastedText.split(/\r?\n/);
+      const newBlocks: ChronoBlock[] = lines.map((line, i) => ({
+        type: 'text',
+        id: `t-paste-${Date.now()}-${i}`,
+        content: line,
+      }));
+
+      const updated = [...parsedChronologicalBlocks];
+      if (selectedBlockIndicesRef.current.length > 0) {
+        const sorted = [...selectedBlockIndicesRef.current].sort((a, b) => a - b);
+        const firstIdx = sorted[0];
+        const selectedSet = new Set(sorted);
+        const filtered = updated.filter((_, idx) => !selectedSet.has(idx));
+        const insertAt = Math.min(firstIdx, filtered.length);
+        filtered.splice(insertAt, 0, ...newBlocks);
+        reassembleAndSaveBlocks(filtered);
+        setSelectedBlockIndices([]);
+      } else {
+        updated.push(...newBlocks);
+        reassembleAndSaveBlocks(updated);
+      }
+    };
+
     window.addEventListener('keydown', handleGlobalKeyDown);
     window.addEventListener('mousedown', handleGlobalMouseDown);
+    window.addEventListener('paste', handleGlobalPaste);
     return () => {
       window.removeEventListener('keydown', handleGlobalKeyDown);
       window.removeEventListener('mousedown', handleGlobalMouseDown);
+      window.removeEventListener('paste', handleGlobalPaste);
     };
   }, [isAllSelected, selectedBlockIndices, content, handleUndo, handleRedo]);
 
@@ -3815,10 +3890,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
   // Apply rich markdown formatting around selected text with toggle-off (unwrap) support
   const applyFormatting = useCallback((wrapper: string) => {
-    if (!selectionToolbar) return;
     const selection = window.getSelection();
+    const targetBlockIdx = selectionToolbar?.blockIdx ?? lastFocusedBlockIdxRef.current ?? 0;
 
-    if (selection && !selection.isCollapsed) {
+    if (selection && (!selection.isCollapsed || wrapper === '**' || wrapper === '*' || wrapper === '<u>' || wrapper === '~~')) {
       const parentNode = selection.anchorNode?.parentElement;
       const targetTag = wrapper === '==' ? 'mark' : wrapper === '`' ? 'code' : wrapper === '$' ? 'span' : null;
 
@@ -3833,7 +3908,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           const activeEl = document.activeElement as HTMLElement;
           if (activeEl && activeEl.isContentEditable) {
             const md = htmlToMarkdown(activeEl.innerHTML);
-            handleTextBlockUpdate(selectionToolbar.blockIdx, md);
+            handleTextBlockUpdate(targetBlockIdx, md);
           }
           setSelectionToolbar(null);
           return;
@@ -3882,7 +3957,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       const activeEl = document.activeElement as HTMLElement;
       if (activeEl && activeEl.isContentEditable) {
         const md = htmlToMarkdown(activeEl.innerHTML);
-        handleTextBlockUpdate(selectionToolbar.blockIdx, md);
+        handleTextBlockUpdate(targetBlockIdx, md);
       }
 
       // For B/I/U/S: keep toolbar open & refresh active format states so toggle is visible
