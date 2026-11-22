@@ -5118,13 +5118,13 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       )}
 
       {/* Main Body Area: Central Inset Tempered Glass Editor Card + Right Sidebar */}
-      <div className="flex-1 flex overflow-hidden bg-transparent px-2 sm:px-4 pt-2 gap-3">
+      <div className="flex-1 flex overflow-hidden bg-transparent px-2 sm:px-4 pt-2 pb-3 gap-3">
         {/* Main Editor Canvas Inset Card */}
         <div
           ref={canvasScrollRef}
           onClick={handleEmptyCanvasClick}
           onMouseDown={handleMouseDownCanvas}
-          className="flex-1 flex flex-col p-6 sm:p-10 overflow-y-auto space-y-1 max-w-[860px] w-full mx-auto pb-32 cursor-text select-text glass-editor-sheet rounded-t-3xl"
+          className="flex-1 flex flex-col p-6 sm:p-10 overflow-y-auto space-y-1 max-w-[860px] w-full mx-auto pb-32 cursor-text select-text glass-editor-sheet rounded-3xl [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         >
           {/* Title Input */}
           <input
@@ -5138,10 +5138,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             className="w-full text-2xl sm:text-3xl font-extrabold bg-transparent text-white placeholder:text-slate-500 border-none focus:outline-none tracking-tight leading-tight select-text mb-3"
           />
 
-          {/* Seamless Floating Tags Bar (No Outer Border Box) */}
+          {/* Seamless Floating Tags Bar (Monochrome) */}
           <div className="flex flex-wrap items-center gap-2 py-1 text-xs font-medium mb-5 select-none">
             {/* Simple Tag Icon (Right-facing) */}
-            <svg className="w-4 h-4 text-sky-300/80 shrink-0 -scale-x-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-4 h-4 text-white/55 shrink-0 -scale-x-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l5.58-5.58a2.426 2.426 0 0 0 0-3.42z" />
               <circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" stroke="none" />
             </svg>
