@@ -1090,12 +1090,13 @@ function markdownToHtml(md: string): string {
       return `<mark data-color="${preset.id}" class="${preset.bgClass} ${preset.textClass} px-1.5 py-0.5 rounded-md font-medium font-sans">${text}</mark>`;
     })
     .replace(/==([\s\S]*?)==/g, '<mark data-color="yellow" class="bg-amber-500/25 text-amber-200 border border-amber-400/30 px-1.5 py-0.5 rounded-md font-medium font-sans">$1</mark>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="underline underline-offset-4 decoration-white/40 text-white/90 hover:text-white">$1</a>')
     .replace(/\*\*([\s\S]*?)\*\*/g, '<strong class="font-bold text-white font-sans">$1</strong>')
     .replace(/\*([\s\S]*?)\*/g, '<em class="italic text-zinc-100 font-sans">$1</em>')
-    .replace(/<u>([\s\S]*?)<\/u>/g, '<u class="underline underline-offset-4 decoration-indigo-400 font-sans">$1</u>')
+    .replace(/<u>([\s\S]*?)<\/u>/g, '<u class="underline underline-offset-4 decoration-white/50 font-sans">$1</u>')
     .replace(/~~([\s\S]*?)~~/g, '<span class="line-through text-zinc-400 font-sans">$1</span>')
-    .replace(/`([\s\S]*?)`/g, '<code class="bg-[#22232b] text-rose-400 border border-white/10 font-mono text-[13px] px-1.5 py-0.5 rounded-md font-medium shadow-sm">$1</code>')
-    .replace(/\$([\s\S]*?)\$/g, '<span class="inline-flex items-center px-1.5 py-0.5 bg-indigo-950/50 border border-indigo-500/30 text-indigo-200 rounded-md font-serif italic text-sm shadow-sm select-all">$1</span>');
+    .replace(/`([\s\S]*?)`/g, '<code class="bg-white/[0.08] text-white/90 border border-white/15 font-mono text-[13px] px-1.5 py-0.5 rounded-md font-medium">$1</code>')
+    .replace(/\$([\s\S]*?)\$/g, '<span class="inline-flex items-center px-1.5 py-0.5 bg-white/[0.08] border border-white/20 text-white/90 rounded-md font-serif italic text-sm select-all">$1</span>');
 }
 
 function htmlToMarkdown(html: string): string {
@@ -1110,7 +1111,7 @@ function htmlToMarkdown(html: string): string {
     if (node.nodeType === Node.ELEMENT_NODE) {
       const el = node as HTMLElement;
       const tag = el.tagName.toLowerCase();
-      let inner = Array.from(el.childNodes).map(parseNode).join('');
+      const inner = Array.from(el.childNodes).map(parseNode).join('');
 
       if (tag === 'mark') {
         const colorId = el.getAttribute('data-color');
@@ -1119,12 +1120,19 @@ function htmlToMarkdown(html: string): string {
         }
         return `==${inner}==`;
       }
+      if (tag === 'a') {
+        const href = el.getAttribute('href');
+        if (href && /^https?:\/\//i.test(href) && inner !== href) {
+          return `[${inner}](${href})`;
+        }
+        return inner;
+      }
       if (tag === 'strong' || tag === 'b') return `**${inner}**`;
       if (tag === 'em' || tag === 'i') return `*${inner}*`;
       if (tag === 'u') return `<u>${inner}</u>`;
       if (tag === 'del' || tag === 's' || tag === 'strike' || (tag === 'span' && el.classList.contains('line-through'))) return `~~${inner}~~`;
       if (tag === 'code') return `\`${inner}\``;
-      if (tag === 'span' && el.classList.contains('bg-indigo-950/50')) return `$${inner}$`;
+      if (tag === 'span' && (el.classList.contains('bg-indigo-950/50') || el.classList.contains('font-serif'))) return `$${inner}$`;
       if (tag === 'br') return '\n';
       if (tag === 'div' || tag === 'p') return inner ? '\n' + inner : '';
       return inner;
@@ -1159,6 +1167,24 @@ function parsePastedHtmlToMarkdown(htmlData: string): string {
         return `\n\`\`\`${lang}\n${rawCode}\n\`\`\`\n`;
       }
 
+      // HTML Tables -> Markdown Table syntax
+      if (tag === 'table') {
+        const rows = Array.from(el.querySelectorAll('tr'));
+        if (rows.length === 0) return '';
+        const mdRows: string[] = [];
+        rows.forEach((tr, rIdx) => {
+          const cells = Array.from(tr.querySelectorAll('th, td')).map((cell) =>
+            walk(cell, listDepth).replace(/\s*\n\s*/g, ' ').replace(/\|/g, '\\|').trim()
+          );
+          if (cells.length === 0) return;
+          mdRows.push(`| ${cells.join(' | ')} |`);
+          if (rIdx === 0) {
+            mdRows.push(`| ${cells.map(() => '---').join(' | ')} |`);
+          }
+        });
+        return `\n${mdRows.join('\n')}\n`;
+      }
+
       if (tag === 'ul') {
         const items = Array.from(el.children)
           .filter((c) => c.tagName.toLowerCase() === 'li')
@@ -1182,8 +1208,14 @@ function parsePastedHtmlToMarkdown(htmlData: string): string {
 
       if (tag === 'li') {
         const indent = '  '.repeat(Math.max(0, listDepth - 1));
-        const inner = Array.from(el.childNodes).map((c) => walk(c, listDepth)).join('').trim();
-        return inner ? `\n${indent}• ${inner}` : '';
+        const checkbox = el.querySelector('input[type="checkbox"]') as HTMLInputElement | null;
+        const prefix = checkbox ? (checkbox.checked ? '☑ ' : '☐ ') : '• ';
+        const inner = Array.from(el.childNodes)
+          .filter((c) => !(c instanceof HTMLElement && c.tagName.toLowerCase() === 'input'))
+          .map((c) => walk(c, listDepth))
+          .join('')
+          .trim();
+        return inner ? `\n${indent}${prefix}${inner}` : '';
       }
 
       const children = Array.from(el.childNodes).map((c) => walk(c, listDepth)).join('');
@@ -1192,6 +1224,14 @@ function parsePastedHtmlToMarkdown(htmlData: string): string {
         return '';
       }
 
+      if (tag === 'a') {
+        const href = el.getAttribute('href');
+        const label = children.trim();
+        if (href && /^https?:\/\//i.test(href) && label && label !== href) {
+          return `[${label}](${href})`;
+        }
+        return label;
+      }
       if (tag === 'b' || tag === 'strong') {
         return `**${children.trim()}**`;
       }
@@ -1213,7 +1253,13 @@ function parsePastedHtmlToMarkdown(htmlData: string): string {
       if (/^h[1-6]$/.test(tag)) {
         return `\n**${children.trim()}**\n`;
       }
-      if (tag === 'p' || tag === 'div' || tag === 'blockquote') {
+      if (tag === 'blockquote') {
+        return `\n▎ *${children.trim()}*\n`;
+      }
+      if (tag === 'hr') {
+        return `\n────────────────────────\n`;
+      }
+      if (tag === 'p' || tag === 'div') {
         return `\n${children.trim()}\n`;
       }
       if (tag === 'br') {
@@ -1230,7 +1276,12 @@ function parsePastedHtmlToMarkdown(htmlData: string): string {
 }
 
 function parsePastedTextToChronoBlocks(rawText: string): ChronoBlock[] {
-  const normalized = rawText.replace(/\r\n/g, '\n');
+  // Convert ChatGPT LaTeX inline \( ... \) and block \[ ... \] delimiters cleanly
+  const normalized = rawText
+    .replace(/\r\n/g, '\n')
+    .replace(/\\\((.+?)\\\)/g, '$$$1$$')
+    .replace(/\\\[([\s\S]+?)\\\]/g, (_m, expr) => `$${expr.trim()}$`);
+
   const blocks: ChronoBlock[] = [];
   const fenceRegex = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
   let lastIdx = 0;
@@ -1239,19 +1290,88 @@ function parsePastedTextToChronoBlocks(rawText: string): ChronoBlock[] {
 
   const pushTextLines = (segment: string) => {
     const lines = segment.split('\n');
-    for (const line of lines) {
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+
+      // Detect Markdown Table (header row | ... | followed by separator | --- |)
+      if (
+        line.trim().startsWith('|') &&
+        line.trim().endsWith('|') &&
+        i + 1 < lines.length &&
+        /^\|[\s:|-]+\|$/.test(lines[i + 1].trim())
+      ) {
+        const parseCells = (rowStr: string) =>
+          rowStr
+            .trim()
+            .replace(/^\|/, '')
+            .replace(/\|$/, '')
+            .split('|')
+            .map((c) => c.trim());
+
+        const headers = parseCells(line);
+        const colIds = headers.map((_, cIdx) => `col_${cIdx + 1}`);
+        const columns = headers.map((name, cIdx) => ({
+          id: colIds[cIdx],
+          name: name || `Kolom ${cIdx + 1}`,
+          type: 'text' as const,
+          width: 180,
+        }));
+
+        const rows: { id: string; [key: string]: string }[] = [];
+        i += 2; // skip header & separator
+        while (i < lines.length && lines[i].trim().startsWith('|') && lines[i].trim().endsWith('|')) {
+          const cellVals = parseCells(lines[i]);
+          const rowObj: { id: string; [key: string]: string } = {
+            id: `row_${Date.now()}_${counter++}`,
+          };
+          colIds.forEach((cid, cIdx) => {
+            rowObj[cid] = cellVals[cIdx] ?? '';
+          });
+          rows.push(rowObj);
+          i++;
+        }
+
+        const colId = `col-${Date.now()}-${counter++}`;
+        blocks.push({
+          type: 'collection',
+          id: colId,
+          data: {
+            id: colId,
+            title: 'Tabel',
+            views: [{ id: 'v_table', name: 'Table', type: 'table' }],
+            activeViewId: 'v_table',
+            columns,
+            rows,
+          },
+        });
+        continue;
+      }
+
       let cleaned = line;
       const headingMatch = cleaned.match(/^#{1,6}\s+(.+)$/);
+      const taskMatch = cleaned.match(/^(\s*)[-*+]\s+\[([ xX])\]\s+(.+)$/);
+      const quoteMatch = cleaned.match(/^\s*>\s?(.*)$/);
+
       if (headingMatch) {
         cleaned = `**${headingMatch[1].trim()}**`;
+      } else if (taskMatch) {
+        const box = taskMatch[2].toLowerCase() === 'x' ? '☑' : '☐';
+        cleaned = `${taskMatch[1]}${box} ${taskMatch[3]}`;
+      } else if (quoteMatch) {
+        cleaned = quoteMatch[1].trim() ? `▎ *${quoteMatch[1].trim()}*` : '';
+      } else if (/^\s*([-*_])\1{2,}\s*$/.test(cleaned)) {
+        cleaned = '────────────────────────';
       } else {
         cleaned = cleaned.replace(/^(\s*)[-*+]\s+/, '$1• ');
       }
+
       blocks.push({
         type: 'text',
         id: `t-paste-${Date.now()}-${counter++}`,
         content: cleaned,
       });
+      i++;
     }
   };
 
@@ -1260,15 +1380,23 @@ function parsePastedTextToChronoBlocks(rawText: string): ChronoBlock[] {
     if (before.trim()) {
       pushTextLines(before);
     }
-    blocks.push({
-      type: 'code',
-      id: `code-${Date.now()}-${counter++}`,
-      data: {
-        id: `code-${Date.now()}-${counter++}`,
-        lang: match[1] || 'auto',
-        code: match[2].replace(/\n$/, ''),
-      },
-    });
+    const lang = (match[1] || 'auto').toLowerCase();
+    const blockCode = match[2].replace(/\n$/, '');
+    if (lang === 'mermaid') {
+      const mmdId = `mmd-${Date.now()}-${counter++}`;
+      blocks.push({
+        type: 'mermaid',
+        id: mmdId,
+        data: { id: mmdId, code: blockCode },
+      });
+    } else {
+      const codeId = `code-${Date.now()}-${counter++}`;
+      blocks.push({
+        type: 'code',
+        id: codeId,
+        data: { id: codeId, lang: lang || 'auto', code: blockCode },
+      });
+    }
     lastIdx = match.index + match[0].length;
   }
 
