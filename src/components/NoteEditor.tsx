@@ -51,11 +51,40 @@ import mermaid from 'mermaid';
 
 mermaid.initialize({
   startOnLoad: false,
-  theme: 'dark',
+  theme: 'base',
   securityLevel: 'loose',
   suppressErrorRendering: true,
   logLevel: 'error',
   fontFamily: 'Inter, system-ui, sans-serif',
+  themeVariables: {
+    darkMode: true,
+    background: 'transparent',
+    primaryColor: '#162848',
+    primaryBorderColor: 'rgba(255, 255, 255, 0.26)',
+    primaryTextColor: '#ffffff',
+    secondaryColor: '#11213D',
+    secondaryBorderColor: 'rgba(255, 255, 255, 0.20)',
+    secondaryTextColor: '#ffffff',
+    tertiaryColor: '#0E1C35',
+    lineColor: 'rgba(255, 255, 255, 0.65)',
+    textColor: '#ffffff',
+    mainBkg: '#162848',
+    nodeBorder: 'rgba(255, 255, 255, 0.26)',
+    clusterBkg: 'rgba(255, 255, 255, 0.04)',
+    clusterBorder: 'rgba(255, 255, 255, 0.16)',
+    actorBkg: '#162848',
+    actorBorder: 'rgba(255, 255, 255, 0.26)',
+    actorTextColor: '#ffffff',
+    actorLineColor: 'rgba(255, 255, 255, 0.35)',
+    signalColor: 'rgba(255, 255, 255, 0.85)',
+    signalTextColor: '#ffffff',
+    labelBoxBkgColor: '#162848',
+    labelBoxBorderColor: 'rgba(255, 255, 255, 0.22)',
+    labelTextColor: '#ffffff',
+    noteBkgColor: '#192E52',
+    noteBorderColor: 'rgba(255, 255, 255, 0.22)',
+    noteTextColor: '#ffffff',
+  },
 });
 import type { Note, CollectionData } from '../types/note';
 import { CollectionBlockRenderer, createDefaultCollection } from './CollectionBlockRenderer';
@@ -446,8 +475,8 @@ const MermaidRenderer: React.FC<{
 
   if (!svgContent) {
     return (
-      <div className="p-6 flex items-center justify-center gap-2 text-zinc-500 text-xs italic">
-        <div className="w-3.5 h-3.5 border-2 border-indigo-500/40 border-t-indigo-500 rounded-full animate-spin" />
+      <div className="p-6 flex items-center justify-center gap-2 text-white/55 text-xs italic">
+        <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
         <span>Memuat Mermaid Diagram...</span>
       </div>
     );
@@ -461,10 +490,10 @@ const MermaidRenderer: React.FC<{
           : 'p-3 flex items-center justify-center [&>svg]:max-w-full [&>svg]:h-auto'
       }`}
     >
-      <div dangerouslySetInnerHTML={{ __html: svgContent }} className="w-full flex items-center justify-center" />
+      <div dangerouslySetInnerHTML={{ __html: svgContent }} className="mermaid-glass-svg w-full flex items-center justify-center" />
       {isRendering && (
-        <div className="absolute top-2 right-2 flex items-center gap-1 bg-[#121318]/80 backdrop-blur-sm border border-white/10 px-2 py-0.5 rounded text-[10px] text-indigo-400 font-mono">
-          <div className="w-2 h-2 border-2 border-indigo-400/40 border-t-indigo-400 rounded-full animate-spin" />
+        <div className="absolute top-2 right-2 flex items-center gap-1.5 glass-control px-2.5 py-0.5 rounded-full text-[10px] text-white/85 font-mono">
+          <div className="w-2 h-2 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           <span>Rendering...</span>
         </div>
       )}
@@ -4143,10 +4172,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               }}
               className={`relative w-[380px] max-w-full px-3.5 py-2 rounded-xl cursor-pointer transition-all shadow-sm flex items-center gap-3 select-none border ${
                 selectedBlockIndices.includes(idx)
-                  ? 'ring-2 ring-indigo-500/70 border-indigo-500/80 bg-[#13284C]/90 text-white'
+                  ? 'ring-1 ring-white/45 border-white/40 bg-white/[0.12] text-white'
                   : isAllSelected
-                  ? 'ring-1 ring-indigo-500/50 border-indigo-500/80 bg-[#13284C]/90 text-white'
-                  : 'bg-[#0B172E]/80 hover:bg-[#122446]/90 border-white/10'
+                  ? 'ring-1 ring-white/30 border-white/30 bg-white/[0.09] text-white'
+                  : 'glass-card'
               }`}
             >
               <CraftPageBadge />
@@ -4207,17 +4236,16 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               }}
               className={`relative w-full rounded-2xl cursor-pointer transition-all duration-200 shadow-lg hover:shadow-2xl overflow-hidden border select-none group/craftcard ${
                 selectedBlockIndices.includes(idx)
-                  ? 'ring-2 ring-indigo-500/80 border-indigo-500 bg-[#252630]'
+                  ? 'ring-1 ring-white/45 border-white/40 bg-white/[0.12]'
                   : isAllSelected
-                  ? 'ring-1 ring-indigo-500/50 border-indigo-500/80 bg-[#252630]'
-                  : 'bg-[#0B172E]/80 hover:bg-[#122446]/90 border-white/10 hover:border-indigo-500/40'
+                  ? 'ring-1 ring-white/30 border-white/30 bg-white/[0.09]'
+                  : 'glass-card'
               }`}
             >
-              {/* Top Aesthetic Cover Art Header Banner */}
-              <div className="h-20 w-full bg-gradient-to-r from-indigo-950 via-purple-900/60 to-slate-900 border-b border-white/10 relative overflow-hidden flex items-start justify-between p-3.5">
-                {/* Ambient glow decoration */}
-                <div className="absolute -right-4 -top-6 w-32 h-32 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none" />
-                <div className="absolute left-16 -bottom-8 w-24 h-24 bg-purple-500/20 rounded-full blur-xl pointer-events-none" />
+              {/* Top Monochrome Tempered Glass Cover Banner */}
+              <div className="h-20 w-full bg-gradient-to-r from-white/[0.08] via-white/[0.04] to-transparent border-b border-white/10 relative overflow-hidden flex items-start justify-between p-3.5">
+                <div className="absolute -right-4 -top-6 w-32 h-32 bg-white/[0.06] rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute left-16 -bottom-8 w-24 h-24 bg-white/[0.04] rounded-full blur-xl pointer-events-none" />
 
                 {/* Subpage Document Tag */}
                 <div className="relative z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/15 text-[10px] font-bold text-indigo-200 tracking-wide">
@@ -4511,8 +4539,8 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             <div
               className={`relative rounded-xl overflow-hidden shadow-xl transition-all ${
                 isAllSelected
-                  ? 'ring-2 ring-indigo-500/80 border-indigo-500/80 bg-indigo-500/10'
-                  : 'border border-white/10 bg-[#16171d]'
+                  ? 'ring-1 ring-white/45 border border-white/40 bg-white/[0.10]'
+                  : 'glass-card'
               }`}
             >
               <img
@@ -4614,8 +4642,8 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               onClick={() => setPreviewAttachment(att)}
               className={`relative w-[380px] max-w-full px-3.5 py-2 rounded-xl cursor-pointer transition-all shadow-sm flex items-center gap-3 select-none border ${
                 isAllSelected
-                  ? 'ring-2 ring-indigo-500/70 border-indigo-500/80 bg-[#13284C]/90 text-white'
-                  : 'bg-[#0B172E]/80 hover:bg-[#122446]/90 border-white/10'
+                  ? 'ring-1 ring-white/45 border-white/40 bg-white/[0.12] text-white'
+                  : 'glass-card'
               }`}
             >
               <CraftFileTypeBadge mime={att.mime} name={att.name} />
@@ -4647,8 +4675,8 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               onClick={() => setPreviewAttachment(att)}
               className={`relative w-52 p-4 rounded-2xl cursor-pointer transition-all shadow-lg flex flex-col items-center justify-center text-center select-none border ${
                 isAllSelected
-                  ? 'ring-2 ring-indigo-500/70 border-indigo-500/80 bg-[#13284C]/90 text-white'
-                  : 'bg-[#0B172E]/80 hover:bg-[#122446]/90 border-white/10'
+                  ? 'ring-1 ring-white/45 border-white/40 bg-white/[0.12] text-white'
+                  : 'glass-card'
               }`}
             >
               {/* 3-Dots Action Button Top Right */}

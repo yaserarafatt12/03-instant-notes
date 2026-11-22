@@ -479,6 +479,47 @@ body::after {
   text-shadow: none !important;
 }
 
+/* Midnight Navy Tempered Glass Styling for Rendered Mermaid SVGs */
+.mermaid-glass-svg svg {
+  background: transparent !important;
+}
+
+.mermaid-glass-svg rect.actor,
+.mermaid-glass-svg .node rect,
+.mermaid-glass-svg .node polygon,
+.mermaid-glass-svg .node circle,
+.mermaid-glass-svg .node ellipse,
+.mermaid-glass-svg .labelBox,
+.mermaid-glass-svg rect.note {
+  fill: rgba(255, 255, 255, 0.08) !important;
+  stroke: rgba(255, 255, 255, 0.24) !important;
+  stroke-width: 1.25px !important;
+  rx: 10px;
+  ry: 10px;
+}
+
+.mermaid-glass-svg text,
+.mermaid-glass-svg .actor > tspan,
+.mermaid-glass-svg .nodeLabel,
+.mermaid-glass-svg .messageText,
+.mermaid-glass-svg .noteText {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  font-family: var(--font-sans) !important;
+}
+
+.mermaid-glass-svg .messageLine0,
+.mermaid-glass-svg .messageLine1,
+.mermaid-glass-svg .actor-line,
+.mermaid-glass-svg .flowchart-link {
+  stroke: rgba(255, 255, 255, 0.55) !important;
+}
+
+.mermaid-glass-svg marker path {
+  fill: rgba(255, 255, 255, 0.80) !important;
+  stroke: rgba(255, 255, 255, 0.80) !important;
+}
+
 ::-moz-selection {
   background-color: rgba(56, 189, 248, 0.26) !important;
   color: inherit !important;
