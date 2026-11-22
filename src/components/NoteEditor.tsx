@@ -45,6 +45,7 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
+  Search,
 } from 'lucide-react';
 import mermaid from 'mermaid';
 
@@ -122,111 +123,79 @@ type ChronoBlock =
 // Global In-Memory Attachment Data Store
 const globalAttachmentMap = new Map<string, FileAttachment>();
 
-// Craft Docs Style White Paper File Icon with Color Badge
+// Monochrome Tempered Glass File Icon Badge
 const CraftFileTypeBadge: React.FC<{ mime: string; name: string }> = ({ mime, name }) => {
   const ext = name.split('.').pop()?.toLowerCase() || '';
 
-  let badgeColor = 'bg-rose-600 text-white';
-  let label = 'PDF';
-
+  let label = 'FILE';
   if (mime.includes('pdf') || ext === 'pdf') {
-    badgeColor = 'bg-rose-600 text-white';
     label = 'PDF';
   } else if (['xlsx', 'xls', 'csv'].includes(ext) || mime.includes('spreadsheet')) {
-    badgeColor = 'bg-emerald-600 text-white';
     label = 'XLS';
   } else if (['docx', 'doc'].includes(ext) || mime.includes('word')) {
-    badgeColor = 'bg-blue-600 text-white';
     label = 'DOC';
   } else if (ext === 'txt') {
-    badgeColor = 'bg-cyan-600 text-white';
     label = 'TXT';
   } else if (['zip', 'rar', '7z'].includes(ext)) {
-    badgeColor = 'bg-amber-600 text-white';
     label = 'ZIP';
   } else if (['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'].includes(ext) || mime.startsWith('audio/')) {
-    badgeColor = 'bg-violet-600 text-white';
     label = 'MP3';
   } else if (['mp4', 'webm', 'ogv', 'mov', 'mkv', 'avi'].includes(ext) || mime.startsWith('video/')) {
-    badgeColor = 'bg-purple-600 text-white';
     label = 'MP4';
   } else if (mime.startsWith('image/')) {
-    badgeColor = 'bg-pink-600 text-white';
-    label = 'PNG';
+    label = 'IMG';
   } else {
-    badgeColor = 'bg-indigo-600 text-white';
-    label = ext.slice(0, 3).toUpperCase() || 'FILE';
+    label = ext.slice(0, 4).toUpperCase() || 'FILE';
   }
 
   return (
-    <div className="w-8 h-10 bg-zinc-100 rounded-lg p-0.5 flex flex-col items-center justify-between shadow-sm shrink-0 border border-zinc-300 relative select-none">
-      <div className="w-2 h-2 bg-zinc-300 absolute top-0 right-0 rounded-bl" />
-      <div className="w-full flex-1 flex items-center justify-center pt-0.5">
-        <FileText className="w-3.5 h-3.5 text-zinc-600" />
-      </div>
-      <div className={`w-full py-0.5 rounded text-[6.5px] font-black text-center uppercase tracking-tighter ${badgeColor}`}>
+    <div className="w-9 h-9 rounded-xl bg-white/[0.08] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.20)] flex flex-col items-center justify-center shrink-0 select-none">
+      <FileText className="w-3.5 h-3.5 text-white/85" />
+      <span className="text-[7px] font-bold uppercase tracking-wider text-white/60 leading-none mt-0.5">
         {label}
-      </div>
+      </span>
     </div>
   );
 };
 
-// Craft Docs Style Page Document Badge
+// Monochrome Tempered Glass Page Document Badge
 const CraftPageBadge: React.FC = () => (
-  <div className="w-8 h-10 bg-zinc-100 rounded-lg p-0.5 flex flex-col items-center justify-between shadow-sm shrink-0 border border-zinc-300 relative select-none">
-    <div className="w-2 h-2 bg-zinc-300 absolute top-0 right-0 rounded-bl" />
-    <div className="w-full flex-1 flex items-center justify-center pt-0.5">
-      <FileText className="w-4 h-4 text-zinc-700 stroke-[2.25]" />
-    </div>
-    <div className="w-full py-0.5 rounded text-[6.5px] font-black text-center uppercase tracking-tighter bg-indigo-600 text-white">
-      PAGE
-    </div>
+  <div className="w-9 h-9 rounded-xl bg-white/[0.08] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.20)] flex items-center justify-center shrink-0 select-none">
+    <FileText className="w-4 h-4 text-white/90 stroke-[2]" />
   </div>
 );
 
-// Craft Docs Style Large File Icon (For Card Mode - Screenshot 3)
+// Monochrome Tempered Glass Large File Icon (For Card Mode)
 const LargeCraftFileTypeBadge: React.FC<{ mime: string; name: string }> = ({ mime, name }) => {
   const ext = name.split('.').pop()?.toLowerCase() || '';
 
-  let badgeColor = 'bg-rose-600 text-white';
-  let label = 'PDF';
-
+  let label = 'FILE';
   if (mime.includes('pdf') || ext === 'pdf') {
-    badgeColor = 'bg-rose-600 text-white';
     label = 'PDF';
   } else if (['xlsx', 'xls', 'csv'].includes(ext) || mime.includes('spreadsheet')) {
-    badgeColor = 'bg-emerald-600 text-white';
     label = 'XLS';
   } else if (['docx', 'doc'].includes(ext) || mime.includes('word')) {
-    badgeColor = 'bg-blue-600 text-white';
     label = 'DOC';
   } else if (ext === 'txt') {
-    badgeColor = 'bg-cyan-600 text-white';
     label = 'TXT';
   } else if (['zip', 'rar', '7z'].includes(ext)) {
-    badgeColor = 'bg-amber-600 text-white';
     label = 'ZIP';
   } else if (['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'].includes(ext) || mime.startsWith('audio/')) {
-    badgeColor = 'bg-violet-600 text-white';
     label = 'MP3';
   } else if (['mp4', 'webm', 'ogv', 'mov', 'mkv', 'avi'].includes(ext) || mime.startsWith('video/')) {
-    badgeColor = 'bg-purple-600 text-white';
     label = 'MP4';
   } else if (mime.startsWith('image/')) {
-    badgeColor = 'bg-pink-600 text-white';
-    label = 'PNG';
+    label = 'IMG';
   } else {
-    badgeColor = 'bg-indigo-600 text-white';
-    label = ext.slice(0, 3).toUpperCase() || 'FILE';
+    label = ext.slice(0, 4).toUpperCase() || 'FILE';
   }
 
   return (
-    <div className="w-24 h-28 bg-zinc-100 rounded-2xl p-2 flex flex-col items-center justify-between shadow-xl shrink-0 border border-zinc-300 relative select-none">
-      <div className="w-5 h-5 bg-zinc-300 absolute top-0 right-0 rounded-bl-xl" />
-      <div className="w-full flex-1 flex items-center justify-center pt-2">
-        <FileText className="w-10 h-10 text-zinc-600" />
+    <div className="w-24 h-28 rounded-2xl bg-white/[0.08] border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_12px_28px_rgba(0,0,0,0.3)] p-2.5 flex flex-col items-center justify-between shrink-0 select-none">
+      <div className="w-full flex-1 flex items-center justify-center">
+        <FileText className="w-9 h-9 text-white/85" />
       </div>
-      <div className={`w-full py-1 rounded-lg text-xs font-black text-center uppercase tracking-wider ${badgeColor}`}>
+      <div className="w-full py-1 rounded-lg bg-white/[0.10] border border-white/[0.14] text-white/90 text-[10px] font-bold text-center uppercase tracking-wider">
         {label}
       </div>
     </div>
@@ -4957,10 +4926,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         accept="image/png, image/jpeg, image/webp, image/svg+xml, image/gif"
       />
 
-      {/* Top Toolbar: Frosted Tempered Glass Header */}
-      <div className="flex items-center justify-between px-5 h-12 select-none glass-header gap-4 shrink-0">
-        {/* Left: Folder Path Breadcrumb (Starting From Left, Perfectly Centered Vertically) */}
-        <div className="flex items-center gap-2 text-xs font-semibold text-zinc-400 overflow-x-auto max-w-[75%] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden shrink-0 h-full pt-[2px]">
+      {/* Top Floating Tempered Glass Editor Header Dock (Breadcrumb Path + In-Note Word Search + Actions) */}
+      <div className="mx-3 sm:mx-5 mt-3 mb-1 px-4 h-13 rounded-2xl glass-sidebar flex items-center justify-between gap-4 shrink-0 select-none">
+        {/* Left: Folder Path Breadcrumb */}
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-400 overflow-x-auto max-w-[42%] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden shrink-0">
           {!isSidebarOpen && onToggleSidebar && (
             <button
               onClick={onToggleSidebar}
@@ -4973,41 +4942,41 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               </svg>
             </button>
           )}
-          {/* Home Icon Button (Click to return to Home Dashboard - 15 Spaces Blank Offset) */}
+          {/* Home Icon Button */}
           <button
             onClick={() => {
               if (onSubjectChange) onSubjectChange(null);
               if (onFilterChange) onFilterChange('all');
               if (onClose) onClose(note);
             }}
-            className="p-1 text-zinc-400 hover:text-white rounded-md hover:bg-white/10 transition-colors shrink-0 ml-[60px] flex items-center"
+            className="p-1.5 text-white/65 hover:text-white rounded-lg hover:bg-white/10 transition-colors shrink-0 flex items-center"
             title="Kembali ke Beranda (Dashboard)"
           >
-            <Home className="w-3.5 h-3.5 text-zinc-300 stroke-[2.25]" />
+            <Home className="w-4 h-4 stroke-[2]" />
           </button>
 
           {subject ? (
             <>
-              <ChevronRight className="w-3.5 h-3.5 text-zinc-600 stroke-[2.25] shrink-0" />
+              <ChevronRight className="w-3.5 h-3.5 text-white/30 shrink-0" />
               <button
                 onClick={() => {
                   if (onSubjectChange) onSubjectChange(subject);
                   if (onClose) onClose(note);
                 }}
-                className="flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors p-1 rounded-md hover:bg-white/10 font-semibold shrink-0"
+                className="flex items-center gap-1.5 text-white/65 hover:text-white transition-colors px-2 py-1 rounded-lg hover:bg-white/10 font-medium shrink-0"
                 title={`Ke Folder ${subject}`}
               >
-                <Folder className="w-3.5 h-3.5 text-zinc-400 stroke-[2.25] shrink-0" />
+                <Folder className="w-3.5 h-3.5 shrink-0" />
                 <span className="leading-none">{subject}</span>
               </button>
             </>
           ) : null}
 
-          <ChevronRight className="w-3.5 h-3.5 text-zinc-600 stroke-[2.25] shrink-0" />
+          <ChevronRight className="w-3.5 h-3.5 text-white/30 shrink-0" />
           <button
             onClick={() => setSubPageStack([])}
-            className={`font-semibold transition-colors truncate shrink-0 max-w-[160px] sm:max-w-[240px] leading-none p-1 rounded-md hover:bg-white/10 ${
-              subPageStack.length === 0 ? 'text-white font-bold' : 'text-zinc-400 hover:text-white'
+            className={`font-semibold transition-colors truncate shrink-0 max-w-[140px] sm:max-w-[200px] leading-none px-2 py-1 rounded-lg hover:bg-white/10 ${
+              subPageStack.length === 0 ? 'text-white' : 'text-white/65 hover:text-white'
             }`}
             title="Catatan Utama"
           >
@@ -5017,19 +4986,41 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           {/* Render Subpage Stack Breadcrumbs */}
           {subPageStack.map((sub, index) => (
             <React.Fragment key={sub.id || index}>
-              <ChevronRight className="w-3.5 h-3.5 text-zinc-600 stroke-[2.25] shrink-0" />
+              <ChevronRight className="w-3.5 h-3.5 text-white/30 shrink-0" />
               <button
                 onClick={() => setSubPageStack(subPageStack.slice(0, index + 1))}
-                className={`flex items-center gap-1.5 transition-colors truncate shrink-0 max-w-[130px] sm:max-w-[180px] font-semibold p-1 rounded-md hover:bg-white/10 ${
-                  index === subPageStack.length - 1 ? 'text-white font-bold' : 'text-zinc-400 hover:text-white'
+                className={`flex items-center gap-1.5 transition-colors truncate shrink-0 max-w-[120px] sm:max-w-[160px] font-semibold px-2 py-1 rounded-lg hover:bg-white/10 ${
+                  index === subPageStack.length - 1 ? 'text-white' : 'text-white/65 hover:text-white'
                 }`}
                 title={`Navigasi ke subpage ${sub.title || 'Page'}`}
               >
-                <FileText className="w-3.5 h-3.5 text-zinc-400 stroke-[2.25] shrink-0" />
+                <FileText className="w-3.5 h-3.5 shrink-0" />
                 <span className="leading-none">{sub.title || 'Page Title'}</span>
               </button>
             </React.Fragment>
           ))}
+        </div>
+
+        {/* Center: Embedded In-Note Word Search Pill */}
+        <div ref={searchContainerRef} className="hidden md:flex flex-1 max-w-xs relative items-center">
+          <Search className="w-3.5 h-3.5 text-white/45 absolute left-3 pointer-events-none" />
+          <input
+            ref={inNoteSearchInputRef}
+            type="text"
+            value={inNoteSearchQuery}
+            onChange={(e) => setInNoteSearchQuery(e.target.value)}
+            placeholder="Cari kata di catatan..."
+            className="w-full h-8 pl-8 pr-7 glass-input rounded-full text-xs text-white placeholder:text-white/40 focus:outline-none transition-all"
+          />
+          {inNoteSearchQuery && (
+            <button
+              onClick={() => setInNoteSearchQuery('')}
+              className="absolute right-2 p-0.5 text-white/50 hover:text-white rounded-full"
+              title="Hapus pencarian kata"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
         </div>
 
         {/* Right: Top Right Editor Actions */}
