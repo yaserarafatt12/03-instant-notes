@@ -49,6 +49,25 @@ import {
   FilePlus,
 } from 'lucide-react';
 import mermaid from 'mermaid';
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
+import Prism from 'prismjs';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-jsx';
+import 'prismjs/components/prism-tsx';
+import 'prismjs/components/prism-python';
+import 'prismjs/components/prism-css';
+import 'prismjs/components/prism-json';
+import 'prismjs/components/prism-bash';
+import 'prismjs/components/prism-sql';
+import 'prismjs/components/prism-markup';
+import 'prismjs/components/prism-java';
+import 'prismjs/components/prism-go';
+import 'prismjs/components/prism-rust';
+import 'prismjs/components/prism-c';
+import 'prismjs/components/prism-cpp';
+import 'prismjs/components/prism-markdown';
 
 mermaid.initialize({
   startOnLoad: false,
@@ -524,7 +543,45 @@ const POPULAR_LANGUAGES = [
   { id: 'swift', label: 'Swift' },
 ];
 
-// Line-Numbered Editor Component with Direct Immediate Input & VS-Code Keyboard Navigation
+const PRISM_LANG_MAP: Record<string, string> = {
+  js: 'javascript',
+  javascript: 'javascript',
+  ts: 'typescript',
+  typescript: 'typescript',
+  jsx: 'jsx',
+  tsx: 'tsx',
+  py: 'python',
+  python: 'python',
+  html: 'markup',
+  xml: 'markup',
+  svg: 'markup',
+  markup: 'markup',
+  css: 'css',
+  json: 'json',
+  sh: 'bash',
+  shell: 'bash',
+  bash: 'bash',
+  zsh: 'bash',
+  sql: 'sql',
+  md: 'markdown',
+  markdown: 'markdown',
+  java: 'java',
+  go: 'go',
+  rust: 'rust',
+  rs: 'rust',
+  c: 'c',
+  cpp: 'cpp',
+  'c++': 'cpp',
+};
+
+function escapeCodeHtml(raw: string): string {
+  return raw
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// Line-Numbered Editor Component with PrismJS Syntax Highlighting & VS-Code Keyboard Navigation
 const LineNumberedEditor: React.FC<{
   value: string;
   lang?: string;
@@ -533,10 +590,25 @@ const LineNumberedEditor: React.FC<{
   onBlur?: () => void;
   autoFocus?: boolean;
   onDeleteIfEmpty?: () => void;
-}> = ({ value, onChange, placeholder, onBlur, autoFocus, onDeleteIfEmpty }) => {
+}> = ({ value, lang, onChange, placeholder, onBlur, autoFocus, onDeleteIfEmpty }) => {
   const lines = value.split('\n');
   const lineCount = Math.max(1, lines.length);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const preRef = useRef<HTMLPreElement>(null);
+
+  const highlightedHtml = useMemo(() => {
+    if (!value) return '';
+    const key = PRISM_LANG_MAP[(lang || '').toLowerCase()] || 'javascript';
+    const grammar = Prism.languages[key];
+    if (grammar) {
+      try {
+        return Prism.highlight(value, grammar, key);
+      } catch {
+        return escapeCodeHtml(value);
+      }
+    }
+    return escapeCodeHtml(value);
+  }, [value, lang]);
 
   useEffect(() => {
     if (autoFocus) {
@@ -560,7 +632,7 @@ const LineNumberedEditor: React.FC<{
   return (
     <div
       onClick={() => textareaRef.current?.focus({ preventScroll: true })}
-      className="flex w-full bg-white/[0.04] hover:bg-white/[0.06] rounded-xl border border-white/[0.12] hover:border-white/20 overflow-hidden font-mono text-xs shadow-md relative group/editor cursor-text min-h-[56px] transition-colors"
+      className="flex w-full bg-[#0b1526]/75 hover:bg-[#0d1a30]/85 rounded-xl border border-white/[0.12] hover:border-white/20 overflow-hidden font-mono text-xs shadow-md relative group/editor cursor-text min-h-[56px] transition-colors"
     >
       {/* Left Line Numbers Column with Clean Vertical Divider */}
       <div className="py-3 px-3 bg-transparent border-r border-white/10 text-zinc-500/80 select-none text-right font-mono text-xs leading-relaxed shrink-0 min-w-[34px]">
@@ -569,12 +641,27 @@ const LineNumberedEditor: React.FC<{
         ))}
       </div>
 
-      {/* Code Textarea Area - Direct, Crystal-Clear Instant Writing */}
-      <div className="flex-1 relative overflow-hidden flex items-start">
+      {/* Synchronized PrismJS Highlight Layer + Transparent Interactive Textarea */}
+      <div className="flex-1 relative overflow-hidden">
+        <pre
+          ref={preRef}
+          aria-hidden="true"
+          style={{ tabSize: 2 }}
+          className="pointer-events-none m-0 p-3 font-mono text-xs leading-relaxed whitespace-pre overflow-hidden text-zinc-100 min-h-[48px] block"
+          dangerouslySetInnerHTML={{
+            __html: value ? highlightedHtml + (value.endsWith('\n') ? '\n ' : '') : ' ',
+          }}
+        />
         <textarea
           ref={textareaRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onScroll={(e) => {
+            if (preRef.current) {
+              preRef.current.scrollLeft = e.currentTarget.scrollLeft;
+              preRef.current.scrollTop = e.currentTarget.scrollTop;
+            }
+          }}
           onBlur={onBlur}
           onKeyDown={(e) => {
             if (e.key === 'Tab') {
@@ -619,7 +706,7 @@ const LineNumberedEditor: React.FC<{
           spellCheck={false}
           rows={lineCount}
           style={{ tabSize: 2 }}
-          className="w-full p-3 m-0 bg-transparent font-mono text-xs text-zinc-100 caret-white focus:outline-none resize-none leading-relaxed whitespace-pre overflow-x-auto block selection:bg-white/20 selection:text-white placeholder:text-zinc-500 placeholder:italic border-0 min-h-[48px]"
+          className="absolute inset-0 w-full h-full p-3 m-0 bg-transparent font-mono text-xs text-transparent caret-white focus:outline-none resize-none leading-relaxed whitespace-pre overflow-x-auto overflow-y-hidden block selection:bg-white/20 selection:text-transparent placeholder:text-zinc-500 placeholder:italic border-0 min-h-[48px]"
         />
       </div>
     </div>
@@ -1082,21 +1169,82 @@ export const NOTION_COLORS: ColorPreset[] = [
   { id: 'gray', name: 'Abu-abu (Gray)', bgClass: 'bg-zinc-700/50 border border-zinc-500/30', textClass: 'text-zinc-200', dotColor: '#a1a1aa' },
 ];
 
+function renderKatexSafe(expr: string, displayMode: boolean): string {
+  const trimmed = expr.trim();
+  if (!trimmed) return displayMode ? '$$$$' : '$$';
+  try {
+    const rendered = katex.renderToString(trimmed, {
+      throwOnError: false,
+      displayMode,
+      strict: false,
+    });
+    const encoded = encodeURIComponent(trimmed);
+    if (displayMode) {
+      return `<span data-math="${encoded}" data-display="true" contenteditable="false" class="katex-block-wrapper inline-block w-full my-1.5 py-2.5 px-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-center overflow-x-auto select-all align-middle">${rendered}</span>`;
+    }
+    return `<span data-math="${encoded}" data-display="false" contenteditable="false" class="katex-inline-wrapper inline-flex items-center px-1 py-0.5 rounded text-white/95 select-all align-baseline">${rendered}</span>`;
+  } catch {
+    return displayMode ? `$$${trimmed}$$` : `$${trimmed}$`;
+  }
+}
+
 function markdownToHtml(md: string): string {
   if (!md) return '';
-  return md
+  const tokens: string[] = [];
+  const stash = (html: string) => {
+    const idx = tokens.length;
+    tokens.push(html);
+    return `\uE000TOK_${idx}\uE001`;
+  };
+
+  let out = md
+    // 1. Protect inline code first so math/markdown inside backticks stays literal
+    .replace(/`([^`\n]+)`/g, (_m, code) =>
+      stash(
+        `<code class="bg-white/[0.08] text-rose-300/95 border border-white/15 font-mono text-[13px] px-1.5 py-0.5 rounded-md font-medium">${escapeCodeHtml(code)}</code>`
+      )
+    )
+    // 2. Display math $$...$$ via KaTeX
+    .replace(/\$\$([\s\S]+?)\$\$/g, (_m, expr) => stash(renderKatexSafe(expr, true)))
+    // 3. Inline math $...$ via KaTeX
+    .replace(/(?<!\$)\$((?:[^$\n\\]|\\.)+?)\$(?!\$)/g, (_m, expr) => {
+      if (!expr.trim()) return _m;
+      return stash(renderKatexSafe(expr, false));
+    })
+    // 4. Markdown links [label](https://...)
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_m, label, href) =>
+      stash(
+        `<a href="${href}" target="_blank" rel="noopener noreferrer" class="underline underline-offset-4 decoration-sky-400/60 text-sky-300 hover:text-sky-200 cursor-pointer transition-colors">${label}</a>`
+      )
+    )
+    // 5. Bare URLs https://...
+    .replace(/(https?:\/\/[^\s<>"'`]+)/g, (_m, href) => {
+      const cleanHref = href.replace(/[.,;:!?)]+$/, '');
+      const trailing = href.slice(cleanHref.length);
+      return (
+        stash(
+          `<a href="${cleanHref}" target="_blank" rel="noopener noreferrer" class="underline underline-offset-4 decoration-sky-400/60 text-sky-300 hover:text-sky-200 cursor-pointer transition-colors">${cleanHref}</a>`
+        ) + trailing
+      );
+    })
+    // 6. Highlights, Bold, Italic, Underline, Strikethrough
     .replace(/==([a-z]+):([\s\S]*?)==/g, (_m, colorId, text) => {
       const preset = NOTION_COLORS.find((c) => c.id === colorId) || NOTION_COLORS[0];
       return `<mark data-color="${preset.id}" class="${preset.bgClass} ${preset.textClass} px-1.5 py-0.5 rounded-md font-medium font-sans">${text}</mark>`;
     })
-    .replace(/==([\s\S]*?)==/g, '<mark data-color="yellow" class="bg-amber-500/25 text-amber-200 border border-amber-400/30 px-1.5 py-0.5 rounded-md font-medium font-sans">$1</mark>')
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="underline underline-offset-4 decoration-white/40 text-white/90 hover:text-white">$1</a>')
-    .replace(/\*\*([\s\S]*?)\*\*/g, '<strong class="font-bold text-white font-sans">$1</strong>')
-    .replace(/\*([\s\S]*?)\*/g, '<em class="italic text-zinc-100 font-sans">$1</em>')
+    .replace(
+      /==([\s\S]*?)==/g,
+      '<mark data-color="yellow" class="bg-amber-500/25 text-amber-200 border border-amber-400/30 px-1.5 py-0.5 rounded-md font-medium font-sans">$1</mark>'
+    )
+    .replace(/\*\*\*([\s\S]+?)\*\*\*/g, '<strong class="font-bold text-white font-sans"><em class="italic">$1</em></strong>')
+    .replace(/\*\*([\s\S]+?)\*\*/g, '<strong class="font-bold text-white font-sans">$1</strong>')
+    .replace(/\*([^*\n]+?)\*/g, '<em class="italic text-zinc-100 font-sans">$1</em>')
     .replace(/<u>([\s\S]*?)<\/u>/g, '<u class="underline underline-offset-4 decoration-white/50 font-sans">$1</u>')
-    .replace(/~~([\s\S]*?)~~/g, '<span class="line-through text-zinc-400 font-sans">$1</span>')
-    .replace(/`([\s\S]*?)`/g, '<code class="bg-white/[0.08] text-white/90 border border-white/15 font-mono text-[13px] px-1.5 py-0.5 rounded-md font-medium">$1</code>')
-    .replace(/\$([\s\S]*?)\$/g, '<span class="inline-flex items-center px-1.5 py-0.5 bg-white/[0.08] border border-white/20 text-white/90 rounded-md font-serif italic text-sm select-all">$1</span>');
+    .replace(/~~([\s\S]*?)~~/g, '<span class="line-through text-zinc-400 font-sans">$1</span>');
+
+  // Restore protected tokens (code, KaTeX math, links)
+  out = out.replace(/\uE000TOK_(\d+)\uE001/g, (_m, idx) => tokens[Number(idx)] ?? '');
+  return out;
 }
 
 function htmlToMarkdown(html: string): string {
@@ -1111,6 +1259,14 @@ function htmlToMarkdown(html: string): string {
     if (node.nodeType === Node.ELEMENT_NODE) {
       const el = node as HTMLElement;
       const tag = el.tagName.toLowerCase();
+
+      // Round-trip KaTeX math wrappers cleanly before walking children
+      if (el.hasAttribute('data-math')) {
+        const raw = decodeURIComponent(el.getAttribute('data-math') || '');
+        const isDisplay = el.getAttribute('data-display') === 'true';
+        return isDisplay ? `$$${raw}$$` : `$${raw}$`;
+      }
+
       const inner = Array.from(el.childNodes).map(parseNode).join('');
 
       if (tag === 'mark') {
@@ -1122,10 +1278,10 @@ function htmlToMarkdown(html: string): string {
       }
       if (tag === 'a') {
         const href = el.getAttribute('href');
-        if (href && /^https?:\/\//i.test(href) && inner !== href) {
+        if (href && /^https?:\/\//i.test(href) && inner && inner !== href) {
           return `[${inner}](${href})`;
         }
-        return inner;
+        return inner || href || '';
       }
       if (tag === 'strong' || tag === 'b') return `**${inner}**`;
       if (tag === 'em' || tag === 'i') return `*${inner}*`;
@@ -1143,11 +1299,32 @@ function htmlToMarkdown(html: string): string {
   return parseNode(temp).replace(/^\n/, '');
 }
 
+function wrapInlinePreservingSpaces(raw: string, open: string, close: string): string {
+  const lead = raw.match(/^\s*/)?.[0] || '';
+  const trail = raw.match(/\s*$/)?.[0] || '';
+  const core = raw.trim();
+  return core ? `${lead}${open}${core}${close}${trail}` : raw;
+}
+
 function parsePastedHtmlToMarkdown(htmlData: string): string {
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlData, 'text/html');
 
-  // Strip out UI buttons, SVGs, action bars (Copy, Share, Like, Dislike, 3-dots, etc.)
+  // 1. Preserve ChatGPT / KaTeX equations BEFORE stripping [aria-hidden="true"]!
+  doc.querySelectorAll('.katex-display').forEach((node) => {
+    const ann = node.querySelector('annotation[encoding="application/x-tex"]');
+    if (ann?.textContent) {
+      node.replaceWith(doc.createTextNode(`\n$$${ann.textContent.trim()}$$\n`));
+    }
+  });
+  doc.querySelectorAll('.katex').forEach((node) => {
+    const ann = node.querySelector('annotation[encoding="application/x-tex"]');
+    if (ann?.textContent) {
+      node.replaceWith(doc.createTextNode(`$${ann.textContent.trim()}$`));
+    }
+  });
+
+  // 2. Strip out UI buttons, SVGs, action bars (Copy, Share, Like, Dislike, 3-dots, etc.)
   doc.querySelectorAll('svg, button, nav, footer, script, style, form, iframe, [aria-hidden="true"], [role="button"]').forEach((node) => node.remove());
 
   function walk(node: Node, listDepth = 0): string {
@@ -1161,7 +1338,7 @@ function parsePastedHtmlToMarkdown(htmlData: string): string {
       // Fenced code blocks (<pre><code>...</code></pre>)
       if (tag === 'pre') {
         const codeEl = el.querySelector('code');
-        const langMatch = codeEl?.className.match(/language-([a-zA-Z0-9_-]+)/);
+        const langMatch = (codeEl?.className || el.className || '').match(/language-([a-zA-Z0-9_-]+)/);
         const lang = langMatch?.[1] || 'auto';
         const rawCode = (codeEl?.textContent || el.textContent || '').replace(/^\n+|\n+$/g, '');
         return `\n\`\`\`${lang}\n${rawCode}\n\`\`\`\n`;
@@ -1209,7 +1386,7 @@ function parsePastedHtmlToMarkdown(htmlData: string): string {
       if (tag === 'li') {
         const indent = '  '.repeat(Math.max(0, listDepth - 1));
         const checkbox = el.querySelector('input[type="checkbox"]') as HTMLInputElement | null;
-        const prefix = checkbox ? (checkbox.checked ? '☑ ' : '☐ ') : '• ';
+        const prefix = checkbox ? (checkbox.checked ? '- [x] ' : '- [ ] ') : '• ';
         const inner = Array.from(el.childNodes)
           .filter((c) => !(c instanceof HTMLElement && c.tagName.toLowerCase() === 'input'))
           .map((c) => walk(c, listDepth))
@@ -1230,34 +1407,40 @@ function parsePastedHtmlToMarkdown(htmlData: string): string {
         if (href && /^https?:\/\//i.test(href) && label && label !== href) {
           return `[${label}](${href})`;
         }
-        return label;
+        return label || href || '';
       }
       if (tag === 'b' || tag === 'strong') {
-        return `**${children.trim()}**`;
+        return wrapInlinePreservingSpaces(children, '**', '**');
       }
       if (tag === 'i' || tag === 'em') {
-        return `*${children.trim()}*`;
+        return wrapInlinePreservingSpaces(children, '*', '*');
       }
       if (tag === 'u') {
-        return `<u>${children.trim()}</u>`;
+        return wrapInlinePreservingSpaces(children, '<u>', '</u>');
       }
       if (tag === 's' || tag === 'del' || tag === 'strike') {
-        return `~~${children.trim()}~~`;
+        return wrapInlinePreservingSpaces(children, '~~', '~~');
       }
       if (tag === 'code') {
-        return `\`${children.trim()}\``;
+        return wrapInlinePreservingSpaces(children, '`', '`');
       }
       if (tag === 'mark') {
-        return `==${children.trim()}==`;
+        return wrapInlinePreservingSpaces(children, '==', '==');
       }
-      if (/^h[1-6]$/.test(tag)) {
-        return `\n**${children.trim()}**\n`;
+      if (/^h([1-6])$/.test(tag)) {
+        const level = Math.min(4, parseInt(tag[1], 10));
+        return `\n${'#'.repeat(level)} ${children.trim()}\n`;
       }
       if (tag === 'blockquote') {
-        return `\n▎ *${children.trim()}*\n`;
+        const qLines = children
+          .trim()
+          .split('\n')
+          .map((l) => l.trim())
+          .filter(Boolean);
+        return qLines.length > 0 ? `\n${qLines.map((l) => `> ${l}`).join('\n')}\n` : '';
       }
       if (tag === 'hr') {
-        return `\n────────────────────────\n`;
+        return `\n---\n`;
       }
       if (tag === 'p' || tag === 'div') {
         return `\n${children.trim()}\n`;
@@ -1276,11 +1459,12 @@ function parsePastedHtmlToMarkdown(htmlData: string): string {
 }
 
 function parsePastedTextToChronoBlocks(rawText: string): ChronoBlock[] {
-  // Convert ChatGPT LaTeX inline \( ... \) and block \[ ... \] delimiters cleanly
+  // Normalize line endings, ChatGPT LaTeX delimiters \(...\) & \[...\], and collapse multi-line $$...$$ into single-line block math
   const normalized = rawText
     .replace(/\r\n/g, '\n')
     .replace(/\\\((.+?)\\\)/g, '$$$1$$')
-    .replace(/\\\[([\s\S]+?)\\\]/g, (_m, expr) => `$${expr.trim()}$`);
+    .replace(/\\\[([\s\S]+?)\\\]/g, (_m, expr) => `$$${expr.replace(/\n+/g, ' ').trim()}$$`)
+    .replace(/\$\$\s*\n([\s\S]+?)\n\s*\$\$/g, (_m, expr) => `$$${expr.replace(/\n+/g, ' ').trim()}$$`);
 
   const blocks: ChronoBlock[] = [];
   const fenceRegex = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
@@ -1288,18 +1472,25 @@ function parsePastedTextToChronoBlocks(rawText: string): ChronoBlock[] {
   let match: RegExpExecArray | null;
   let counter = 0;
 
+  const isTableSeparator = (str: string) =>
+    /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)+\|?\s*$/.test(str);
+
+  const isTableRow = (str: string) => {
+    const t = str.trim();
+    return t.includes('|') && t.replace(/\|/g, '').trim().length > 0;
+  };
+
   const pushTextLines = (segment: string) => {
     const lines = segment.split('\n');
     let i = 0;
     while (i < lines.length) {
       const line = lines[i];
 
-      // Detect Markdown Table (header row | ... | followed by separator | --- |)
+      // Detect Markdown Table (with or without outer pipes)
       if (
-        line.trim().startsWith('|') &&
-        line.trim().endsWith('|') &&
+        isTableRow(line) &&
         i + 1 < lines.length &&
-        /^\|[\s:|-]+\|$/.test(lines[i + 1].trim())
+        isTableSeparator(lines[i + 1])
       ) {
         const parseCells = (rowStr: string) =>
           rowStr
@@ -1320,7 +1511,7 @@ function parsePastedTextToChronoBlocks(rawText: string): ChronoBlock[] {
 
         const rows: { id: string; [key: string]: string }[] = [];
         i += 2; // skip header & separator
-        while (i < lines.length && lines[i].trim().startsWith('|') && lines[i].trim().endsWith('|')) {
+        while (i < lines.length && isTableRow(lines[i])) {
           const cellVals = parseCells(lines[i]);
           const rowObj: { id: string; [key: string]: string } = {
             id: `row_${Date.now()}_${counter++}`,
@@ -1349,19 +1540,24 @@ function parsePastedTextToChronoBlocks(rawText: string): ChronoBlock[] {
       }
 
       let cleaned = line;
-      const headingMatch = cleaned.match(/^#{1,6}\s+(.+)$/);
-      const taskMatch = cleaned.match(/^(\s*)[-*+]\s+\[([ xX])\]\s+(.+)$/);
+      const headingMatch = cleaned.match(/^(#{1,6})\s+(.+)$/);
+      const taskMatch = cleaned.match(/^(\s*)[-*+]\s+\[([ xX])\]\s*(.*)$/);
+      const unicodeTaskMatch = cleaned.match(/^(\s*)([☐☑])\s*(.*)$/);
       const quoteMatch = cleaned.match(/^\s*>\s?(.*)$/);
 
       if (headingMatch) {
-        cleaned = `**${headingMatch[1].trim()}**`;
+        const level = Math.min(4, headingMatch[1].length);
+        cleaned = `${'#'.repeat(level)} ${headingMatch[2].trim()}`;
       } else if (taskMatch) {
-        const box = taskMatch[2].toLowerCase() === 'x' ? '☑' : '☐';
-        cleaned = `${taskMatch[1]}${box} ${taskMatch[3]}`;
+        const mark = taskMatch[2].toLowerCase() === 'x' ? 'x' : ' ';
+        cleaned = `${taskMatch[1]}- [${mark}] ${taskMatch[3]}`;
+      } else if (unicodeTaskMatch) {
+        const mark = unicodeTaskMatch[2] === '☑' ? 'x' : ' ';
+        cleaned = `${unicodeTaskMatch[1]}- [${mark}] ${unicodeTaskMatch[3]}`;
       } else if (quoteMatch) {
-        cleaned = quoteMatch[1].trim() ? `▎ *${quoteMatch[1].trim()}*` : '';
+        cleaned = `> ${quoteMatch[1].trim()}`;
       } else if (/^\s*([-*_])\1{2,}\s*$/.test(cleaned)) {
-        cleaned = '────────────────────────';
+        cleaned = '---';
       } else {
         cleaned = cleaned.replace(/^(\s*)[-*+]\s+/, '$1• ');
       }
@@ -1411,6 +1607,7 @@ function parsePastedTextToChronoBlocks(rawText: string): ChronoBlock[] {
 interface RichTextBlockProps {
   id?: string;
   content: string;
+  className?: string;
   onChange: (val: string) => void;
   placeholder?: string;
   onFocus?: () => void;
@@ -1429,6 +1626,7 @@ interface RichTextBlockProps {
 const RichTextBlock: React.FC<RichTextBlockProps> = ({
   id,
   content,
+  className,
   onChange,
   placeholder,
   onFocus,
@@ -1736,6 +1934,17 @@ const RichTextBlock: React.FC<RichTextBlockProps> = ({
       onInput={handleInput}
       onKeyDown={handleKeyDown}
       onPaste={handlePaste}
+      onClick={(e) => {
+        const anchor = (e.target as HTMLElement | null)?.closest('a');
+        if (anchor) {
+          const href = anchor.getAttribute('href');
+          if (href && /^https?:\/\//i.test(href)) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.open(href, '_blank', 'noopener,noreferrer');
+          }
+        }
+      }}
       onFocus={() => {
         isTypingRef.current = true;
         if (onFocus) onFocus();
@@ -1751,7 +1960,9 @@ const RichTextBlock: React.FC<RichTextBlockProps> = ({
         if (onDrop) onDrop(e);
       }}
       data-placeholder={placeholder}
-      className="rich-text-editor w-full bg-transparent text-zinc-200 text-[15px] leading-[26px] tracking-[-0.01em] border-none focus:outline-none resize-none font-normal py-0 select-text cursor-text min-h-[26px] empty:before:content-[attr(data-placeholder)] empty:before:text-zinc-600 empty:before:italic"
+      className={`rich-text-editor w-full bg-transparent border-none focus:outline-none resize-none py-0 select-text cursor-text min-h-[26px] empty:before:content-[attr(data-placeholder)] empty:before:text-zinc-600 empty:before:italic ${
+        className || 'text-zinc-200 text-[15px] leading-[26px] tracking-[-0.01em] font-normal'
+      }`}
     />
   );
 };
@@ -5890,57 +6101,186 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                           )}
                         </div>
 
-                      <RichTextBlock
-                        id={`editor-${block.id}`}
-                        editorRef={(el) => {
-                          if (el) textareaRefs.current.set(block.id, el);
-                          else textareaRefs.current.delete(block.id);
-                        }}
-                        content={block.content}
-                        onFocus={() => {
-                          lastFocusedBlockIdxRef.current = idx;
-                          setActiveTextBlockIndex(idx);
-                          setSelectedBlockIndices([]);
-                          setSelectionToolbar(null);
-                        }}
-                        onBlur={() => {
-                          if (activeTextBlockIndex === idx) setActiveTextBlockIndex(null);
-                        }}
-                        onChange={(newMd) => {
-                          lastFocusedBlockIdxRef.current = idx;
-                          handleTextBlockUpdate(idx, newMd);
-                        }}
-                        onSelect={() => {
-                          lastFocusedBlockIdxRef.current = idx;
-                          handleTextSelect(idx);
-                        }}
-                        onInsertImageBlock={(blockMd) => insertBlockAtActivePosition(blockMd)}
-                        onDeleteEmptyBlock={() => handleDeleteBlockAtIndex(idx)}
-                        onSplitBlockAtCaret={(before, after) => handleSplitBlockAtCaret(idx, before, after)}
-                        onMergeWithPreviousBlock={() => handleMergeBlockWithPrevious(idx)}
-                        onDragOver={(e) => handleDragOverBlock(idx, e)}
-                        onDrop={(e) => handleDropOnBlock(idx, e)}
-                        onPasteMultiLine={(rawText) => {
-                          const pastedBlocks = parsePastedTextToChronoBlocks(rawText);
-                          if (pastedBlocks.length === 0) return;
-                          const updated = [...parsedChronologicalBlocks];
-                          const currentBlock = updated[idx];
-                          const isCurrentEmpty = currentBlock?.type === 'text' && !currentBlock.content.trim();
-                          if (isCurrentEmpty) {
-                            updated.splice(idx, 1, ...pastedBlocks);
-                          } else {
-                            updated.splice(idx + 1, 0, ...pastedBlocks);
-                          }
-                          reassembleAndSaveBlocks(updated);
-                        }}
-                        placeholder={
-                          idx === 0
-                            ? activeSubPage
-                              ? 'Mulai ketik isi subpage di sini...'
-                              : 'Mulai ketik catatan di sini...'
-                            : ''
+                      {(() => {
+                        const raw = block.content || '';
+                        const isDivider = /^\s*([-*_])\1{2,}\s*$/.test(raw);
+                        if (isDivider) {
+                          return (
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedBlockIndices([idx]);
+                              }}
+                              className="py-3 w-full flex items-center cursor-pointer group/hr"
+                              title="Divider — klik lalu tekan Backspace/Delete untuk hapus"
+                            >
+                              <hr className="w-full border-0 border-t border-white/15 group-hover/hr:border-white/35 transition-colors" />
+                            </div>
+                          );
                         }
-                      />
+
+                        const headingMatch = raw.match(/^(#{1,4})\s+(.*)$/);
+                        const checklistMatch = !headingMatch ? raw.match(/^(\s*)-\s+\[([ xX])\]\s*(.*)$/) : null;
+                        const quoteMatch = !headingMatch && !checklistMatch ? raw.match(/^>\s?(.*)$/) : null;
+
+                        let displayContent = raw;
+                        let blockPrefix = '';
+                        let editorClassName = '';
+                        let wrapperClassName = '';
+
+                        if (headingMatch) {
+                          const level = headingMatch[1].length;
+                          blockPrefix = `${headingMatch[1]} `;
+                          displayContent = headingMatch[2];
+                          if (level === 1) {
+                            editorClassName = 'text-[28px] font-extrabold text-white tracking-[-0.025em] leading-[1.28] pt-3 pb-1';
+                          } else if (level === 2) {
+                            editorClassName = 'text-[22px] font-bold text-white tracking-[-0.02em] leading-[1.32] pt-2.5 pb-0.5';
+                          } else if (level === 3) {
+                            editorClassName = 'text-[18px] font-bold text-white/95 tracking-[-0.015em] leading-[1.36] pt-2 pb-0.5';
+                          } else {
+                            editorClassName = 'text-[15.5px] font-semibold text-white/90 tracking-[-0.01em] leading-[1.4] pt-1.5';
+                          }
+                        } else if (checklistMatch) {
+                          const indent = checklistMatch[1];
+                          const isChecked = checklistMatch[2].toLowerCase() === 'x';
+                          blockPrefix = `${indent}- [${isChecked ? 'x' : ' '}] `;
+                          displayContent = checklistMatch[3];
+                          editorClassName = isChecked
+                            ? 'text-white/45 line-through text-[15px] leading-[26px] tracking-[-0.01em] font-normal'
+                            : 'text-zinc-200 text-[15px] leading-[26px] tracking-[-0.01em] font-normal';
+                        } else if (quoteMatch) {
+                          blockPrefix = '> ';
+                          displayContent = quoteMatch[1];
+                          wrapperClassName = 'border-l-[3px] border-white/35 pl-3.5 py-1 my-0.5 bg-white/[0.03] rounded-r-lg';
+                          editorClassName = 'text-white/80 italic text-[15px] leading-[26px] tracking-[-0.01em] font-normal';
+                        }
+
+                        const richEditorEl = (
+                          <RichTextBlock
+                            id={`editor-${block.id}`}
+                            className={editorClassName}
+                            editorRef={(el) => {
+                              if (el) textareaRefs.current.set(block.id, el);
+                              else textareaRefs.current.delete(block.id);
+                            }}
+                            content={displayContent}
+                            onFocus={() => {
+                              lastFocusedBlockIdxRef.current = idx;
+                              setActiveTextBlockIndex(idx);
+                              setSelectedBlockIndices([]);
+                              setSelectionToolbar(null);
+                            }}
+                            onBlur={() => {
+                              if (activeTextBlockIndex === idx) setActiveTextBlockIndex(null);
+                            }}
+                            onChange={(newMd) => {
+                              lastFocusedBlockIdxRef.current = idx;
+                              handleTextBlockUpdate(idx, blockPrefix ? `${blockPrefix}${newMd}` : newMd);
+                            }}
+                            onSelect={() => {
+                              lastFocusedBlockIdxRef.current = idx;
+                              handleTextSelect(idx);
+                            }}
+                            onInsertImageBlock={(blockMd) => insertBlockAtActivePosition(blockMd)}
+                            onDeleteEmptyBlock={() => {
+                              if (blockPrefix) {
+                                // First Backspace on empty heading/quote/checklist unwraps prefix back to normal paragraph
+                                handleTextBlockUpdate(idx, '');
+                              } else {
+                                handleDeleteBlockAtIndex(idx);
+                              }
+                            }}
+                            onSplitBlockAtCaret={(before, after) => {
+                              if (checklistMatch) {
+                                if (!before.trim() && !after.trim()) {
+                                  // Pressing Enter on an empty checklist item exits the checklist
+                                  handleTextBlockUpdate(idx, '');
+                                  return;
+                                }
+                                const nextIndent = checklistMatch[1];
+                                handleSplitBlockAtCaret(idx, `${blockPrefix}${before}`, `${nextIndent}- [ ] ${after}`);
+                                return;
+                              }
+                              if (blockPrefix) {
+                                handleSplitBlockAtCaret(idx, `${blockPrefix}${before}`, after);
+                                return;
+                              }
+                              handleSplitBlockAtCaret(idx, before, after);
+                            }}
+                            onMergeWithPreviousBlock={() => {
+                              if (blockPrefix) {
+                                handleTextBlockUpdate(idx, displayContent);
+                              } else {
+                                handleMergeBlockWithPrevious(idx);
+                              }
+                            }}
+                            onDragOver={(e) => handleDragOverBlock(idx, e)}
+                            onDrop={(e) => handleDropOnBlock(idx, e)}
+                            onPasteMultiLine={(rawText) => {
+                              const pastedBlocks = parsePastedTextToChronoBlocks(rawText);
+                              if (pastedBlocks.length === 0) return;
+                              const updated = [...parsedChronologicalBlocks];
+                              const currentBlock = updated[idx];
+                              const isCurrentEmpty = currentBlock?.type === 'text' && !currentBlock.content.trim();
+                              if (isCurrentEmpty) {
+                                updated.splice(idx, 1, ...pastedBlocks);
+                              } else {
+                                updated.splice(idx + 1, 0, ...pastedBlocks);
+                              }
+                              reassembleAndSaveBlocks(updated);
+                            }}
+                            placeholder={
+                              checklistMatch
+                                ? 'Item checklist...'
+                                : quoteMatch
+                                ? 'Kutipan...'
+                                : headingMatch
+                                ? `Heading ${headingMatch[1].length}...`
+                                : idx === 0
+                                ? activeSubPage
+                                  ? 'Mulai ketik isi subpage di sini...'
+                                  : 'Mulai ketik catatan di sini...'
+                                : ''
+                            }
+                          />
+                        );
+
+                        if (checklistMatch) {
+                          const indentPx = checklistMatch[1].length * 10;
+                          const isChecked = checklistMatch[2].toLowerCase() === 'x';
+                          return (
+                            <div
+                              className="flex items-start gap-2.5 w-full"
+                              style={{ paddingLeft: indentPx > 0 ? `${indentPx}px` : undefined }}
+                            >
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const nextMark = isChecked ? ' ' : 'x';
+                                  handleTextBlockUpdate(idx, `${checklistMatch[1]}- [${nextMark}] ${checklistMatch[3]}`);
+                                }}
+                                className={`mt-[4px] w-[18px] h-[18px] rounded-[5px] border flex items-center justify-center shrink-0 transition-all ${
+                                  isChecked
+                                    ? 'bg-white/90 border-white text-[#071124] shadow-xs'
+                                    : 'bg-white/[0.05] border-white/25 hover:border-white/50 text-transparent'
+                                }`}
+                                title={isChecked ? 'Tandai belum selesai' : 'Tandai selesai'}
+                              >
+                                <Check className="w-3 h-3 stroke-[3]" />
+                              </button>
+                              <div className="flex-1 min-w-0">{richEditorEl}</div>
+                            </div>
+                          );
+                        }
+
+                        if (wrapperClassName) {
+                          return <div className={wrapperClassName}>{richEditorEl}</div>;
+                        }
+
+                        return richEditorEl;
+                      })()}
                     </div>
                   );
                 } else if (block.type === 'attachment' && block.data.isInlineImage) {

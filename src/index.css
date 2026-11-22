@@ -613,6 +613,21 @@ img::selection {
   font-style: italic;
 }
 
+/* KaTeX Mathematical Expressions (Clean & High-Contrast on Midnight Navy Glass) */
+.katex {
+  font-size: 1.06em;
+  color: #f8fafc;
+}
+.katex-display {
+  margin: 0 !important;
+}
+.katex-block-wrapper .katex {
+  font-size: 1.18em;
+}
+.light .katex {
+  color: #0A1128;
+}
+
 /* ============================================================================
  * Light Mode High-Contrast Surface & Text Normalization for Editor Internals
  * ============================================================================ */
