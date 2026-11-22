@@ -69,7 +69,10 @@ export function LiquidSegmentedControl<T extends string>({
     0,
     options.findIndex((opt) => opt.value === value)
   );
-  const slotWidth = trackSize.width > 0 ? trackSize.width / itemCount : 0;
+  // Keep explicit horizontal track padding in sync for exact concentric symmetry
+  const PAD_X = size === 'xs' ? 3 : 4;
+  const innerTrackWidth = Math.max(0, trackSize.width - PAD_X * 2);
+  const slotWidth = innerTrackWidth > 0 ? innerTrackWidth / itemCount : 0;
 
   // Track dark/light theme class reactively
   useEffect(() => {
@@ -98,11 +101,11 @@ export function LiquidSegmentedControl<T extends string>({
     return () => ro.disconnect();
   }, []);
 
-  // Lens bubble dimensions: sleek pill at rest, blooming overflowing Liquid Glass lens when held
-  const restingWidth = Math.max(24, slotWidth - 4);
+  // Lens bubble dimensions: exact concentric match to each equal grid column
+  const restingWidth = Math.max(24, slotWidth - 2);
   const holdingWidth = Math.max(38, slotWidth + 12);
   const bubbleWidth = isHolding ? holdingWidth : restingWidth;
-  const restingHeight = Math.max(20, trackSize.height - 4);
+  const restingHeight = Math.max(20, trackSize.height - PAD_X * 2);
   const holdingHeight = trackSize.height + 10;
   const bubbleHeight = isHolding ? holdingHeight : restingHeight;
 
@@ -181,7 +184,7 @@ export function LiquidSegmentedControl<T extends string>({
   // Snap liquid bubble to active option when not actively holding/dragging
   useEffect(() => {
     if (!isHolding && slotWidth > 0) {
-      const targetCenter = activeIndex * slotWidth + slotWidth / 2;
+      const targetCenter = PAD_X + activeIndex * slotWidth + slotWidth / 2;
       const s = springRef.current;
       s.targetX = targetCenter;
       prevXRef.current = targetCenter;
@@ -195,7 +198,7 @@ export function LiquidSegmentedControl<T extends string>({
         ensureSpringRunning();
       }
     }
-  }, [activeIndex, slotWidth, isHolding, applyLensTransform, ensureSpringRunning]);
+  }, [activeIndex, slotWidth, PAD_X, isHolding, applyLensTransform, ensureSpringRunning]);
 
   // Keep left offset synced immediately when bubbleWidth blooms/shrinks
   useEffect(() => {
@@ -223,14 +226,14 @@ export function LiquidSegmentedControl<T extends string>({
       const el = trackRef.current;
       if (!el || slotWidth <= 0) return { idx: activeIndex, clampedX: 0 };
       const rect = el.getBoundingClientRect();
-      const relX = clientX - rect.left;
-      const minCenter = slotWidth / 2;
-      const maxCenter = rect.width - slotWidth / 2;
-      const clampedX = Math.max(minCenter, Math.min(maxCenter, relX));
+      const relX = clientX - rect.left - PAD_X;
+      const minCenter = PAD_X + slotWidth / 2;
+      const maxCenter = PAD_X + innerTrackWidth - slotWidth / 2;
+      const clampedX = Math.max(minCenter, Math.min(maxCenter, clientX - rect.left));
       const idx = Math.max(0, Math.min(itemCount - 1, Math.floor(relX / slotWidth)));
       return { idx, clampedX };
     },
-    [activeIndex, itemCount, slotWidth]
+    [activeIndex, innerTrackWidth, itemCount, PAD_X, slotWidth]
   );
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -305,7 +308,7 @@ export function LiquidSegmentedControl<T extends string>({
     }
 
     if (slotWidth > 0) {
-      const snapCenter = (shouldCommit ? finalIdx : activeIndex) * slotWidth + slotWidth / 2;
+      const snapCenter = PAD_X + (shouldCommit ? finalIdx : activeIndex) * slotWidth + slotWidth / 2;
       s.targetX = snapCenter;
       prevXRef.current = snapCenter;
       ensureSpringRunning();
@@ -314,17 +317,18 @@ export function LiquidSegmentedControl<T extends string>({
 
   const displayActiveIndex = isHolding && hoverIndex !== null ? hoverIndex : activeIndex;
 
-  const paddingClass = size === 'xs' ? 'p-[2px]' : size === 'sm' ? 'p-[3px]' : 'p-1';
+  const paddingClass = size === 'xs' ? 'p-[3px]' : 'p-[4px]';
+  const heightClass = size === 'xs' ? 'h-8' : size === 'sm' ? 'h-9' : 'h-10';
   const itemPaddingClass =
     size === 'xs'
-      ? 'px-2 py-1 text-[11px]'
+      ? 'px-2.5 text-[11.5px]'
       : size === 'sm'
-      ? 'px-2.5 py-1.5 text-xs'
-      : 'px-3.5 py-2 text-xs';
+      ? 'px-3.5 text-xs'
+      : 'px-4 text-[13px]';
 
   return (
     <div
-      className={`relative inline-flex items-center overflow-visible rounded-full select-none transition-transform duration-300 ${
+      className={`relative inline-flex items-center overflow-visible rounded-full select-none transition-transform duration-300 ${heightClass} ${
         isHolding ? 'scale-[1.015] z-30' : 'scale-100'
       } ${fullWidth ? 'w-full flex' : ''} ${className}`}
     >
@@ -362,14 +366,14 @@ export function LiquidSegmentedControl<T extends string>({
         />
       </div>
 
-      {/* Interactive Hold-and-Scrub Track */}
+      {/* Interactive Hold-and-Scrub Track (Grid auto-cols-fr enforces equal slot widths) */}
       <div
         ref={trackRef}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={(e) => finishInteraction(e, true)}
         onPointerCancel={(e) => finishInteraction(e, false)}
-        className={`relative z-30 flex items-center w-full h-full touch-none select-none cursor-grab active:cursor-grabbing ${paddingClass}`}
+        className={`relative z-30 grid grid-flow-col auto-cols-fr items-center w-full h-full touch-none select-none cursor-grab active:cursor-grabbing ${paddingClass}`}
       >
         {/* iOS 26 Liquid Glass Blooming Refractive Lens Bubble */}
         {slotWidth > 0 && (
@@ -447,7 +451,7 @@ export function LiquidSegmentedControl<T extends string>({
               }}
               title={opt.title || opt.label}
               aria-pressed={opt.value === value}
-              className={`relative z-20 flex-1 flex items-center justify-center gap-1.5 rounded-full font-semibold transition-all duration-200 whitespace-nowrap select-none focus:outline-none ${itemPaddingClass} ${
+              className={`relative z-20 h-full w-full flex items-center justify-center gap-1.5 rounded-full font-semibold transition-all duration-200 whitespace-nowrap select-none focus:outline-none ${itemPaddingClass} ${
                 isActive
                   ? isLight
                     ? 'text-[#00A3FF]'

@@ -684,7 +684,7 @@ export function App() {
       <div className="flex-1 flex flex-col h-full relative z-10 overflow-hidden bg-transparent">
         {/* Prominent Top Header Bar (Only visible in Gallery View, hidden when editing a note) */}
         {!selectedNoteId && (
-          <header className="h-14 glass-header px-5 flex items-center justify-between z-20 shrink-0 select-none">
+          <header className="h-16 glass-header px-6 flex items-center justify-between z-20 shrink-0 select-none">
           <div className="flex items-center gap-3">
             {!isSidebarOpen && !isFocusMode && (
               <div className="flex items-center gap-2.5">
@@ -721,7 +721,7 @@ export function App() {
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder={isEn ? 'Search notes, folders, or tags... (Ctrl+K)' : 'Cari catatan, folder, atau tag... (Ctrl+K)'}
-              className="w-full pl-10 pr-9 py-2 glass-input rounded-full text-xs font-medium q-text-primary placeholder:text-slate-400 focus:outline-none transition-all text-center focus:text-left"
+              className="w-full h-9 pl-10 pr-9 glass-input rounded-full text-[13px] font-medium q-text-primary placeholder:text-slate-400 focus:outline-none transition-all text-center focus:text-left"
             />
             {searchQuery && (
               <button
@@ -735,7 +735,7 @@ export function App() {
           </div>
 
           {/* Right Actions: Multi-select Toggle, Custom Popover Sort Dropdown & iOS 26 Liquid Glass View Switcher */}
-          <div className="flex items-center gap-2 text-xs q-text-secondary">
+          <div className="flex items-center gap-2.5 text-xs q-text-secondary">
             {/* Multi-select Toggle Button */}
             <button
               onClick={() => {
@@ -746,7 +746,7 @@ export function App() {
                   setIsSelectionMode(true);
                 }
               }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${
+              className={`h-9 flex items-center gap-1.5 px-3.5 rounded-full border text-xs font-semibold transition-all ${
                 isSelectionMode
                   ? 'liquid-lens-active q-text-primary'
                   : 'glass-control'
@@ -771,7 +771,7 @@ export function App() {
             <div className="relative" ref={sortRef}>
               <button
                 onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
-                className="flex items-center gap-2 glass-control font-semibold px-3.5 py-1.5 rounded-full"
+                className="h-9 flex items-center gap-2 glass-control font-semibold px-3.5 rounded-full"
               >
                 <SlidersHorizontal className="w-3.5 h-3.5 q-text-muted" />
                 <span className="q-text-primary">{sortLabels[settings.defaultSort]}</span>
@@ -801,10 +801,11 @@ export function App() {
               )}
             </div>
 
-            {/* True iOS 26 Liquid Glass Sliding Lens View Switcher */}
+            {/* True iOS 26 Liquid Glass Sliding Lens View Switcher (Equal-Width Symmetric) */}
             <div className="hidden md:flex items-center">
               <LiquidSegmentedControl
-                size="xs"
+                size="sm"
+                className="min-w-[180px]"
                 value={viewMode}
                 onChange={setViewMode}
                 options={[
@@ -845,11 +846,11 @@ export function App() {
             onFilterChange={setActiveFilter}
           />
         ) : (
-          <div className="flex-1 overflow-y-auto p-6 sm:p-10 space-y-6">
-            {/* View Header */}
-            <div className="flex items-center justify-between pb-3.5 mb-2 border-b q-border px-0.5">
-              <div className="flex items-baseline gap-2.5 pl-0.5">
-                <h1 className="text-xl sm:text-2xl font-bold q-text-primary tracking-tight">
+          <div className="flex-1 overflow-y-auto px-6 py-7 sm:px-9 sm:py-8 space-y-6">
+            {/* Clean Stage View Header (No redundant divider line) */}
+            <div className="flex items-center justify-between px-0.5">
+              <div className="flex items-center gap-3 pl-0.5">
+                <h1 className="text-2xl font-bold q-text-primary tracking-tight leading-none">
                   {selectedSubject
                     ? selectedSubject
                     : selectedTag
@@ -863,7 +864,7 @@ export function App() {
                     : isEn ? 'All Notes' : 'Semua Catatan'}
                 </h1>
                 {!isLoading && (
-                  <span className="text-xs font-medium q-text-muted">
+                  <span className="text-xs font-medium q-text-secondary bg-white/[0.06] border border-white/[0.10] px-2.5 py-0.5 rounded-full">
                     {searchResults.length} {isEn ? (searchResults.length === 1 ? 'note' : 'notes') : 'catatan'}
                   </span>
                 )}

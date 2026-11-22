@@ -152,16 +152,16 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           setIsMenuOpen(true);
         }
       }}
-      className={`group relative p-4 rounded-2xl transition-all duration-200 cursor-pointer select-none font-sans flex flex-col justify-between min-h-[260px] glass-card ${
+      className={`group relative p-4.5 rounded-2xl transition-all duration-200 cursor-pointer select-none font-sans flex flex-col justify-between min-h-[260px] glass-card ${
         isMultiSelected
-          ? '!border-[#38BDF8]/75 ring-2 ring-[#38BDF8]/35'
+          ? '!border-white/45 ring-2 ring-white/25'
           : isSelected
-          ? '!border-[#38BDF8]/55 ring-1 ring-[#38BDF8]/25'
+          ? '!border-white/35 ring-1 ring-white/20'
           : 'hover:-translate-y-0.5'
       }`}
     >
       {/* Top Section: Multi-select Checkbox, Clean Full Title, & Context Menu */}
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 overflow-hidden flex-1">
             {/* Multi-selection Checkbox Indicator */}
@@ -173,15 +173,15 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                 }}
                 className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all shrink-0 ${
                   isMultiSelected
-                    ? 'bg-[#38BDF8] border-[#38BDF8] text-[#071124]'
-                    : 'border-white/25 glass-recessed group-hover:border-white/45'
+                    ? 'bg-white border-white text-[#071124]'
+                    : 'border-white/25 bg-white/[0.06] group-hover:border-white/45'
                 }`}
               >
                 {isMultiSelected && <Check className="w-3 h-3" />}
               </div>
             )}
 
-            <h3 className="font-semibold text-sm q-text-primary line-clamp-1 transition-colors tracking-tight">
+            <h3 className="font-semibold text-[15px] text-white line-clamp-1 transition-colors tracking-tight">
               <HighlightText text={note.title || 'Catatan Tanpa Judul'} query={searchQuery} />
             </h3>
           </div>
@@ -239,7 +239,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                             }}
                             className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold q-text-secondary hover:q-text-primary hover:bg-white/10 rounded-xl transition-colors"
                           >
-                            <Star className={`w-3.5 h-3.5 ${note.isFavorite ? 'q-text-accent fill-current' : 'q-text-muted'}`} />
+                            <Star className={`w-3.5 h-3.5 ${note.isFavorite ? 'text-white fill-current' : 'q-text-muted'}`} />
                             <span>{note.isFavorite ? 'Hapus Favorit' : 'Tandai Favorit'}</span>
                           </button>
                         )}
@@ -312,31 +312,31 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         </div>
 
         {/* Metadata Row: Folder Name, Star Badge, & Updated Relative Time */}
-        <div className="flex items-center gap-1.5 text-[10px] q-text-muted font-medium">
-          <FolderOpen className="w-3 h-3 q-text-muted shrink-0" />
-          <span className="truncate q-text-secondary">{note.subject || 'Umum'}</span>
+        <div className="flex items-center gap-1.5 text-[11.5px] text-white/55 font-medium">
+          <FolderOpen className="w-3.5 h-3.5 text-white/50 shrink-0" />
+          <span className="truncate text-white/70">{note.subject || 'Umum'}</span>
 
           {note.isFavorite && (
-            <Star className="w-3 h-3 q-text-accent fill-current shrink-0 ml-0.5" />
+            <Star className="w-3 h-3 text-white fill-current shrink-0 ml-0.5" />
           )}
 
           <span className="opacity-40">•</span>
-          <Clock className="w-3 h-3 q-text-muted shrink-0" />
-          <span className="q-text-muted">{formatRelativeTime(note.updatedAt)}</span>
+          <Clock className="w-3.5 h-3.5 text-white/50 shrink-0" />
+          <span className="text-white/55">{formatRelativeTime(note.updatedAt)}</span>
         </div>
       </div>
 
       {/* Middle Document Preview (Clean Card Surface Hierarchy) */}
-      <div className="flex-1 my-3 py-1 overflow-hidden text-left flex flex-col justify-start gap-1.5">
+      <div className="flex-1 my-3 py-1 overflow-hidden text-left flex flex-col justify-start gap-2">
         {miniBlocks.length === 0 ? (
-          <p className="text-[12px] q-text-muted italic select-none">
+          <p className="text-[12.5px] text-white/40 italic select-none">
             Belum ada konten catatan.
           </p>
         ) : (
           miniBlocks.slice(0, 3).map((b, i) => {
             if (b.type === 'text') {
               return (
-                <p key={i} className="text-[12px] q-text-secondary font-normal leading-relaxed line-clamp-3 select-none">
+                <p key={i} className="text-[13px] text-white/75 font-normal leading-relaxed line-clamp-3 select-none">
                   <HighlightText text={b.text} query={searchQuery} />
                 </p>
               );

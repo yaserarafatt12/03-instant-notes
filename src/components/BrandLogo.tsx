@@ -9,45 +9,54 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   size = 'md',
   showWordmark = true,
 }) => {
-  const boxSize = size === 'sm' ? 'w-7 h-7 rounded-lg' : 'w-8 h-8 rounded-xl';
-  const iconSize = size === 'sm' ? 14 : 16;
+  const iconSize = size === 'sm' ? 20 : 23;
+  const textClass =
+    size === 'sm'
+      ? 'text-[17px] font-bold tracking-[-0.025em]'
+      : 'text-[20px] font-bold tracking-[-0.025em]';
 
   return (
     <div className="flex items-center gap-2.5 select-none">
-      <div
-        className={`${boxSize} brand-squircle flex items-center justify-center shrink-0`}
+      <svg
+        width={iconSize}
+        height={iconSize}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="shrink-0 drop-shadow-[0_2px_8px_rgba(255,255,255,0.16)]"
         aria-hidden="true"
       >
-        <svg
-          width={iconSize}
-          height={iconSize}
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M6.5 4.25H13.75L17.75 8.25V19.75C17.75 20.4404 17.1904 21 16.5 21H6.5C5.80964 21 5.25 20.4404 5.25 19.75V5.5C5.25 4.80964 5.80964 4.25 6.5 4.25Z"
-            stroke="#FFFFFF"
-            strokeWidth="1.75"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M13.5 4.25V8.5H17.75"
-            stroke="#FFFFFF"
-            strokeWidth="1.65"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M8.5 12.25H14.5M8.5 15.75H12.5"
-            stroke="rgba(255,255,255,0.78)"
-            strokeWidth="1.65"
-            strokeLinecap="round"
-          />
-        </svg>
-      </div>
+        {/* Back layered sheet silhouette */}
+        <path
+          d="M7.5 3.75H16.5C17.6046 3.75 18.5 4.64543 18.5 5.75V16.75"
+          stroke="rgba(255,255,255,0.45)"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+        {/* Front folded note sheet */}
+        <path
+          d="M5.75 6.75H13.25L16.75 10.25V19C16.75 19.6904 16.1904 20.25 15.5 20.25H5.75C5.05964 20.25 4.5 19.6904 4.5 19V8C4.5 7.30964 5.05964 6.75 5.75 6.75Z"
+          fill="rgba(255,255,255,0.12)"
+          stroke="#FFFFFF"
+          strokeWidth="1.8"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M13 6.75V10.5H16.75"
+          stroke="#FFFFFF"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M7.75 13.75H13.5M7.75 16.75H11.5"
+          stroke="rgba(255,255,255,0.85)"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+        />
+      </svg>
       {showWordmark && (
-        <span className="text-[15px] font-semibold tracking-tight text-white/95 leading-none">
+        <span className={`${textClass} text-white leading-none`}>
           SeeNote
         </span>
       )}

@@ -32,6 +32,7 @@ import { ConfirmModal } from './ConfirmModal';
 import { CreateFolderModal } from './CreateFolderModal';
 import { BrandLogo } from './BrandLogo';
 import { LiquidSegmentedControl } from './LiquidSegmentedControl';
+import { LiquidVerticalNav } from './LiquidVerticalNav';
 import { getFolderIconComponent } from '../lib/folderIcons';
 
 interface FilterBarProps {
@@ -367,28 +368,28 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             e.stopPropagation();
             setActiveFolderMenuPath(node.fullPath);
           }}
-          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer group/item relative ${
+          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-medium transition-all cursor-pointer group/item relative ${
             isSelected
-              ? 'liquid-lens-active q-text-primary font-semibold'
-              : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
+              ? 'liquid-lens-active text-white font-semibold'
+              : 'q-text-secondary hover:bg-white/[0.06] hover:text-white border border-transparent'
           }`}
-          style={{ paddingLeft: `${depth * 12 + 10}px` }}
+          style={{ paddingLeft: `${depth * 14 + 10}px` }}
         >
-          <div className="flex items-center gap-1.5 overflow-hidden">
+          <div className="flex items-center gap-2 overflow-hidden">
             <button
               onClick={(e) => toggleFolderPathExpand(node.fullPath, e)}
               className="p-0.5 q-text-muted hover:q-text-primary rounded"
             >
               {isExpanded ? (
-                <ChevronDown className="w-3 h-3" />
+                <ChevronDown className="w-3.5 h-3.5" />
               ) : (
-                <ChevronRight className="w-3 h-3" />
+                <ChevronRight className="w-3.5 h-3.5" />
               )}
             </button>
             <CustomFolderIcon
-              className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-white' : 'text-white/55'}`}
+              className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-white/55'}`}
             />
-            <span className="truncate max-w-[110px]">{node.name}</span>
+            <span className="truncate max-w-[130px]">{node.name}</span>
           </div>
 
           <div className="flex items-center gap-1">
@@ -520,12 +521,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               <button
                 key={doc.id}
                 onClick={() => onSelectNote(doc.id)}
-                className={`w-full text-left py-1 text-[11px] truncate block rounded-lg transition-colors ${
+                className={`w-full text-left py-1.5 text-[12.5px] truncate block rounded-lg transition-colors ${
                   selectedNoteId === doc.id
                     ? 'text-white font-semibold bg-white/[0.12]'
                     : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.06]'
                 }`}
-                style={{ paddingLeft: `${(depth + 1) * 12 + 22}px` }}
+                style={{ paddingLeft: `${(depth + 1) * 14 + 24}px` }}
               >
                 {doc.title || 'Catatan Tanpa Judul'}
               </button>
@@ -534,8 +535,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             {node.documents.length > 4 && (
               <button
                 onClick={(e) => toggleExpandDocListFolder(node.fullPath, e)}
-                className="w-full text-left py-1 text-[10px] font-semibold text-white/75 hover:text-white hover:underline transition-colors block"
-                style={{ paddingLeft: `${(depth + 1) * 12 + 22}px` }}
+                className="w-full text-left py-1 text-[11px] font-semibold text-white/75 hover:text-white hover:underline transition-colors block"
+                style={{ paddingLeft: `${(depth + 1) * 14 + 24}px` }}
               >
                 {expandedDocListFolderPaths.includes(node.fullPath)
                   ? 'Sembunyikan'
@@ -549,8 +550,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   };
 
   return (
-    <aside className="w-full lg:w-60 shrink-0 glass-sidebar border-r px-2.5 py-3.5 flex flex-col justify-between h-full select-none font-sans overflow-hidden relative z-20">
-      <div className="space-y-4 overflow-y-auto flex-1 pr-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+    <aside className="w-full lg:w-[268px] shrink-0 glass-sidebar border-r px-3.5 py-4 flex flex-col justify-between h-full select-none font-sans overflow-hidden relative z-20">
+      <div className="space-y-5 overflow-y-auto flex-1 pr-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {/* Render Table of Contents (TOC) View when inside a note & sidebarView === 'toc' */}
         {selectedNoteId && sidebarView === 'toc' && activeNote ? (
           <div className="space-y-4 flex-1 flex flex-col min-h-0">
@@ -759,14 +760,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </div>
         ) : (
           <>
-            {/* 1. Minimal Monochrome Tempered-Glass Brand Header & Sidebar Close Button */}
+            {/* 1. Clean Wordmark Brand Header & Sidebar Close Button */}
             <div className="flex items-center justify-between px-1.5 pt-0.5">
               <BrandLogo />
 
               {onToggleSidebar && (
                 <button
                   onClick={onToggleSidebar}
-                  className="p-1.5 q-text-muted hover:q-text-primary rounded-xl hover:bg-white/10 transition-colors"
+                  className="p-2 q-text-muted hover:q-text-primary rounded-xl hover:bg-white/10 transition-colors"
                   title={isEn ? 'Hide Sidebar' : 'Sembunyikan Sidebar'}
                 >
                   <PanelLeft className="w-4 h-4" />
@@ -777,95 +778,52 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             {/* 2. Crisp Quest Primary CTA */}
             <button
               onClick={onNewNote}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold glass-btn-primary rounded-xl active:scale-[0.98] group"
+              className="w-full h-10 flex items-center justify-center gap-2 px-3.5 text-[13.5px] font-semibold glass-btn-primary rounded-xl active:scale-[0.98] group"
             >
-              <SquarePen className="w-3.5 h-3.5 transition-transform group-hover:scale-105" />
+              <SquarePen className="w-4 h-4 transition-transform group-hover:scale-105" />
               <span>{isEn ? 'New Note' : 'Catatan Baru'}</span>
             </button>
 
-              {/* 3. Main Nav Menu (Strict Monochrome) */}
-            <div className="space-y-1 pt-1">
-              <button
-                onClick={() => {
-                  onFilterChange('all');
-                  onSubjectChange(null);
-                  onTagChange(null);
-                }}
-                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
-                  activeFilter === 'all' && !selectedSubject && !selectedTag
-                    ? 'liquid-lens-active text-white font-semibold'
-                    : 'q-text-secondary hover:bg-white/[0.06] hover:text-white border border-transparent'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <FileText className={`w-3.5 h-3.5 ${activeFilter === 'all' && !selectedSubject && !selectedTag ? 'text-white' : 'text-white/55'}`} />
-                  <span>{isEn ? 'All Notes' : 'Semua Catatan'}</span>
-                </div>
-                <span className="text-[11px] q-text-muted font-medium">{totalNotes}</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  onFilterChange('recent');
-                  onSubjectChange(null);
-                  onTagChange(null);
-                }}
-                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
-                  activeFilter === 'recent'
-                    ? 'liquid-lens-active text-white font-semibold'
-                    : 'q-text-secondary hover:bg-white/[0.06] hover:text-white border border-transparent'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <History className={`w-3.5 h-3.5 ${activeFilter === 'recent' ? 'text-white' : 'text-white/55'}`} />
-                  <span>{isEn ? 'Recently Opened' : 'Baru Dibuka'}</span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  onFilterChange('favorites');
-                  onSubjectChange(null);
-                  onTagChange(null);
-                }}
-                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
-                  activeFilter === 'favorites'
-                    ? 'liquid-lens-active text-white font-semibold'
-                    : 'q-text-secondary hover:bg-white/[0.06] hover:text-white border border-transparent'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Star className={`w-3.5 h-3.5 ${activeFilter === 'favorites' ? 'text-white fill-current' : 'text-white/55'}`} />
-                  <span>{isEn ? 'Favorites' : 'Favorit'}</span>
-                </div>
-                <span className="text-[11px] q-text-muted font-medium">{favoriteCount}</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  onFilterChange('trash');
-                  onSubjectChange(null);
-                  onTagChange(null);
-                }}
-                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
-                  activeFilter === 'trash'
-                    ? 'liquid-lens-active text-white font-semibold'
-                    : 'q-text-secondary hover:bg-white/[0.06] hover:text-white border border-transparent'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Trash2 className={`w-3.5 h-3.5 ${activeFilter === 'trash' ? 'text-white' : 'text-white/55'}`} />
-                  <span>{isEn ? 'Trash' : 'Tempat Sampah'}</span>
-                </div>
-                <span className="text-[11px] q-text-muted font-medium">{trashCount}</span>
-              </button>
-            </div>
+            {/* 3. Main Nav Menu (Vertical Hold-and-Scrub Liquid Glass Slider) */}
+            <LiquidVerticalNav
+              activeValue={selectedSubject || selectedTag ? null : activeFilter}
+              onSelect={(val) => {
+                onFilterChange(val);
+                onSubjectChange(null);
+                onTagChange(null);
+              }}
+              items={[
+                {
+                  value: 'all',
+                  label: isEn ? 'All Notes' : 'Semua Catatan',
+                  icon: <FileText className="w-4 h-4" />,
+                  badge: totalNotes,
+                },
+                {
+                  value: 'recent',
+                  label: isEn ? 'Recently Opened' : 'Baru Dibuka',
+                  icon: <History className="w-4 h-4" />,
+                },
+                {
+                  value: 'favorites',
+                  label: isEn ? 'Favorites' : 'Favorit',
+                  icon: <Star className={`w-4 h-4 ${activeFilter === 'favorites' && !selectedSubject && !selectedTag ? 'fill-current' : ''}`} />,
+                  badge: favoriteCount,
+                },
+                {
+                  value: 'trash',
+                  label: isEn ? 'Trash' : 'Tempat Sampah',
+                  icon: <Trash2 className="w-4 h-4" />,
+                  badge: trashCount,
+                },
+              ]}
+            />
 
             {/* 4. Folders Section Header */}
-            <div className="space-y-0.5 pt-3 group/folders">
-              <div className="flex items-center justify-between px-2.5 mb-1">
-                <span className="text-[11px] font-semibold q-text-muted flex items-center gap-2">
-                  <FoldersHeaderIcon className="w-3.5 h-3.5" />
+            <div className="space-y-1 pt-2 group/folders">
+              <div className="flex items-center justify-between px-2.5 mb-1.5">
+                <span className="text-xs font-semibold q-text-muted tracking-wide flex items-center gap-2">
+                  <FoldersHeaderIcon className="w-4 h-4" />
                   <span>{isEn ? 'Folders' : 'Folder'}</span>
                 </span>
                 <div className="flex items-center gap-1 opacity-0 group-hover/folders:opacity-100 transition-opacity">
@@ -893,7 +851,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               {!isFoldersSectionCollapsed && (
                 <div className="space-y-0.5">
                   {folderTree.size === 0 ? (
-                    <p className="px-2.5 text-[10px] q-text-muted italic">{isEn ? 'No folders yet' : 'Belum ada folder'}</p>
+                    <p className="px-2.5 text-xs q-text-muted italic">{isEn ? 'No folders yet' : 'Belum ada folder'}</p>
                   ) : (
                     <>
                       {(showAllFolders
@@ -918,10 +876,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             </div>
 
             {/* 5. Tags Section Header */}
-            <div className="space-y-0.5 pt-3 group/tags relative">
-              <div className="flex items-center justify-between px-2.5 mb-1">
-                <span className="text-[11px] font-semibold q-text-muted flex items-center gap-2">
-                  <TagIcon className="w-3.5 h-3.5 rotate-90" />
+            <div className="space-y-1 pt-2 group/tags relative">
+              <div className="flex items-center justify-between px-2.5 mb-1.5">
+                <span className="text-xs font-semibold q-text-muted tracking-wide flex items-center gap-2">
+                  <TagIcon className="w-4 h-4 rotate-90" />
                   <span>{isEn ? 'Tags' : 'Tag'}</span>
                 </span>
                 <div className="flex items-center gap-1 opacity-0 group-hover/tags:opacity-100 transition-opacity">
@@ -982,7 +940,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               {!isTagsCollapsed && (
                 <div className="space-y-0.5">
                   {tags.filter((t) => pinnedTags.includes(t.name)).length === 0 ? (
-                    <p className="px-2 text-[10px] q-text-muted italic">
+                    <p className="px-2.5 text-xs q-text-muted italic leading-relaxed">
                       {isEn ? 'Pin key tags for quick access' : 'Sematkan tag penting untuk akses cepat'}
                     </p>
                   ) : (
@@ -996,7 +954,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                             onSubjectChange(null);
                             onTagChange(selectedTag === name ? null : name);
                           }}
-                          className={`w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all text-left ${
+                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] font-medium transition-all text-left ${
                             selectedTag === name
                               ? 'liquid-lens-active q-text-primary font-semibold'
                               : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
@@ -1042,10 +1000,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
       {/* 6. Bottom Left Footer (Only in Folders view) */}
       {sidebarView !== 'toc' && (
-        <div className="pt-2 border-t q-border shrink-0 flex items-center justify-between px-1">
+        <div className="pt-2.5 border-t q-border shrink-0 flex items-center justify-between px-1">
           <button
             onClick={onOpenSettings}
-            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-xs font-semibold q-text-secondary hover:q-text-primary hover:bg-white/[0.08] rounded-xl transition-colors"
+            className="w-full h-10 flex items-center gap-2.5 px-3 text-[13.5px] font-medium q-text-secondary hover:q-text-primary hover:bg-white/[0.08] rounded-xl transition-colors"
             title={isEn ? 'Settings' : 'Pengaturan'}
           >
             <Settings className="w-4 h-4 q-text-muted" />
