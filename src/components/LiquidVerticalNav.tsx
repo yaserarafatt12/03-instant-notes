@@ -281,8 +281,17 @@ export function LiquidVerticalNav<T extends string>({
       className={`relative rounded-2xl overflow-visible select-none border ${
         isLight
           ? 'bg-white/55 border-[#0A1128]/10'
-          : 'bg-white/[0.03] border-white/[0.08]'
+          : 'border-white/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.16),0_6px_18px_rgba(0,0,0,0.22)]'
       } ${className}`}
+      style={
+        isLight
+          ? undefined
+          : {
+              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(22, 26, 34, 0.48) 100%)',
+              backdropFilter: 'blur(20px) saturate(110%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(110%)',
+            }
+      }
     >
       <div
         ref={trackRef}
