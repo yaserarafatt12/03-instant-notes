@@ -866,12 +866,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               )}
             </div>
 
-            {/* 2. Crisp Quest Primary CTA */}
+            {/* 2. Sleek Compact Primary CTA */}
             <button
               onClick={onNewNote}
-              className="w-full h-10 flex items-center justify-center gap-2 px-3.5 text-[13.5px] font-semibold glass-btn-primary rounded-xl active:scale-[0.98] group"
+              className="w-full h-9 flex items-center justify-center gap-2 px-3.5 text-[13px] font-semibold glass-btn-primary rounded-full active:scale-[0.98] group"
             >
-              <SquarePen className="w-4 h-4 transition-transform group-hover:scale-105" />
+              <SquarePen className="w-3.5 h-3.5 transition-transform group-hover:scale-105" />
               <span>{isEn ? 'New Note' : 'Catatan Baru'}</span>
             </button>
 

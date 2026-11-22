@@ -723,7 +723,7 @@ export function App() {
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder={isEn ? 'Search notes, folders, or tags... (Ctrl+K)' : 'Cari catatan, folder, atau tag... (Ctrl+K)'}
-              className="w-full h-9 pl-10 pr-9 glass-input rounded-full text-[13px] font-medium q-text-primary placeholder:text-slate-400 focus:outline-none transition-all text-center focus:text-left"
+              className="w-full h-9 pl-10 pr-9 glass-input rounded-full text-[13px] font-medium q-text-primary placeholder:text-white/50 focus:outline-none transition-all text-center focus:text-left"
             />
             {searchQuery && (
               <button
