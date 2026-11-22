@@ -342,7 +342,7 @@ export function LiquidVerticalNav<T extends string>({
                 if (justHandledPointerRef.current) return;
                 commitItemByIndex(idx);
               }}
-              className={`relative z-20 w-full h-10 flex items-center justify-between px-3 rounded-xl text-[13.5px] transition-colors duration-150 select-none focus:outline-none ${
+              className={`relative z-20 w-full h-10 flex items-center justify-between px-3 rounded-xl text-[14px] transition-colors duration-150 select-none focus:outline-none ${
                 isActive
                   ? isLight
                     ? 'text-[#0A1128] font-semibold'

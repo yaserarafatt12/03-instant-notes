@@ -368,28 +368,28 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             e.stopPropagation();
             setActiveFolderMenuPath(node.fullPath);
           }}
-          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-medium transition-all cursor-pointer group/item relative ${
+          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-[14px] font-medium transition-all cursor-pointer group/item relative ${
             isSelected
               ? 'liquid-lens-active text-white font-semibold'
               : 'q-text-secondary hover:bg-white/[0.06] hover:text-white border border-transparent'
           }`}
           style={{ paddingLeft: `${depth * 14 + 10}px` }}
         >
-          <div className="flex items-center gap-2 overflow-hidden">
+          <div className="flex items-center gap-2.5 overflow-hidden">
             <button
               onClick={(e) => toggleFolderPathExpand(node.fullPath, e)}
               className="p-0.5 q-text-muted hover:q-text-primary rounded"
             >
               {isExpanded ? (
-                <ChevronDown className="w-3.5 h-3.5" />
+                <ChevronDown className="w-4 h-4" />
               ) : (
-                <ChevronRight className="w-3.5 h-3.5" />
+                <ChevronRight className="w-4 h-4" />
               )}
             </button>
             <CustomFolderIcon
-              className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-white/55'}`}
+              className={`w-[17px] h-[17px] shrink-0 ${isSelected ? 'text-white' : 'text-white/60'}`}
             />
-            <span className="truncate max-w-[130px]">{node.name}</span>
+            <span className="truncate max-w-[140px]">{node.name}</span>
           </div>
 
           <div className="flex items-center gap-1">
@@ -521,7 +521,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               <button
                 key={doc.id}
                 onClick={() => onSelectNote(doc.id)}
-                className={`w-full text-left py-1.5 text-[12.5px] truncate block rounded-lg transition-colors ${
+                className={`w-full text-left py-1.5 text-[13px] truncate block rounded-lg transition-colors ${
                   selectedNoteId === doc.id
                     ? 'text-white font-semibold bg-white/[0.12]'
                     : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.06]'
@@ -822,7 +822,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             {/* 4. Folders Section Header */}
             <div className="space-y-1 pt-2 group/folders">
               <div className="flex items-center justify-between px-2.5 mb-1.5">
-                <span className="text-xs font-semibold q-text-muted tracking-wide flex items-center gap-2">
+                <span className="text-[13px] font-semibold q-text-muted tracking-wide flex items-center gap-2">
                   <FoldersHeaderIcon className="w-4 h-4" />
                   <span>{isEn ? 'Folders' : 'Folder'}</span>
                 </span>
@@ -851,7 +851,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               {!isFoldersSectionCollapsed && (
                 <div className="space-y-0.5">
                   {folderTree.size === 0 ? (
-                    <p className="px-2.5 text-xs q-text-muted italic">{isEn ? 'No folders yet' : 'Belum ada folder'}</p>
+                    <p className="px-2.5 text-[12.5px] q-text-muted italic">{isEn ? 'No folders yet' : 'Belum ada folder'}</p>
                   ) : (
                     <>
                       {(showAllFolders
@@ -878,7 +878,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             {/* 5. Tags Section Header */}
             <div className="space-y-1 pt-2 group/tags relative">
               <div className="flex items-center justify-between px-2.5 mb-1.5">
-                <span className="text-xs font-semibold q-text-muted tracking-wide flex items-center gap-2">
+                <span className="text-[13px] font-semibold q-text-muted tracking-wide flex items-center gap-2">
                   <TagIcon className="w-4 h-4 rotate-90" />
                   <span>{isEn ? 'Tags' : 'Tag'}</span>
                 </span>
@@ -940,7 +940,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               {!isTagsCollapsed && (
                 <div className="space-y-0.5">
                   {tags.filter((t) => pinnedTags.includes(t.name)).length === 0 ? (
-                    <p className="px-2.5 text-xs q-text-muted italic leading-relaxed">
+                    <p className="px-2.5 text-[12.5px] q-text-muted italic leading-relaxed">
                       {isEn ? 'Pin key tags for quick access' : 'Sematkan tag penting untuk akses cepat'}
                     </p>
                   ) : (
@@ -954,7 +954,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                             onSubjectChange(null);
                             onTagChange(selectedTag === name ? null : name);
                           }}
-                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] font-medium transition-all text-left ${
+                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[14px] font-medium transition-all text-left ${
                             selectedTag === name
                               ? 'liquid-lens-active q-text-primary font-semibold'
                               : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
