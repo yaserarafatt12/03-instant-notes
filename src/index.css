@@ -79,7 +79,7 @@
   }
 }
 
-/* Global Quest 0.035 SVG Fractal Noise Overlay */
+/* Global Quest 0.035 SVG Fractal Noise Overlay (Tiled 160px for 60fps GPU compositing) */
 body::after {
   content: "";
   position: fixed;
@@ -87,9 +87,11 @@ body::after {
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  opacity: 0.035;
+  opacity: 0.03;
   z-index: 9999;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  contain: strict;
+  background-size: 160px 160px;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
 /* ============================================================================
@@ -138,11 +140,11 @@ body::after {
   border-color: var(--border-hairline);
 }
 
-/* Floating Tempered Glass Sidebar Dock (Midnight Navy Tinted Glass) */
+/* Floating Tempered Glass Sidebar Dock (Midnight Navy Tinted Glass — GPU-optimized blur) */
 .glass-sidebar {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(14, 28, 54, 0.48) 100%);
-  backdrop-filter: blur(28px) saturate(125%);
-  -webkit-backdrop-filter: blur(28px) saturate(125%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(14, 28, 54, 0.52) 100%);
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.18),
@@ -229,12 +231,13 @@ body::after {
     0 14px 34px rgba(10, 17, 40, 0.11);
 }
 
-/* Tempered Glass Editor Sheet */
+/* Tempered Glass Editor Sheet (GPU-optimized blur + paint containment for 60fps typing/scroll) */
 .glass-editor-sheet {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(12, 25, 48, 0.56) 100%);
-  backdrop-filter: blur(28px) saturate(125%);
-  -webkit-backdrop-filter: blur(28px) saturate(125%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(12, 25, 48, 0.58) 100%);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+  contain: layout style;
   border-top: 1px solid rgba(255, 255, 255, 0.15);
   border-left: 1px solid rgba(255, 255, 255, 0.12);
   border-right: 1px solid rgba(255, 255, 255, 0.12);

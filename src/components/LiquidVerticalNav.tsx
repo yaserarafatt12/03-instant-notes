@@ -277,22 +277,7 @@ export function LiquidVerticalNav<T extends string>({
   const displayActiveIndex = isHolding && hoverIndex !== null ? hoverIndex : activeIndex;
 
   return (
-    <div
-      className={`relative rounded-2xl overflow-visible select-none border ${
-        isLight
-          ? 'bg-white/55 border-[#0A1128]/10'
-          : 'border-white/15 shadow-[inset_0_1px_1px_rgba(255,255,255,0.16),0_6px_18px_rgba(0,0,0,0.22)]'
-      } ${className}`}
-      style={
-        isLight
-          ? undefined
-          : {
-              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(15, 29, 56, 0.46) 100%)',
-              backdropFilter: 'blur(20px) saturate(125%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(125%)',
-            }
-      }
-    >
+    <div className={`relative overflow-visible select-none bg-transparent ${className}`}>
       <div
         ref={trackRef}
         onPointerDown={handlePointerDown}

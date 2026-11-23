@@ -1194,7 +1194,7 @@ interface RichTextBlockProps {
   onIndentChange?: (delta: 1 | -1) => void;
 }
 
-const RichTextBlock: React.FC<RichTextBlockProps> = ({
+const RichTextBlock: React.FC<RichTextBlockProps> = React.memo(({
   id,
   content,
   className,
@@ -1543,7 +1543,12 @@ const RichTextBlock: React.FC<RichTextBlockProps> = ({
       }`}
     />
   );
-};
+}, (prev, next) =>
+  prev.id === next.id &&
+  prev.content === next.content &&
+  prev.className === next.className &&
+  prev.placeholder === next.placeholder
+);
 
 export const NoteEditor: React.FC<NoteEditorProps> = ({
   note,
@@ -2522,9 +2527,13 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     const handleGlobalMouseDown = (e: MouseEvent) => {
       setIsAllSelected(false);
       const target = e.target as HTMLElement;
+      // Clicking ANYWHERE outside the 6-dot menu or grip handle immediately closes the block menu!
+      if (!target.closest('.block-action-menu') && !target.closest('.grip-handle-btn')) {
+        setActiveBlockMenuIdx(null);
+        setBlockMenuSub('none');
+      }
       if (!target.closest('.group\\/tblock') && !target.closest('.block-action-menu') && !target.closest('.rich-text-editor')) {
         setSelectedBlockIndices([]);
-        setActiveBlockMenuIdx(null);
       }
       if (!target.closest('.floating-selection-toolbar')) {
         const selection = window.getSelection();
@@ -5687,7 +5696,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                             handleDragStartBlock(idx, e);
                           }}
                           onDragEnd={handleDragEnd}
-                          className="w-6 h-6 text-white/45 hover:text-white hover:bg-white/10 rounded-lg cursor-grab active:cursor-grabbing transition-colors flex items-center justify-center"
+                          className="grip-handle-btn w-6 h-6 text-white/45 hover:text-white hover:bg-white/10 rounded-lg cursor-grab active:cursor-grabbing transition-colors flex items-center justify-center"
                           title="Klik untuk menu blok (Ubah, Warna, Duplikat, Hapus) • Tarik untuk geser"
                         >
                           <GripVertical className="w-4 h-4" />

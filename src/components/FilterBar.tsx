@@ -887,7 +887,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             {/* 2. Sleek Compact Primary CTA */}
             <button
               onClick={onNewNote}
-              className="w-full h-9 flex items-center justify-center gap-2 px-3.5 text-[13px] font-semibold glass-btn-primary rounded-full active:scale-[0.98] group"
+              className="w-full h-9 flex items-center justify-center gap-2 px-3.5 text-[13px] font-semibold bg-white/[0.11] hover:bg-white/[0.16] text-white border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.22)] rounded-xl transition-all active:scale-[0.98] group"
             >
               <SquarePen className="w-3.5 h-3.5 transition-transform group-hover:scale-105" />
               <span>{isEn ? 'New Note' : 'Catatan Baru'}</span>
@@ -930,9 +930,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
             {/* 4. Folders Section Header */}
             <div className="space-y-1 pt-2 group/folders">
-              <div className="flex items-center justify-between px-2.5 mb-1.5">
-                <span className="text-[13px] font-semibold q-text-muted tracking-wide flex items-center gap-2">
-                  <FoldersHeaderIcon className="w-4 h-4" />
+              <div className="flex items-center justify-between px-2.5 mb-1">
+                <span className="text-[10.5px] font-semibold text-white/45 uppercase tracking-[0.08em] flex items-center gap-1.5">
+                  <FoldersHeaderIcon className="w-3.5 h-3.5 opacity-75" />
                   <span>{isEn ? 'Folders' : 'Folder'}</span>
                 </span>
                 <div className="flex items-center gap-1 opacity-0 group-hover/folders:opacity-100 transition-opacity">
@@ -986,9 +986,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
             {/* 5. Tags Section Header */}
             <div className="space-y-1 pt-2 group/tags relative">
-              <div className="flex items-center justify-between px-2.5 mb-1.5">
-                <span className="text-[13px] font-semibold q-text-muted tracking-wide flex items-center gap-2">
-                  <TagIcon className="w-4 h-4 rotate-90" />
+              <div className="flex items-center justify-between px-2.5 mb-1">
+                <span className="text-[10.5px] font-semibold text-white/45 uppercase tracking-[0.08em] flex items-center gap-1.5">
+                  <TagIcon className="w-3.5 h-3.5 rotate-90 opacity-75" />
                   <span>{isEn ? 'Tags' : 'Tag'}</span>
                 </span>
                 <div className="flex items-center gap-1 opacity-0 group-hover/tags:opacity-100 transition-opacity">
@@ -1049,8 +1049,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               {!isTagsCollapsed && (
                 <div className="space-y-0.5">
                   {tags.filter((t) => pinnedTags.includes(t.name)).length === 0 ? (
-                    <p className="px-2.5 text-[12.5px] q-text-muted italic leading-relaxed">
-                      {isEn ? 'Pin key tags for quick access' : 'Sematkan tag penting untuk akses cepat'}
+                    <p className="px-2.5 text-[12px] text-white/35">
+                      {isEn ? 'No pinned tags' : 'Belum ada tag disematkan'}
                     </p>
                   ) : (
                     tags
