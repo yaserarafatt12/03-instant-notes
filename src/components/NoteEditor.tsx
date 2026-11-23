@@ -5926,7 +5926,16 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                             'border-l-[2.5px] border-white/16',
                             'border-l-[2.5px] border-white/12',
                           ];
-                          let nested: React.ReactNode = richEditorEl;
+                          const innerIndentMatch = classified.content.match(/^(\s+)(?:•|◦|▪|[-*+]|\d+\.)\s+/);
+                          const innerPadPx = innerIndentMatch
+                            ? Math.floor(innerIndentMatch[1].replace(/\t/g, '  ').length / 2) * 20
+                            : 0;
+                          let nested: React.ReactNode =
+                            innerPadPx > 0 ? (
+                              <div style={{ paddingLeft: `${innerPadPx}px` }}>{richEditorEl}</div>
+                            ) : (
+                              richEditorEl
+                            );
                           for (let d = classified.depth - 1; d >= 0; d--) {
                             nested = (
                               <div

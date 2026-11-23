@@ -79,6 +79,39 @@ export function mapCssColorToPresetOrHex(rawColor: string): string | null {
   const preset = NOTION_COLORS.find((p) => p.dotColor.toLowerCase() === c || p.id === c);
   if (preset) return preset.id;
 
+  // Map common named CSS colors to presets or hex
+  const NAMED_COLORS: Record<string, string> = {
+    crimson: 'red',
+    firebrick: 'red',
+    tomato: 'red',
+    coral: 'orange',
+    darkorange: 'orange',
+    gold: 'yellow',
+    amber: 'yellow',
+    lime: 'green',
+    limegreen: 'green',
+    forestgreen: 'green',
+    seagreen: 'green',
+    emerald: 'green',
+    teal: '#14b8a6',
+    cyan: '#22d3ee',
+    aqua: '#22d3ee',
+    skyblue: 'blue',
+    dodgerblue: 'blue',
+    royalblue: 'blue',
+    steelblue: 'blue',
+    cornflowerblue: 'blue',
+    indigo: '#818cf8',
+    violet: 'purple',
+    mediumpurple: 'purple',
+    magenta: 'pink',
+    hotpink: 'pink',
+    deeppink: 'pink',
+    grey: 'gray',
+    silver: 'gray',
+  };
+  if (NAMED_COLORS[c]) return NAMED_COLORS[c];
+
   // Convert rgb(r, g, b) to hex
   const rgbMatch = c.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
   if (rgbMatch) {
@@ -122,18 +155,19 @@ export function markdownToHtml(md: string): string {
       return stash(renderKatexSafe(expr, false));
     })
     // 4. Markdown links [label](https://... or mailto:...)
-    .replace(/\[([^\]]+)\]\(((?:https?:\/\/|mailto:)[^\s)]+)\)/g, (_m, label, href) =>
-      stash(
-        `<a href="${href}" target="_blank" rel="noopener noreferrer" class="underline underline-offset-4 decoration-sky-400/60 text-sky-300 hover:text-sky-200 cursor-pointer transition-colors">${label}</a>`
-      )
-    )
+    .replace(/\[([^\]]+)\]\(((?:https?:\/\/|mailto:)[^\s)]+)\)/g, (_m, label, href) => {
+      const isExt = /^https?:\/\//i.test(href);
+      return stash(
+        `<a href="${href}" target="_blank" rel="noopener noreferrer" class="${isExt ? 'external-link ' : ''}underline underline-offset-4 decoration-dotted decoration-white/45 text-white/95 hover:text-sky-300 hover:decoration-sky-400/70 cursor-pointer transition-colors">${label}</a>`
+      );
+    })
     // 5. Bare URLs https://...
     .replace(/(https?:\/\/[^\s<>"'`]+)/g, (_m, href) => {
       const cleanHref = href.replace(/[.,;:!?)]+$/, '');
       const trailing = href.slice(cleanHref.length);
       return (
         stash(
-          `<a href="${cleanHref}" target="_blank" rel="noopener noreferrer" class="underline underline-offset-4 decoration-sky-400/60 text-sky-300 hover:text-sky-200 cursor-pointer transition-colors">${cleanHref}</a>`
+          `<a href="${cleanHref}" target="_blank" rel="noopener noreferrer" class="external-link underline underline-offset-4 decoration-dotted decoration-white/45 text-white/95 hover:text-sky-300 hover:decoration-sky-400/70 cursor-pointer transition-colors">${cleanHref}</a>`
         ) + trailing
       );
     })

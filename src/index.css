@@ -634,6 +634,14 @@ img::selection {
 .rich-text-editor {
   unicode-bidi: plaintext;
 }
+.rich-text-editor a.external-link::after {
+  content: " ↗";
+  font-size: 0.78em;
+  opacity: 0.72;
+  display: inline-block;
+  text-decoration: none;
+  margin-left: 1px;
+}
 .rich-text-editor sup {
   font-size: 0.72em;
   vertical-align: super;

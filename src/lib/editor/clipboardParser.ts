@@ -93,8 +93,30 @@ export function parsePastedHtmlToMarkdown(htmlData: string): string {
     }
   });
 
-  // 3. Strip out UI buttons, SVGs, action bars (Copy, Share, Like, Dislike, 3-dots, etc.)
-  doc.querySelectorAll('svg, button, nav, footer, script, style, form, iframe, [aria-hidden="true"], [role="button"]').forEach((node) => node.remove());
+  // 3. Strip out UI buttons, SVGs, action bars (Copy, Share, Like, Dislike, 3-dots, etc.) — preserve <hr>
+  doc.querySelectorAll('svg, button, nav, footer, script, style, form, iframe, [aria-hidden="true"]:not(hr), [role="button"]').forEach((node) => node.remove());
+
+  function applyColorStyles(el: HTMLElement, text: string): string {
+    let out = text;
+    const style = el.style;
+    const fontColor = el.tagName.toLowerCase() === 'font' ? el.getAttribute('color') : null;
+    if (style?.backgroundColor) {
+      const mappedBg = mapCssColorToPresetOrHex(style.backgroundColor);
+      if (mappedBg && !mappedBg.startsWith('#')) {
+        out = wrapInlinePreservingSpaces(out, `==${mappedBg}:`, '==');
+      } else if (mappedBg) {
+        out = wrapInlinePreservingSpaces(out, '==', '==');
+      }
+    }
+    const rawFg = style?.color || fontColor;
+    if (rawFg) {
+      const mappedFg = mapCssColorToPresetOrHex(rawFg);
+      if (mappedFg) {
+        out = wrapInlinePreservingSpaces(out, `^^${mappedFg}:`, '^^');
+      }
+    }
+    return out;
+  }
 
   function walk(node: Node, listDepth = 0, quoteDepth = 0): string {
     if (node.nodeType === Node.TEXT_NODE) {
@@ -154,7 +176,7 @@ export function parsePastedHtmlToMarkdown(htmlData: string): string {
         return listDepth === 0 ? `\n${items}\n` : `\n${items}`;
       }
 
-      // Nested Blockquotes
+      // Nested Blockquotes (preserve leading indentation of nested lists inside blockquotes!)
       if (tag === 'blockquote') {
         const nextQuoteDepth = quoteDepth + 1;
         const inner = Array.from(el.childNodes)
@@ -162,11 +184,10 @@ export function parsePastedHtmlToMarkdown(htmlData: string): string {
           .join('');
         const lines = inner
           .split('\n')
-          .map((l) => l.trim())
-          .filter(Boolean);
+          .map((l) => l.trimEnd())
+          .filter((l) => l.trim().length > 0);
         if (lines.length === 0) return '';
-        // Lines already prefixed by an inner <blockquote> keep their deeper > prefix; others get '> '
-        const formatted = lines.map((l) => (l.startsWith('>') ? `> ${l}` : `> ${l}`));
+        const formatted = lines.map((l) => (l.trimStart().startsWith('>') ? `> ${l.trimStart()}` : `> ${l}`));
         return `\n${formatted.join('\n')}\n`;
       }
 
@@ -193,18 +214,18 @@ export function parsePastedHtmlToMarkdown(htmlData: string): string {
       if (tag === 'b' || tag === 'strong') {
         const fw = (el.style?.fontWeight || '').toLowerCase();
         if (fw === 'normal' || fw === '400') {
-          return children;
+          return applyColorStyles(el, children);
         }
-        return wrapInlinePreservingSpaces(children, '**', '**');
+        return applyColorStyles(el, wrapInlinePreservingSpaces(children, '**', '**'));
       }
       if (tag === 'i' || tag === 'em') {
-        return wrapInlinePreservingSpaces(children, '*', '*');
+        return applyColorStyles(el, wrapInlinePreservingSpaces(children, '*', '*'));
       }
       if (tag === 'u') {
-        return wrapInlinePreservingSpaces(children, '<u>', '</u>');
+        return applyColorStyles(el, wrapInlinePreservingSpaces(children, '<u>', '</u>'));
       }
       if (tag === 's' || tag === 'del' || tag === 'strike') {
-        return wrapInlinePreservingSpaces(children, '~~', '~~');
+        return applyColorStyles(el, wrapInlinePreservingSpaces(children, '~~', '~~'));
       }
       if (tag === 'sup') {
         return wrapInlinePreservingSpaces(children, '<sup>', '</sup>');
@@ -216,7 +237,14 @@ export function parsePastedHtmlToMarkdown(htmlData: string): string {
         return wrapInlinePreservingSpaces(children, '`', '`');
       }
       if (tag === 'mark') {
+        const mappedBg = el.style?.backgroundColor ? mapCssColorToPresetOrHex(el.style.backgroundColor) : null;
+        if (mappedBg && !mappedBg.startsWith('#')) {
+          return wrapInlinePreservingSpaces(children, `==${mappedBg}:`, '==');
+        }
         return wrapInlinePreservingSpaces(children, '==', '==');
+      }
+      if (tag === 'font') {
+        return applyColorStyles(el, children);
       }
 
       // Google Docs & Notion inline styled <span>
@@ -238,21 +266,7 @@ export function parsePastedHtmlToMarkdown(htmlData: string): string {
         if (style.fontWeight === 'bold' || (!Number.isNaN(fwNum) && fwNum >= 600)) {
           styled = wrapInlinePreservingSpaces(styled, '**', '**');
         }
-        if (style.backgroundColor) {
-          const mappedBg = mapCssColorToPresetOrHex(style.backgroundColor);
-          if (mappedBg && !mappedBg.startsWith('#')) {
-            styled = wrapInlinePreservingSpaces(styled, `==${mappedBg}:`, '==');
-          } else if (mappedBg) {
-            styled = wrapInlinePreservingSpaces(styled, '==', '==');
-          }
-        }
-        if (style.color) {
-          const mappedFg = mapCssColorToPresetOrHex(style.color);
-          if (mappedFg) {
-            styled = wrapInlinePreservingSpaces(styled, `^^${mappedFg}:`, '^^');
-          }
-        }
-        return styled;
+        return applyColorStyles(el, styled);
       }
 
       // Full H1–H6 hierarchy preserved (strip redundant outer **...** since headings are already bold)
@@ -265,7 +279,7 @@ export function parsePastedHtmlToMarkdown(htmlData: string): string {
         return `\n---\n`;
       }
       if (tag === 'p' || tag === 'div') {
-        return `\n${children.trim()}\n`;
+        return `\n${applyColorStyles(el, children.trim())}\n`;
       }
       if (tag === 'br') {
         return '\n';
@@ -313,10 +327,25 @@ export function parsePastedHtmlToMarkdown(htmlData: string): string {
 
     Array.from(li.childNodes).forEach(collectFromNode);
 
-    const label = inlineParts.join('').replace(/\s*\n\s*/g, ' ').trim();
+    let label = inlineParts.join('').replace(/\s*\n\s*/g, ' ').trim();
+    let effectiveTaskState = taskState;
+
+    // Also catch Unicode checklist glyphs at start of <li> text (○, ☐, ✓, ✔, ☑, ✅)
+    if (effectiveTaskState === null) {
+      const uncheckedSym = label.match(/^[○◯☐⬜]\s+(.+)$/);
+      const checkedSym = label.match(/^[✔✓☑✅●◉]\s+(.+)$/);
+      if (uncheckedSym) {
+        effectiveTaskState = 'false';
+        label = uncheckedSym[1];
+      } else if (checkedSym) {
+        effectiveTaskState = 'true';
+        label = checkedSym[1];
+      }
+    }
+
     const prefix =
-      taskState !== null
-        ? taskState === 'true'
+      effectiveTaskState !== null
+        ? effectiveTaskState === 'true'
           ? '- [x] '
           : '- [ ] '
         : isOrdered
@@ -428,7 +457,7 @@ export function parsePastedTextToChronoBlocks(rawText: string): ParsedPasteBlock
       let cleaned = line;
       const headingMatch = cleaned.match(/^(#{1,6})\s+(.+)$/);
       const taskMatch = cleaned.match(/^(\s*)[-*+]\s+\[([ xX])\]\s*(.*)$/);
-      const unicodeTaskMatch = cleaned.match(/^(\s*)([☐☑])\s*(.*)$/);
+      const unicodeTaskMatch = cleaned.match(/^(\s*)([☐☑○◯✔✓✅⬜])\s+(.+)$/);
       const quoteMatch = cleaned.match(/^\s*((?:>\s*)+)(.*)$/);
 
       if (headingMatch) {
@@ -438,13 +467,14 @@ export function parsePastedTextToChronoBlocks(rawText: string): ParsedPasteBlock
         const normIndent = taskMatch[1].replace(/\t/g, '  ');
         cleaned = `${normIndent}- [${mark}] ${taskMatch[3]}`;
       } else if (unicodeTaskMatch) {
-        const mark = unicodeTaskMatch[2] === '☑' ? 'x' : ' ';
+        const mark = ['☑', '✔', '✓', '✅'].includes(unicodeTaskMatch[2]) ? 'x' : ' ';
         const normIndent = unicodeTaskMatch[1].replace(/\t/g, '  ');
         cleaned = `${normIndent}- [${mark}] ${unicodeTaskMatch[3]}`;
       } else if (quoteMatch) {
         const depth = Math.min(4, (quoteMatch[1].match(/>/g) || ['>']).length);
         const prefix = Array(depth).fill('>').join(' ');
-        cleaned = `${prefix} ${quoteMatch[2].trim()}`;
+        // Preserve leading indentation inside blockquote (for nested lists inside quotes!)
+        cleaned = `${prefix} ${quoteMatch[2].trimEnd()}`;
       } else if (/^\s*([-*_])\1{2,}\s*$/.test(cleaned)) {
         cleaned = '---';
       } else {
