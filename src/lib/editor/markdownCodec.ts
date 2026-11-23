@@ -37,7 +37,7 @@ export function renderKatexSafe(expr: string, displayMode: boolean): string {
     });
     const encoded = encodeURIComponent(trimmed);
     if (displayMode) {
-      return `<span data-math="${encoded}" data-display="true" contenteditable="false" class="katex-block-wrapper inline-block w-full my-1.5 py-2.5 px-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-center overflow-x-auto select-all align-middle">${rendered}</span>`;
+      return `<span data-math="${encoded}" data-display="true" contenteditable="false" class="katex-block-wrapper inline-block w-full my-1 py-2 text-center overflow-x-auto select-all align-middle">${rendered}</span>`;
     }
     return `<span data-math="${encoded}" data-display="false" contenteditable="false" class="katex-inline-wrapper inline-flex items-center px-1 py-0.5 rounded text-white/95 select-all align-baseline">${rendered}</span>`;
   } catch {
@@ -111,7 +111,7 @@ export function markdownToHtml(md: string): string {
     // 1. Protect inline code first so math/markdown inside backticks stays literal
     .replace(/`([^`\n]+)`/g, (_m, code) =>
       stash(
-        `<code class="bg-white/[0.08] text-rose-300/95 border border-white/15 font-mono text-[13px] px-1.5 py-0.5 rounded-md font-medium">${escapeCodeHtml(code)}</code>`
+        `<code class="bg-white/[0.09] text-zinc-200 border border-white/[0.15] font-mono text-[13px] px-1.5 py-0.5 rounded-md font-medium">${escapeCodeHtml(code)}</code>`
       )
     )
     // 2. Display math $$...$$ via KaTeX

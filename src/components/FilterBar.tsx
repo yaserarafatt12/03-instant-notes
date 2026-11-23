@@ -349,7 +349,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       const headingMatch = trimmed.match(/^(#{1,6})\s+(.+)$/);
       if (headingMatch) {
         const level = headingMatch[1].length;
-        const title = headingMatch[2].trim();
+        const title = headingMatch[2]
+          .replace(/\*\*\*([^*]+)\*\*\*/g, '$1')
+          .replace(/\*\*([^*]+)\*\*/g, '$1')
+          .replace(/\*([^*]+)\*/g, '$1')
+          .replace(/~~([^~]+)~~/g, '$1')
+          .replace(/`([^`]+)`/g, '$1')
+          .replace(/<\/?(?:u|sup|sub)>/gi, '')
+          .trim();
         items.push({ id: `line-${index}`, type: 'heading', title, level });
         return;
       }

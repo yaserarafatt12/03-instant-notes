@@ -2016,7 +2016,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
       const lines = cleanPart.split('\n');
       lines.forEach((line) => {
-        const trimmed = line.replace(/[\r\n\\]+/g, '');
+        const trimmed = line.replace(/[\r\n]+/g, '');
         rawBlocks.push({
           type: 'text',
           id: `t-${lastPrecedingId}-${textLineIndexUnderBlock++}`,
@@ -4246,11 +4246,19 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     const lines = activeText.split('\n');
     const headings: { level: number; text: string }[] = [];
     lines.forEach((line: string) => {
-      const match = line.match(/^(#{1,3})\s+(.+)$/);
+      const match = line.match(/^(#{1,6})\s+(.+)$/);
       if (match) {
+        const cleanTitle = match[2]
+          .replace(/\*\*\*([^*]+)\*\*\*/g, '$1')
+          .replace(/\*\*([^*]+)\*\*/g, '$1')
+          .replace(/\*([^*]+)\*/g, '$1')
+          .replace(/~~([^~]+)~~/g, '$1')
+          .replace(/`([^`]+)`/g, '$1')
+          .replace(/<\/?(?:u|sup|sub)>/gi, '')
+          .trim();
         headings.push({
           level: match[1].length,
-          text: match[2].trim(),
+          text: cleanTitle,
         });
       }
     });
@@ -5701,22 +5709,22 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                         if (classified.kind === 'heading') {
                           switch (classified.level) {
                             case 1:
-                              editorClassName = 'text-[28px] font-extrabold text-white tracking-[-0.025em] leading-[1.28] pt-3 pb-1';
+                              editorClassName = 'text-[30px] font-extrabold text-white tracking-[-0.025em] leading-[1.24] pt-3.5 pb-1';
                               break;
                             case 2:
-                              editorClassName = 'text-[22px] font-bold text-white tracking-[-0.02em] leading-[1.32] pt-2.5 pb-0.5';
+                              editorClassName = 'text-[24px] font-bold text-white tracking-[-0.02em] leading-[1.28] pt-3 pb-0.5';
                               break;
                             case 3:
-                              editorClassName = 'text-[18px] font-bold text-white/95 tracking-[-0.015em] leading-[1.36] pt-2 pb-0.5';
+                              editorClassName = 'text-[19.5px] font-bold text-white/95 tracking-[-0.015em] leading-[1.34] pt-2.5 pb-0.5';
                               break;
                             case 4:
-                              editorClassName = 'text-[16px] font-semibold text-white/90 tracking-[-0.01em] leading-[1.4] pt-1.5';
+                              editorClassName = 'text-[17px] font-semibold text-white/90 tracking-[-0.01em] leading-[1.38] pt-2';
                               break;
                             case 5:
-                              editorClassName = 'text-[14.5px] font-semibold text-white/80 tracking-[0em] leading-[1.45] pt-1';
+                              editorClassName = 'text-[15px] font-semibold text-white/75 tracking-[0em] leading-[1.42] pt-1.5';
                               break;
                             case 6:
-                              editorClassName = 'text-[13px] font-semibold uppercase tracking-[0.06em] text-white/65 leading-[1.45] pt-1';
+                              editorClassName = 'text-[12.5px] font-semibold uppercase tracking-[0.08em] text-white/55 leading-[1.45] pt-1.5';
                               break;
                           }
                         } else if (classified.kind === 'checklist') {
@@ -5724,7 +5732,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                             ? 'text-white/45 line-through text-[15px] leading-[26px] tracking-[-0.01em] font-normal'
                             : 'text-zinc-200 text-[15px] leading-[26px] tracking-[-0.01em] font-normal';
                         } else if (classified.kind === 'blockquote') {
-                          editorClassName = 'text-white/80 italic text-[15px] leading-[26px] tracking-[-0.01em] font-normal';
+                          editorClassName = 'text-white/85 text-[15px] leading-[26px] tracking-[-0.01em] font-normal';
                         }
 
                         if (rtl) {
@@ -5913,17 +5921,17 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
                         if (classified.kind === 'blockquote') {
                           const quoteBorders = [
-                            'border-l-[3px] border-white/35 bg-white/[0.03]',
-                            'border-l-[3px] border-white/25 bg-white/[0.02]',
-                            'border-l-[3px] border-white/18 bg-white/[0.015]',
-                            'border-l-[3px] border-white/14 bg-white/[0.01]',
+                            'border-l-[2.5px] border-white/30',
+                            'border-l-[2.5px] border-white/22',
+                            'border-l-[2.5px] border-white/16',
+                            'border-l-[2.5px] border-white/12',
                           ];
                           let nested: React.ReactNode = richEditorEl;
                           for (let d = classified.depth - 1; d >= 0; d--) {
                             nested = (
                               <div
                                 key={d}
-                                className={`${quoteBorders[Math.min(d, quoteBorders.length - 1)]} pl-3.5 py-1 my-0.5 rounded-r-lg`}
+                                className={`${quoteBorders[Math.min(d, quoteBorders.length - 1)]} pl-3.5 py-0.5`}
                               >
                                 {nested}
                               </div>

@@ -419,7 +419,105 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
         <GripVertical className="w-5 h-5" />
       </div>
 
-      {/* Main Database Container */}
+      {/* Minimal Clean Markdown Table (Pasted from ChatGPT / Notion / Docs) */}
+      {collection.simple ? (
+        <div
+          className={`relative group/simpletable my-2 rounded-xl transition-all font-sans overflow-x-auto ${
+            isSelected ? 'ring-1 ring-white/30 bg-white/[0.04]' : ''
+          }`}
+        >
+          {/* Hover-only Minimal Action Controls */}
+          <div className="absolute right-1 top-1 flex items-center gap-1 opacity-0 group-hover/simpletable:opacity-100 transition-opacity z-20">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddRow();
+              }}
+              className="px-2 py-0.5 text-[11px] font-medium text-white/75 hover:text-white glass-control rounded-md transition-colors"
+              title="Tambah baris"
+            >
+              + Baris
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="p-1 text-white/55 hover:text-rose-400 glass-control hover:bg-rose-500/15 rounded-md transition-colors"
+              title="Hapus Tabel"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </div>
+
+          <table className="w-full border-collapse text-[14px]">
+            <thead>
+              <tr className="border-b border-white/15">
+                {collection.columns.map((col) => {
+                  const alignClass =
+                    col.align === 'center'
+                      ? 'text-center'
+                      : col.align === 'right'
+                      ? 'text-right'
+                      : 'text-left';
+                  return (
+                    <th
+                      key={col.id}
+                      className={`py-2.5 px-3 font-semibold text-white/95 tracking-[-0.01em] ${alignClass}`}
+                    >
+                      <input
+                        type="text"
+                        dir="auto"
+                        value={col.name}
+                        onChange={(e) => handleRenameColumn(col.id, e.target.value)}
+                        className={`w-full bg-transparent border-none focus:outline-none font-semibold text-white/95 ${alignClass}`}
+                      />
+                    </th>
+                  );
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {collection.rows.map((row, rowIdx) => (
+                <tr
+                  key={row.id}
+                  className="border-b border-white/[0.07] last:border-b-0 hover:bg-white/[0.025] transition-colors"
+                >
+                  {collection.columns.map((col, colIdx) => {
+                    const alignClass =
+                      col.align === 'center'
+                        ? 'text-center'
+                        : col.align === 'right'
+                        ? 'text-right'
+                        : 'text-left';
+                    return (
+                      <td key={col.id} className={`py-2 px-3 text-zinc-200 ${alignClass}`}>
+                        <input
+                          ref={(el) => {
+                            const key = `${row.id}_${col.id}`;
+                            if (el) cellInputRefs.current.set(key, el);
+                            else cellInputRefs.current.delete(key);
+                          }}
+                          type="text"
+                          dir="auto"
+                          value={row[col.id] ?? ''}
+                          onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
+                          onKeyDown={(e) => handleCellKeyDown(e, rowIdx, colIdx)}
+                          onFocus={() => setActiveCell({ rowId: row.id, colId: col.id })}
+                          className={`w-full bg-transparent border-none focus:outline-none text-zinc-200 text-[14px] ${alignClass}`}
+                        />
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+      /* Main Database Container */
       <div
         className={`relative group/colcard rounded-2xl glass-card transition-all overflow-hidden font-sans ${
           isSelected
@@ -1104,6 +1202,7 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
           </div>
         )}
       </div>
+      )}
     </div>
   );
 };

@@ -68,7 +68,32 @@ export function parsePastedHtmlToMarkdown(htmlData: string): string {
     }
   });
 
-  // 2. Strip out UI buttons, SVGs, action bars (Copy, Share, Like, Dislike, 3-dots, etc.)
+  // 2. Tag interactive checklist items BEFORE stripping buttons/SVGs/inputs (ChatGPT, Notion, GitHub, Google Docs)
+  doc.querySelectorAll('li').forEach((li) => {
+    const inputCb = li.querySelector('input[type="checkbox"]') as HTMLInputElement | null;
+    const roleCb = li.querySelector('[role="checkbox"]');
+    const dataChecked = li.getAttribute('data-checked');
+    const isTaskClass =
+      li.classList.contains('task-list-item') ||
+      li.parentElement?.classList.contains('contains-task-list') ||
+      li.getAttribute('data-type') === 'taskItem';
+
+    if (inputCb) {
+      const checked = inputCb.checked || inputCb.hasAttribute('checked') || inputCb.getAttribute('aria-checked') === 'true';
+      li.setAttribute('data-task-checked', checked ? 'true' : 'false');
+      inputCb.remove();
+    } else if (roleCb) {
+      const checked = roleCb.getAttribute('aria-checked') === 'true' || roleCb.getAttribute('data-state') === 'checked';
+      li.setAttribute('data-task-checked', checked ? 'true' : 'false');
+      roleCb.remove();
+    } else if (dataChecked === 'true' || dataChecked === 'false') {
+      li.setAttribute('data-task-checked', dataChecked);
+    } else if (isTaskClass) {
+      li.setAttribute('data-task-checked', 'false');
+    }
+  });
+
+  // 3. Strip out UI buttons, SVGs, action bars (Copy, Share, Like, Dislike, 3-dots, etc.)
   doc.querySelectorAll('svg, button, nav, footer, script, style, form, iframe, [aria-hidden="true"], [role="button"]').forEach((node) => node.remove());
 
   function walk(node: Node, listDepth = 0, quoteDepth = 0): string {
@@ -230,10 +255,11 @@ export function parsePastedHtmlToMarkdown(htmlData: string): string {
         return styled;
       }
 
-      // Full H1–H6 hierarchy preserved
+      // Full H1–H6 hierarchy preserved (strip redundant outer **...** since headings are already bold)
       if (/^h([1-6])$/.test(tag)) {
         const level = parseInt(tag[1], 10);
-        return `\n${'#'.repeat(level)} ${children.trim()}\n`;
+        const cleanHeading = children.trim().replace(/^\*\*([\s\S]+)\*\*$/, '$1').trim();
+        return `\n${'#'.repeat(level)} ${cleanHeading}\n`;
       }
       if (tag === 'hr') {
         return `\n---\n`;
@@ -258,31 +284,44 @@ export function parsePastedHtmlToMarkdown(htmlData: string): string {
     quoteDepth: number
   ): string {
     const indent = '  '.repeat(Math.max(0, listDepth));
-    const checkbox = li.querySelector(':scope > input[type="checkbox"], :scope > label > input[type="checkbox"]') as HTMLInputElement | null;
+    const taskState = li.getAttribute('data-task-checked');
 
+    // Collect nested <ul>/<ol> even when wrapped inside <div>/<p> containers (ChatGPT/Notion DOM!)
     const inlineParts: string[] = [];
     const nestedParts: string[] = [];
 
-    Array.from(li.childNodes).forEach((child) => {
-      if (child instanceof HTMLElement) {
-        const cTag = child.tagName.toLowerCase();
+    const collectFromNode = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        inlineParts.push(node.textContent || '');
+        return;
+      }
+      if (node instanceof HTMLElement) {
+        const cTag = node.tagName.toLowerCase();
         if (cTag === 'input') return;
         if (cTag === 'ul' || cTag === 'ol') {
-          nestedParts.push(walk(child, listDepth + 1, quoteDepth));
+          nestedParts.push(walk(node, listDepth + 1, quoteDepth));
           return;
         }
+        // If a wrapper (<div>, <p>, <span>) contains a nested list, traverse its children individually
+        if (node.querySelector('ul, ol')) {
+          Array.from(node.childNodes).forEach(collectFromNode);
+          return;
+        }
+        inlineParts.push(walk(node, listDepth, quoteDepth));
       }
-      inlineParts.push(walk(child, listDepth, quoteDepth));
-    });
+    };
+
+    Array.from(li.childNodes).forEach(collectFromNode);
 
     const label = inlineParts.join('').replace(/\s*\n\s*/g, ' ').trim();
-    const prefix = checkbox
-      ? checkbox.checked
-        ? '- [x] '
-        : '- [ ] '
-      : isOrdered
-      ? `${orderNum}. `
-      : '• ';
+    const prefix =
+      taskState !== null
+        ? taskState === 'true'
+          ? '- [x] '
+          : '- [ ] '
+        : isOrdered
+        ? `${orderNum}. `
+        : '• ';
 
     const line = label ? `\n${indent}${prefix}${label}` : '';
     const nested = nestedParts.join('');
@@ -376,6 +415,7 @@ export function parsePastedTextToChronoBlocks(rawText: string): ParsedPasteBlock
           data: {
             id: colId,
             title: 'Tabel',
+            simple: true,
             views: [{ id: 'v_table', name: 'Table', type: 'table' }],
             activeViewId: 'v_table',
             columns,

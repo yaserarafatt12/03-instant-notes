@@ -79,6 +79,7 @@ export interface CollectionView {
 export interface CollectionData {
   id: string;
   title: string;
+  simple?: boolean;
   views: CollectionView[];
   activeViewId: string;
   columns: CollectionColumn[];
