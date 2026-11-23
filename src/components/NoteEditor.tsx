@@ -4476,7 +4476,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                 <div className="pt-3 mt-1 flex items-center justify-between border-t border-white/[0.08] text-[11px] text-zinc-400 font-medium">
                   <div className="flex items-center gap-2">
                     <span className="px-2 py-0.5 rounded-md bg-white/[0.06] border border-white/10 text-white/80 font-semibold">
-                      ðŸ“„ {wordCountSub} Kata
+                      {wordCountSub} Kata
                     </span>
                     <span>•</span>
                     <span className="text-zinc-400">Sub-halaman</span>
@@ -5117,10 +5117,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         accept="image/png, image/jpeg, image/webp, image/svg+xml, image/gif"
       />
 
-      {/* Unified Midnight Navy Tempered Glass Workspace Shell (Header + Editor + Right Panel) */}
-      <div className="flex-1 flex flex-col m-2 sm:m-3 rounded-3xl glass-editor-sheet overflow-hidden border border-white/[0.12]">
-        {/* Integrated Top Header Bar */}
-        <div className="px-4 sm:px-5 h-12 border-b border-white/[0.08] flex items-center justify-between gap-4 shrink-0 select-none">
+      {/* Seamless Outer Chrome (Connected Left Sidebar + Top Header Bar + Right Panel) */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-transparent">
+        {/* Top Header Bar (Flush & Seamless with Left Sidebar & Right Panel) */}
+        <div className="px-4 sm:px-5 h-13 bg-[#0b1830]/75 backdrop-blur-2xl border-b border-white/[0.08] flex items-center justify-between gap-4 shrink-0 select-none">
         {/* Left: Folder Path Breadcrumb */}
         <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-400 overflow-x-auto max-w-[42%] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden shrink-0">
           {!isSidebarOpen && onToggleSidebar && (
@@ -5282,15 +5282,16 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         </div>
       )}
 
-      {/* Main Body Area inside Unified Shell */}
+      {/* Main Body Area: Standalone Floating Core Editor Sheet + Flush Right Panel */}
       <div className="flex-1 flex overflow-hidden bg-transparent">
-        {/* Main Editor Canvas */}
-        <div
-          ref={canvasScrollRef}
-          onClick={handleEmptyCanvasClick}
-          onMouseDown={handleMouseDownCanvas}
-          className="flex-1 flex flex-col px-6 sm:px-10 pt-6 sm:pt-8 overflow-y-auto space-y-0.5 max-w-[880px] w-full mx-auto pb-32 cursor-text select-text [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-        >
+        {/* Standalone Floating Core Editor Canvas */}
+        <div className="flex-1 flex overflow-hidden px-3 sm:px-5 py-3">
+          <div
+            ref={canvasScrollRef}
+            onClick={handleEmptyCanvasClick}
+            onMouseDown={handleMouseDownCanvas}
+            className="flex-1 flex flex-col p-6 sm:p-10 overflow-y-auto space-y-0.5 max-w-[860px] w-full mx-auto pb-32 cursor-text select-text glass-editor-sheet rounded-3xl [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          >
           {/* Title Input */}
           <input
             ref={titleRef}
@@ -6199,9 +6200,11 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           />
         </div>
 
-        {/* Integrated Right Sidebar Panel */}
+        </div>
+
+        {/* Flush Right Sidebar Panel (Seamlessly Joined with Top Bar & Left Sidebar) */}
         {isRightSidebarOpen && (
-          <aside className="w-56 sm:w-60 border-l border-white/[0.08] bg-white/[0.02] px-3 py-3 flex flex-col justify-between shrink-0 overflow-y-auto animate-in slide-in-from-right duration-200 select-none font-sans relative">
+          <aside className="w-56 sm:w-60 bg-[#0b1830]/75 backdrop-blur-2xl border-l border-white/[0.08] px-3 py-3 flex flex-col justify-between shrink-0 overflow-y-auto animate-in slide-in-from-right duration-200 select-none font-sans relative">
             <div className="space-y-4">
               {/* True iOS 26 Liquid Glass Sliding Lens Panel Tabs */}
               <div className="py-1.5 overflow-visible">

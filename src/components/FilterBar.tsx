@@ -613,7 +613,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     <aside
       ref={asideRef}
       style={{ ['--sidebar-width' as string]: `${sidebarWidth}px` }}
-      className={`w-full lg:w-[var(--sidebar-width)] shrink-0 glass-sidebar lg:my-3 lg:ml-3 lg:h-[calc(100%-1.5rem)] lg:rounded-3xl px-3.5 py-4 flex flex-col justify-between h-full select-none font-sans overflow-hidden relative z-20 ${
+      className={`w-full lg:w-[var(--sidebar-width)] shrink-0 px-3.5 py-4 flex flex-col justify-between h-full select-none font-sans overflow-hidden relative z-20 ${
+        selectedNoteId
+          ? 'bg-[#0b1830]/75 backdrop-blur-2xl border-r border-white/[0.08]'
+          : 'glass-sidebar lg:my-3 lg:ml-3 lg:h-[calc(100%-1.5rem)] lg:rounded-3xl'
+      } ${
         isResizing ? 'transition-none' : 'transition-[width] duration-150 ease-out'
       }`}
     >
