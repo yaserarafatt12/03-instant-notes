@@ -5869,7 +5869,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                               className="py-3 w-full flex items-center cursor-pointer group/hr"
                               title="Divider â€” klik lalu tekan Backspace/Delete untuk hapus"
                             >
-                              <hr className="w-full border-0 border-t border-white/15 group-hover/hr:border-white/35 transition-colors" />
+                              <hr className="w-full border-0 border-t border-white/25 group-hover/hr:border-white/45 transition-colors" />
                             </div>
                           );
                         }

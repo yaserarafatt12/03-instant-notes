@@ -93,27 +93,43 @@ export function parsePastedHtmlToMarkdown(htmlData: string): string {
     }
   });
 
-  // 3. Strip out UI buttons, SVGs, action bars (Copy, Share, Like, Dislike, 3-dots, etc.) — preserve <hr>
-  doc.querySelectorAll('svg, button, nav, footer, script, style, form, iframe, [aria-hidden="true"]:not(hr), [role="button"]').forEach((node) => node.remove());
+  // 3. Strip out UI buttons, SVGs, action bars (Copy, Share, Like, Dislike, 3-dots, etc.) — preserve <hr> & [role="separator"]
+  doc.querySelectorAll('svg, button, nav, footer, script, style, form, iframe, [aria-hidden="true"]:not(hr):not([role="separator"]), [role="button"]').forEach((node) => node.remove());
 
   function applyColorStyles(el: HTMLElement, text: string): string {
     let out = text;
     const style = el.style;
+    const cls = (typeof el.className === 'string' ? el.className : '').toLowerCase();
     const fontColor = el.tagName.toLowerCase() === 'font' ? el.getAttribute('color') : null;
-    if (style?.backgroundColor) {
-      const mappedBg = mapCssColorToPresetOrHex(style.backgroundColor);
-      if (mappedBg && !mappedBg.startsWith('#')) {
-        out = wrapInlinePreservingSpaces(out, `==${mappedBg}:`, '==');
-      } else if (mappedBg) {
-        out = wrapInlinePreservingSpaces(out, '==', '==');
+
+    // 1. Background / Highlight color (backgroundColor, shorthand background, or CSS class)
+    const rawBg = style?.backgroundColor || (style?.background && !style.background.includes('url(') ? style.background.split(/\s+/)[0] : '');
+    let mappedBg = rawBg ? mapCssColorToPresetOrHex(rawBg) : null;
+    if (!mappedBg && cls) {
+      const bgClsMatch = cls.match(/\b(?:bg|highlight)-(yellow|amber|red|rose|green|emerald|blue|sky|purple|pink|orange|gray|zinc)\b/);
+      if (bgClsMatch) {
+        const c = bgClsMatch[1];
+        mappedBg = c === 'amber' ? 'yellow' : c === 'rose' ? 'red' : c === 'emerald' ? 'green' : c === 'sky' ? 'blue' : c === 'zinc' ? 'gray' : c;
       }
     }
+    if (mappedBg && !mappedBg.startsWith('#')) {
+      out = wrapInlinePreservingSpaces(out, `==${mappedBg}:`, '==');
+    } else if (mappedBg) {
+      out = wrapInlinePreservingSpaces(out, '==', '==');
+    }
+
+    // 2. Foreground text color (style.color, <font color>, or CSS class)
     const rawFg = style?.color || fontColor;
-    if (rawFg) {
-      const mappedFg = mapCssColorToPresetOrHex(rawFg);
-      if (mappedFg) {
-        out = wrapInlinePreservingSpaces(out, `^^${mappedFg}:`, '^^');
+    let mappedFg = rawFg ? mapCssColorToPresetOrHex(rawFg) : null;
+    if (!mappedFg && cls) {
+      const fgClsMatch = cls.match(/\b(?:text|color)-(yellow|amber|red|rose|green|emerald|blue|sky|purple|pink|orange)\b/);
+      if (fgClsMatch) {
+        const c = fgClsMatch[1];
+        mappedFg = c === 'amber' ? 'yellow' : c === 'rose' ? 'red' : c === 'emerald' ? 'green' : c === 'sky' ? 'blue' : c;
       }
+    }
+    if (mappedFg) {
+      out = wrapInlinePreservingSpaces(out, `^^${mappedFg}:`, '^^');
     }
     return out;
   }
@@ -189,6 +205,17 @@ export function parsePastedHtmlToMarkdown(htmlData: string): string {
         if (lines.length === 0) return '';
         const formatted = lines.map((l) => (l.trimStart().startsWith('>') ? `> ${l.trimStart()}` : `> ${l}`));
         return `\n${formatted.join('\n')}\n`;
+      }
+
+      // Horizontal dividers (<hr>, [role="separator"], or empty border-divider <div>)
+      if (
+        tag === 'hr' ||
+        el.getAttribute('role') === 'separator' ||
+        (tag === 'div' &&
+          !el.textContent?.trim() &&
+          (el.style?.borderTop || el.style?.borderBottom || /\b(?:divider|separator|border-t|border-b)\b/i.test(el.className || '')))
+      ) {
+        return `\n---\n`;
       }
 
       const children = Array.from(el.childNodes).map((c) => walk(c, listDepth, quoteDepth)).join('');

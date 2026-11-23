@@ -635,12 +635,16 @@ img::selection {
   unicode-bidi: plaintext;
 }
 .rich-text-editor a.external-link::after {
-  content: " ↗";
-  font-size: 0.78em;
-  opacity: 0.72;
+  content: "";
   display: inline-block;
-  text-decoration: none;
-  margin-left: 1px;
+  width: 0.78em;
+  height: 0.78em;
+  margin-left: 0.22em;
+  vertical-align: -0.06em;
+  background-color: currentColor;
+  opacity: 0.7;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17L17 7'/%3E%3Cpath d='M8 7h9v9'/%3E%3C/svg%3E") no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17L17 7'/%3E%3Cpath d='M8 7h9v9'/%3E%3C/svg%3E") no-repeat center / contain;
 }
 .rich-text-editor sup {
   font-size: 0.72em;
