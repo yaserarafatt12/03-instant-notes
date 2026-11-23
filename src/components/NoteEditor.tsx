@@ -5156,10 +5156,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         accept="image/png, image/jpeg, image/webp, image/svg+xml, image/gif"
       />
 
-      {/* Seamless Tempered Glass Outer Chrome (Left + Top + Right Joined with Rounded Outer Edges) */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-transparent lg:py-2.5 lg:pr-2.5">
-        {/* Top Header Bar (Tempered Glass, Seamlessly Joined to Left & Right Panels) */}
-        <div className="px-4 sm:px-5 h-13 glass-sidebar lg:rounded-tr-3xl lg:rounded-tl-none rounded-t-3xl lg:border-l-0 border-b border-white/[0.10] flex items-center justify-between gap-4 shrink-0 select-none">
+      {/* Seamless Outer Chrome (Inherits Single Unbroken Tempered Glass Shell from App — Zero Internal Seams) */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-transparent">
+        {/* Top Header Bar (100% Seamless — No Border/Seam with Left or Right Panel) */}
+        <div className="px-4 sm:px-5 h-13 bg-transparent flex items-center justify-between gap-4 shrink-0 select-none">
         {/* Left: Folder Path Breadcrumb */}
         <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-400 overflow-x-auto max-w-[42%] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden shrink-0">
           {!isSidebarOpen && onToggleSidebar && (
@@ -5321,10 +5321,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         </div>
       )}
 
-      {/* Main Body Area: Standalone Floating Core Editor Sheet + Flush Right Panel */}
+      {/* Main Body Area: Standalone Floating Core Editor Sheet + Seamless Right Panel */}
       <div className="flex-1 flex overflow-hidden bg-transparent">
         {/* Standalone Floating Core Editor Canvas */}
-        <div className="flex-1 flex overflow-hidden px-3 sm:px-5 py-3">
+        <div className="flex-1 flex overflow-hidden px-2 sm:px-3 pb-3 pt-0.5">
           <div
             ref={canvasScrollRef}
             onClick={handleEmptyCanvasClick}
@@ -6276,9 +6276,9 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
         </div>
 
-        {/* Right Sidebar Panel (Tempered Glass, Seamlessly Joined to Top Bar with Rounded Bottom-Right Edge) */}
+        {/* Right Sidebar Panel (100% Seamless — No Border/Seam with Top Bar) */}
         {isRightSidebarOpen && (
-          <aside className="w-56 sm:w-60 glass-sidebar border-t-0 lg:rounded-br-3xl lg:rounded-bl-2xl px-3 py-3 flex flex-col justify-between shrink-0 overflow-y-auto animate-in slide-in-from-right duration-200 select-none font-sans relative">
+          <aside className="w-56 sm:w-60 bg-transparent px-3 pb-3 pt-1 flex flex-col justify-between shrink-0 overflow-y-auto animate-in slide-in-from-right duration-200 select-none font-sans relative">
             <div className="space-y-4">
               {/* True iOS 26 Liquid Glass Sliding Lens Panel Tabs */}
               <div className="py-1.5 overflow-visible">
