@@ -41,7 +41,7 @@ export function LiquidVerticalNav<T extends string>({
   const justHandledPointerRef = useRef<boolean>(false);
   const prevYRef = useRef<number>(0);
 
-  const PAD_Y = 5;
+  const PAD_Y = 2;
   const itemCount = Math.max(1, items.length);
   const activeIndex = items.findIndex((item) => item.value === activeValue);
   const hasActive = activeIndex >= 0;
@@ -86,7 +86,7 @@ export function LiquidVerticalNav<T extends string>({
     return () => ro.disconnect();
   }, [items.length]);
 
-  const bubbleHeight = Math.max(32, isHolding ? slotHeight + 4 : slotHeight - 2);
+  const bubbleHeight = Math.max(30, isHolding ? slotHeight + 4 : slotHeight - 2);
   springRef.current.bubbleHeight = bubbleHeight;
 
   const applyLensTransform = useCallback(() => {
@@ -284,21 +284,21 @@ export function LiquidVerticalNav<T extends string>({
         onPointerMove={handlePointerMove}
         onPointerUp={(e) => finishInteraction(e, true)}
         onPointerCancel={(e) => finishInteraction(e, false)}
-        className="relative flex flex-col w-full px-[5px] py-[5px] touch-none select-none cursor-pointer"
+        className="relative flex flex-col w-full px-0 py-[2px] touch-none select-none cursor-pointer"
       >
         {/* Sliding Vertical Liquid Glass Pill */}
         {(hasActive || isHolding) && slotHeight > 0 && (
           <div
             ref={lensRef}
             aria-hidden="true"
-            className="absolute left-[5px] right-[5px] rounded-xl pointer-events-none z-10 overflow-hidden will-change-transform"
+            className="absolute left-0 right-0 rounded-lg pointer-events-none z-10 overflow-hidden will-change-transform"
             style={{
               height: `${bubbleHeight}px`,
               transition: 'height 220ms cubic-bezier(0.32, 1.35, 0.5, 1)',
             }}
           >
             <div
-              className="w-full h-full rounded-xl relative transition-all duration-200"
+              className="w-full h-full rounded-lg relative transition-all duration-200"
               style={{
                 backdropFilter: isHolding
                   ? 'blur(14px) saturate(160%) brightness(1.12)'
@@ -336,7 +336,7 @@ export function LiquidVerticalNav<T extends string>({
                 if (justHandledPointerRef.current) return;
                 commitItemByIndex(idx);
               }}
-              className={`relative z-20 w-full h-10 flex items-center justify-between px-3 rounded-xl text-[14px] transition-colors duration-150 select-none focus:outline-none ${
+              className={`relative z-20 w-full h-[34px] flex items-center justify-between px-2 rounded-lg text-[13.5px] transition-colors duration-150 select-none focus:outline-none ${
                 isActive
                   ? isLight
                     ? 'text-[#0A1128] font-semibold'

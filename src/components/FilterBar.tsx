@@ -4,8 +4,6 @@ import {
   Star,
   Trash2,
   Plus,
-  FolderOpen as FoldersHeaderIcon,
-  Tag as TagIcon,
   History,
   Settings,
   PanelLeft,
@@ -613,10 +611,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     <aside
       ref={asideRef}
       style={{ ['--sidebar-width' as string]: `${sidebarWidth}px` }}
-      className={`w-full lg:w-[var(--sidebar-width)] shrink-0 px-3.5 py-4 flex flex-col justify-between select-none font-sans overflow-hidden relative z-20 ${
+      className={`w-full lg:w-[var(--sidebar-width)] shrink-0 px-2 py-3 flex flex-col justify-between h-full select-none font-sans overflow-hidden relative z-20 ${
         selectedNoteId
-          ? 'bg-transparent border-0 shadow-none h-full'
-          : 'glass-sidebar lg:my-3 lg:ml-3 lg:h-[calc(100%-1.5rem)] lg:rounded-3xl'
+          ? 'bg-[#0b1830]/60 backdrop-blur-xl border-r border-white/[0.07]'
+          : 'bg-[#0b1830]/65 backdrop-blur-xl border-r border-white/[0.08]'
       } ${
         isResizing ? 'transition-none' : 'transition-[width] duration-150 ease-out'
       }`}
@@ -870,13 +868,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         ) : (
           <>
             {/* 1. Clean Wordmark Brand Header & Sidebar Close Button */}
-            <div className="flex items-center justify-between px-1.5 pt-0.5">
+            <div className="flex items-center justify-between px-2 pt-0.5">
               <BrandLogo />
 
               {onToggleSidebar && (
                 <button
                   onClick={onToggleSidebar}
-                  className="p-2 q-text-muted hover:q-text-primary rounded-xl hover:bg-white/10 transition-colors"
+                  className="p-1.5 q-text-muted hover:q-text-primary rounded-lg hover:bg-white/10 transition-colors"
                   title={isEn ? 'Hide Sidebar' : 'Sembunyikan Sidebar'}
                 >
                   <PanelLeft className="w-4 h-4" />
@@ -887,9 +885,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             {/* 2. Sleek Compact Primary CTA */}
             <button
               onClick={onNewNote}
-              className="w-full h-9 flex items-center justify-center gap-2 px-3.5 text-[13px] font-semibold bg-white/[0.11] hover:bg-white/[0.16] text-white border border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.22)] rounded-xl transition-all active:scale-[0.98] group"
+              className="w-full h-8 flex items-center justify-start gap-2 px-2.5 text-[13px] font-medium bg-white/[0.09] hover:bg-white/[0.14] text-white border border-white/[0.12] rounded-lg transition-all active:scale-[0.99] group"
             >
-              <SquarePen className="w-3.5 h-3.5 transition-transform group-hover:scale-105" />
+              <SquarePen className="w-3.5 h-3.5 text-white/75 group-hover:text-white transition-colors" />
               <span>{isEn ? 'New Note' : 'Catatan Baru'}</span>
             </button>
 
@@ -928,12 +926,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               ]}
             />
 
-            {/* 4. Folders Section Header */}
-            <div className="space-y-1 pt-2 group/folders">
-              <div className="flex items-center justify-between px-2.5 mb-1">
-                <span className="text-[10.5px] font-semibold text-white/45 uppercase tracking-[0.08em] flex items-center gap-1.5">
-                  <FoldersHeaderIcon className="w-3.5 h-3.5 opacity-75" />
-                  <span>{isEn ? 'Folders' : 'Folder'}</span>
+            {/* 4. Folders Section Header (Clean Notion-style — no noisy icon, flush left rail) */}
+            <div className="space-y-0.5 pt-1 group/folders">
+              <div className="flex items-center justify-between px-2 mb-0.5">
+                <span className="text-[11.5px] font-medium text-white/45 tracking-wide">
+                  {isEn ? 'Folders' : 'Folder'}
                 </span>
                 <div className="flex items-center gap-1 opacity-0 group-hover/folders:opacity-100 transition-opacity">
                   <button
@@ -960,7 +957,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               {!isFoldersSectionCollapsed && (
                 <div className="space-y-0.5">
                   {folderTree.size === 0 ? (
-                    <p className="px-2.5 text-[12.5px] q-text-muted italic">{isEn ? 'No folders yet' : 'Belum ada folder'}</p>
+                    <p className="px-2 text-[12px] text-white/35">{isEn ? 'No folders yet' : 'Belum ada folder'}</p>
                   ) : (
                     <>
                       {(showAllFolders
@@ -984,12 +981,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               )}
             </div>
 
-            {/* 5. Tags Section Header */}
-            <div className="space-y-1 pt-2 group/tags relative">
-              <div className="flex items-center justify-between px-2.5 mb-1">
-                <span className="text-[10.5px] font-semibold text-white/45 uppercase tracking-[0.08em] flex items-center gap-1.5">
-                  <TagIcon className="w-3.5 h-3.5 rotate-90 opacity-75" />
-                  <span>{isEn ? 'Tags' : 'Tag'}</span>
+            {/* 5. Tags Section Header (Clean Notion-style — no noisy icon, flush left rail) */}
+            <div className="space-y-0.5 pt-1 group/tags relative">
+              <div className="flex items-center justify-between px-2 mb-0.5">
+                <span className="text-[11.5px] font-medium text-white/45 tracking-wide">
+                  {isEn ? 'Tags' : 'Tag'}
                 </span>
                 <div className="flex items-center gap-1 opacity-0 group-hover/tags:opacity-100 transition-opacity">
                   <button
@@ -1049,7 +1045,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               {!isTagsCollapsed && (
                 <div className="space-y-0.5">
                   {tags.filter((t) => pinnedTags.includes(t.name)).length === 0 ? (
-                    <p className="px-2.5 text-[12px] text-white/35">
+                    <p className="px-2 text-[12px] text-white/35">
                       {isEn ? 'No pinned tags' : 'Belum ada tag disematkan'}
                     </p>
                   ) : (
@@ -1109,10 +1105,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
       {/* 6. Bottom Left Footer (Only in Folders view) */}
       {sidebarView !== 'toc' && (
-        <div className="pt-2.5 border-t q-border shrink-0 flex items-center justify-between px-1">
+        <div className="pt-2 border-t border-white/[0.07] shrink-0 flex items-center justify-between">
           <button
             onClick={onOpenSettings}
-            className="w-full h-10 flex items-center gap-2.5 px-3 text-[13.5px] font-medium q-text-secondary hover:q-text-primary hover:bg-white/[0.08] rounded-xl transition-colors"
+            className="w-full h-9 flex items-center gap-2.5 px-2 text-[13.5px] font-medium q-text-secondary hover:q-text-primary hover:bg-white/[0.07] rounded-lg transition-colors"
             title={isEn ? 'Settings' : 'Pengaturan'}
           >
             <Settings className="w-4 h-4 q-text-muted" />

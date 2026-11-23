@@ -634,12 +634,10 @@ export function App() {
       {/* Quest Subtle Ambient Cyan Radial & Side Energy Overlay */}
       <div className="quest-ambient-energy" aria-hidden="true" />
 
-      {/* Unified Seamless Tempered Glass Outer Shell when Editing a Note (Zero Internal Seams between Left + Top + Right) */}
+      {/* Seamless Tempered Glass Outer Shell when Editing a Note (Flush to Screen Edges — Zero Wasted Margin) */}
       <div
-        className={`flex-1 flex overflow-hidden relative z-10 ${
-          selectedNoteId
-            ? 'lg:m-2.5 lg:h-[calc(100%-1.25rem)] h-full lg:rounded-3xl glass-sidebar'
-            : 'h-full w-full'
+        className={`flex-1 flex overflow-hidden relative z-10 h-full w-full ${
+          selectedNoteId ? 'bg-[#0b1830]/45' : ''
         }`}
       >
       {/* 1. Tempered Glass Left Sidebar */}
