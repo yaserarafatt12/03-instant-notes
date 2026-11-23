@@ -739,19 +739,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                     >
                       {item.type === 'page' ? (
                         <FileText className="w-3.5 h-3.5 q-text-muted shrink-0" />
-                      ) : item.type === 'heading' ? (
-                        <span
-                          className={`rounded-full shrink-0 transition-colors ${
-                            (item.level || 1) === 1
-                              ? 'w-1.5 h-1.5 bg-white/75'
-                              : (item.level || 1) === 2
-                              ? 'w-1.5 h-1.5 bg-white/45'
-                              : 'w-1 h-1 bg-white/30'
-                          }`}
-                        />
-                      ) : (
+                      ) : item.type === 'code' ? (
                         <Code className="w-3 h-3 q-text-muted shrink-0" />
-                      )}
+                      ) : null}
                       <span
                         className={`truncate ${
                           item.type === 'heading' && (item.level || 1) === 1
