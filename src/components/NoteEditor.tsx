@@ -5156,10 +5156,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         accept="image/png, image/jpeg, image/webp, image/svg+xml, image/gif"
       />
 
-      {/* Seamless Outer Chrome (Connected Left Sidebar + Top Header Bar + Right Panel) */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-transparent">
-        {/* Top Header Bar (Flush & Seamless with Left Sidebar & Right Panel) */}
-        <div className="px-4 sm:px-5 h-13 bg-[#0b1830]/75 backdrop-blur-2xl border-b border-white/[0.08] flex items-center justify-between gap-4 shrink-0 select-none">
+      {/* Seamless Tempered Glass Outer Chrome (Left + Top + Right Joined with Rounded Outer Edges) */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-transparent lg:py-2.5 lg:pr-2.5">
+        {/* Top Header Bar (Tempered Glass, Seamlessly Joined to Left & Right Panels) */}
+        <div className="px-4 sm:px-5 h-13 glass-sidebar lg:rounded-tr-3xl lg:rounded-tl-none rounded-t-3xl lg:border-l-0 border-b border-white/[0.10] flex items-center justify-between gap-4 shrink-0 select-none">
         {/* Left: Folder Path Breadcrumb */}
         <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-400 overflow-x-auto max-w-[42%] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden shrink-0">
           {!isSidebarOpen && onToggleSidebar && (
@@ -5616,6 +5616,21 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                     : 'rounded-lg';
 
                   const isQuoteBlock = /^>/.test(block.content || '');
+                  const headingPrefixMatch = (block.content || '').match(/^(#{1,6})\s+/);
+                  const headingLevel = headingPrefixMatch ? headingPrefixMatch[1].length : 0;
+                  const gripPosClass =
+                    headingLevel === 1
+                      ? 'top-[18px] h-[30px]'
+                      : headingLevel === 2
+                      ? 'top-[14px] h-[28px]'
+                      : headingLevel === 3
+                      ? 'top-[11px] h-[26px]'
+                      : headingLevel === 4
+                      ? 'top-[8px] h-[25px]'
+                      : headingLevel >= 5
+                      ? 'top-[6px] h-[24px]'
+                      : 'top-0 h-[25px]';
+
                   elements.push(
                     <div
                       key={block.id}
@@ -5637,9 +5652,9 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                         />
                       )}
 
-                      {/* 6-dot Grip Handle — Centered Vertically on Line 1 */}
+                      {/* 6-dot Grip Handle — Optically Centered on First Line (Including H1–H6) */}
                       <div
-                        className={`absolute -left-7 top-0 h-[25px] w-6 flex items-center justify-center select-none transition-all duration-75 z-30 ${
+                        className={`absolute -left-7 ${gripPosClass} w-6 flex items-center justify-center select-none transition-all duration-75 z-30 ${
                           isSelected || activeBlockMenuIdx === idx
                             ? 'opacity-100'
                             : 'opacity-0 group-hover/tblock:opacity-100'
@@ -5718,126 +5733,143 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                           return (
                             <div
                               onClick={(e) => e.stopPropagation()}
-                              className="block-action-menu absolute left-7 top-0 w-56 glass-popover rounded-2xl z-50 p-1.5 text-xs font-medium text-white/85 space-y-0.5 shadow-2xl"
+                              onMouseLeave={() => setBlockMenuSub('none')}
+                              className="block-action-menu absolute left-7 top-0 w-52 glass-popover rounded-2xl z-50 p-1.5 text-xs font-medium text-white/85 space-y-0.5 shadow-2xl overflow-visible"
                             >
-                              {/* Ubah menjadi (Turn into) */}
-                              <button
-                                type="button"
-                                onClick={() => setBlockMenuSub(blockMenuSub === 'turninto' ? 'none' : 'turninto')}
-                                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-colors ${
-                                  blockMenuSub === 'turninto' ? 'bg-white/12 text-white' : 'hover:bg-white/10 hover:text-white'
-                                }`}
+                              {/* Ubah menjadi (Hover-to-Open Side Flyout) */}
+                              <div
+                                className="relative"
+                                onMouseEnter={() => setBlockMenuSub('turninto')}
                               >
-                                <span className="flex items-center gap-2">
-                                  <Type className="w-3.5 h-3.5 text-white/60" />
-                                  <span>Ubah menjadi</span>
-                                </span>
-                                <ChevronRight className={`w-3.5 h-3.5 text-white/45 transition-transform ${blockMenuSub === 'turninto' ? 'rotate-90' : ''}`} />
-                              </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setBlockMenuSub(blockMenuSub === 'turninto' ? 'none' : 'turninto')}
+                                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-colors ${
+                                    blockMenuSub === 'turninto' ? 'bg-white/12 text-white' : 'hover:bg-white/10 hover:text-white'
+                                  }`}
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <Type className="w-3.5 h-3.5 text-white/60" />
+                                    <span>Ubah menjadi</span>
+                                  </span>
+                                  <ChevronRight className="w-3.5 h-3.5 text-white/45" />
+                                </button>
 
-                              {blockMenuSub === 'turninto' && (
-                                <div className="px-1 py-1 grid grid-cols-2 gap-1 bg-white/[0.04] rounded-xl border border-white/10">
-                                  {[
-                                    { label: 'Teks', prefix: '' },
-                                    { label: 'Heading 1', prefix: '# ' },
-                                    { label: 'Heading 2', prefix: '## ' },
-                                    { label: 'Heading 3', prefix: '### ' },
-                                    { label: 'Heading 4', prefix: '#### ' },
-                                    { label: 'Bullet List', prefix: '• ' },
-                                    { label: 'Number List', prefix: '1. ' },
-                                    { label: 'Checklist', prefix: '- [ ] ' },
-                                    { label: 'Blockquote', prefix: '> ' },
-                                    { label: 'Divider', prefix: '---' },
-                                  ].map((opt) => (
-                                    <button
-                                      key={opt.label}
-                                      type="button"
-                                      onClick={() => applyTurnInto(opt.prefix)}
-                                      className="px-2 py-1 text-[11px] text-left rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-                                    >
-                                      {opt.label}
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-
-                              {/* Warna (Color & Highlight) */}
-                              <button
-                                type="button"
-                                onClick={() => setBlockMenuSub(blockMenuSub === 'color' ? 'none' : 'color')}
-                                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-colors ${
-                                  blockMenuSub === 'color' ? 'bg-white/12 text-white' : 'hover:bg-white/10 hover:text-white'
-                                }`}
-                              >
-                                <span className="flex items-center gap-2">
-                                  <Highlighter className="w-3.5 h-3.5 text-white/60" />
-                                  <span>Warna</span>
-                                </span>
-                                <ChevronRight className={`w-3.5 h-3.5 text-white/45 transition-transform ${blockMenuSub === 'color' ? 'rotate-90' : ''}`} />
-                              </button>
-
-                              {blockMenuSub === 'color' && (
-                                <div className="p-2 bg-white/[0.04] rounded-xl border border-white/10 space-y-2.5">
-                                  <div>
-                                    <div className="text-[10px] font-semibold uppercase tracking-wider text-white/50 mb-1.5">
-                                      Warna Teks
-                                    </div>
-                                    <div className="grid grid-cols-5 gap-1">
-                                      <button
-                                        type="button"
-                                        onClick={() => applyBlockTextColor('default')}
-                                        className="w-7 h-7 rounded-lg bg-white/[0.06] border border-white/15 hover:border-white/40 flex items-center justify-center font-bold text-xs text-white/80"
-                                        title="Warna Default"
-                                      >
-                                        A
-                                      </button>
-                                      {NOTION_COLORS.map((c) => (
+                                {blockMenuSub === 'turninto' && (
+                                  <div className="absolute left-full top-0 pl-1.5 z-50">
+                                    <div className="w-48 glass-popover rounded-2xl p-1.5 grid grid-cols-2 gap-1 shadow-2xl">
+                                      {[
+                                        { label: 'Teks', prefix: '' },
+                                        { label: 'Heading 1', prefix: '# ' },
+                                        { label: 'Heading 2', prefix: '## ' },
+                                        { label: 'Heading 3', prefix: '### ' },
+                                        { label: 'Heading 4', prefix: '#### ' },
+                                        { label: 'Heading 5', prefix: '##### ' },
+                                        { label: 'Bullet List', prefix: '• ' },
+                                        { label: 'Number List', prefix: '1. ' },
+                                        { label: 'Checklist', prefix: '- [ ] ' },
+                                        { label: 'Blockquote', prefix: '> ' },
+                                        { label: 'Divider', prefix: '---' },
+                                      ].map((opt) => (
                                         <button
-                                          key={`btxt-${c.id}`}
+                                          key={opt.label}
                                           type="button"
-                                          onClick={() => applyBlockTextColor(c.id)}
-                                          className="w-7 h-7 rounded-lg bg-white/[0.06] border border-white/15 hover:border-white/40 flex items-center justify-center font-bold text-xs"
-                                          style={{ color: c.dotColor }}
-                                          title={`Teks ${c.name}`}
+                                          onClick={() => applyTurnInto(opt.prefix)}
+                                          className="px-2 py-1.5 text-[11px] text-left rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors"
                                         >
-                                          A
+                                          {opt.label}
                                         </button>
                                       ))}
                                     </div>
                                   </div>
-                                  <div>
-                                    <div className="text-[10px] font-semibold uppercase tracking-wider text-white/50 mb-1.5">
-                                      Warna Latar
-                                    </div>
-                                    <div className="grid grid-cols-5 gap-1">
-                                      <button
-                                        type="button"
-                                        onClick={() => applyBlockBgColor('default')}
-                                        className="w-7 h-7 rounded-lg bg-white/[0.06] border border-white/15 hover:border-white/40 flex items-center justify-center text-[11px] text-white/55"
-                                        title="Tanpa Latar"
-                                      >
-                                        ✕
-                                      </button>
-                                      {NOTION_COLORS.map((c) => (
-                                        <button
-                                          key={`bbg-${c.id}`}
-                                          type="button"
-                                          onClick={() => applyBlockBgColor(c.id)}
-                                          className={`w-7 h-7 rounded-lg ${c.bgClass} hover:scale-105 flex items-center justify-center transition-transform`}
-                                          title={`Latar ${c.name}`}
-                                        >
-                                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: c.dotColor }} />
-                                        </button>
-                                      ))}
+                                )}
+                              </div>
+
+                              {/* Warna (Hover-to-Open Side Flyout) */}
+                              <div
+                                className="relative"
+                                onMouseEnter={() => setBlockMenuSub('color')}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => setBlockMenuSub(blockMenuSub === 'color' ? 'none' : 'color')}
+                                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-colors ${
+                                    blockMenuSub === 'color' ? 'bg-white/12 text-white' : 'hover:bg-white/10 hover:text-white'
+                                  }`}
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <Highlighter className="w-3.5 h-3.5 text-white/60" />
+                                    <span>Warna</span>
+                                  </span>
+                                  <ChevronRight className="w-3.5 h-3.5 text-white/45" />
+                                </button>
+
+                                {blockMenuSub === 'color' && (
+                                  <div className="absolute left-full top-0 pl-1.5 z-50">
+                                    <div className="w-52 glass-popover rounded-2xl p-2.5 space-y-2.5 shadow-2xl">
+                                      <div>
+                                        <div className="text-[10px] font-semibold uppercase tracking-wider text-white/50 mb-1.5">
+                                          Warna Teks
+                                        </div>
+                                        <div className="grid grid-cols-5 gap-1">
+                                          <button
+                                            type="button"
+                                            onClick={() => applyBlockTextColor('default')}
+                                            className="w-7 h-7 rounded-lg bg-white/[0.06] border border-white/15 hover:border-white/40 flex items-center justify-center font-bold text-xs text-white/80"
+                                            title="Warna Default"
+                                          >
+                                            A
+                                          </button>
+                                          {NOTION_COLORS.map((c) => (
+                                            <button
+                                              key={`btxt-${c.id}`}
+                                              type="button"
+                                              onClick={() => applyBlockTextColor(c.id)}
+                                              className="w-7 h-7 rounded-lg bg-white/[0.06] border border-white/15 hover:border-white/40 flex items-center justify-center font-bold text-xs"
+                                              style={{ color: c.dotColor }}
+                                              title={`Teks ${c.name}`}
+                                            >
+                                              A
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-[10px] font-semibold uppercase tracking-wider text-white/50 mb-1.5">
+                                          Warna Latar
+                                        </div>
+                                        <div className="grid grid-cols-5 gap-1">
+                                          <button
+                                            type="button"
+                                            onClick={() => applyBlockBgColor('default')}
+                                            className="w-7 h-7 rounded-lg bg-white/[0.06] border border-white/15 hover:border-white/40 flex items-center justify-center text-[11px] text-white/55"
+                                            title="Tanpa Latar"
+                                          >
+                                            ✕
+                                          </button>
+                                          {NOTION_COLORS.map((c) => (
+                                            <button
+                                              key={`bbg-${c.id}`}
+                                              type="button"
+                                              onClick={() => applyBlockBgColor(c.id)}
+                                              className={`w-7 h-7 rounded-lg ${c.bgClass} hover:scale-105 flex items-center justify-center transition-transform`}
+                                              title={`Latar ${c.name}`}
+                                            >
+                                              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: c.dotColor }} />
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              )}
+                                )}
+                              </div>
 
                               <div className="my-1 border-t border-white/10" />
 
                               <button
                                 type="button"
+                                onMouseEnter={() => setBlockMenuSub('none')}
                                 onClick={() => handleDuplicateBlockByIdx(idx)}
                                 className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-white/10 hover:text-white text-left transition-colors"
                               >
@@ -5846,6 +5878,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                               </button>
                               <button
                                 type="button"
+                                onMouseEnter={() => setBlockMenuSub('none')}
                                 onClick={() => handleMoveBlockUp(idx)}
                                 disabled={idx === 0}
                                 className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-white/10 hover:text-white text-left transition-colors disabled:opacity-30"
@@ -5855,6 +5888,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                               </button>
                               <button
                                 type="button"
+                                onMouseEnter={() => setBlockMenuSub('none')}
                                 onClick={() => handleMoveBlockDown(idx)}
                                 disabled={idx === parsedChronologicalBlocks.length - 1}
                                 className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-white/10 hover:text-white text-left transition-colors disabled:opacity-30"
@@ -5867,6 +5901,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
                               <button
                                 type="button"
+                                onMouseEnter={() => setBlockMenuSub('none')}
                                 onClick={() => handleDeleteSelectedBlocks()}
                                 className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-rose-500/15 text-rose-400 text-left transition-colors"
                               >
@@ -6241,9 +6276,9 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
         </div>
 
-        {/* Flush Right Sidebar Panel (Seamlessly Joined with Top Bar & Left Sidebar) */}
+        {/* Right Sidebar Panel (Tempered Glass, Seamlessly Joined to Top Bar with Rounded Bottom-Right Edge) */}
         {isRightSidebarOpen && (
-          <aside className="w-56 sm:w-60 bg-[#0b1830]/75 backdrop-blur-2xl border-l border-white/[0.08] px-3 py-3 flex flex-col justify-between shrink-0 overflow-y-auto animate-in slide-in-from-right duration-200 select-none font-sans relative">
+          <aside className="w-56 sm:w-60 glass-sidebar border-t-0 lg:rounded-br-3xl lg:rounded-bl-2xl px-3 py-3 flex flex-col justify-between shrink-0 overflow-y-auto animate-in slide-in-from-right duration-200 select-none font-sans relative">
             <div className="space-y-4">
               {/* True iOS 26 Liquid Glass Sliding Lens Panel Tabs */}
               <div className="py-1.5 overflow-visible">
