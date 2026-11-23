@@ -1646,6 +1646,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
   // Selected block state when 6-dot grip handle is clicked or marquee drag selected
   const [selectedBlockIndices, setSelectedBlockIndices] = useState<number[]>([]);
   const [activeBlockMenuIdx, setActiveBlockMenuIdx] = useState<number | null>(null);
+  const [blockMenuSub, setBlockMenuSub] = useState<'none' | 'turninto' | 'color'>('none');
 
   // Marquee Drag Selection State (Matching Screenshots 2 & 3 - Continuous Auto-Scroll & Infinite Drag)
   const marqueeBoxRef = useRef<HTMLDivElement>(null);
@@ -5569,11 +5570,14 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                       : 'rounded-b-lg rounded-t-none'
                     : 'rounded-lg';
 
+                  const isQuoteBlock = /^>/.test(block.content || '');
                   elements.push(
                     <div
                       key={block.id}
                       data-block-idx={idx}
-                      className={`group/tblock relative transition-colors duration-75 w-full leading-[25px] px-1.5 py-[3px] ${selectedRadiusClass} ${
+                      className={`group/tblock relative transition-colors duration-75 w-full leading-[25px] px-1.5 ${
+                        isQuoteBlock ? 'py-0' : 'py-[3px]'
+                      } ${selectedRadiusClass} ${
                         isSelected
                           ? 'bg-white/[0.08] text-white'
                           : 'hover:bg-white/[0.025]'
@@ -5588,10 +5592,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                         />
                       )}
 
-                      {/* 6-dot Grip Handle â€” Identical -left-7 w-6 h-6 Rail */}
+                      {/* 6-dot Grip Handle — Identical -left-7 w-6 h-6 Rail + Notion-Style Block Menu */}
                       <div
-                        className={`absolute -left-7 top-[1px] w-6 h-[28px] flex items-center justify-center select-none transition-all duration-75 z-20 ${
-                          isSelected
+                        className={`absolute -left-7 top-[1px] w-6 h-[28px] flex items-center justify-center select-none transition-all duration-75 z-30 ${
+                          isSelected || activeBlockMenuIdx === idx
                             ? 'opacity-100'
                             : 'opacity-0 group-hover/tblock:opacity-100'
                         }`}
@@ -5600,7 +5604,6 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                           draggable
                           onClick={(e) => {
                             e.stopPropagation();
-                            // Clear text selection range & toolbar to prevent double highlight!
                             window.getSelection()?.removeAllRanges();
                             setSelectionToolbar(null);
                             setShowColorPicker(false);
@@ -5611,20 +5614,226 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                               const max = Math.max(start, idx);
                               const range = Array.from({ length: max - min + 1 }, (_, i) => min + i);
                               setSelectedBlockIndices(range);
+                              setActiveBlockMenuIdx(null);
                             } else {
-                              setSelectedBlockIndices(isSelected && selectedBlockIndices.length === 1 ? [] : [idx]);
+                              const nextOpen = activeBlockMenuIdx === idx ? null : idx;
+                              setActiveBlockMenuIdx(nextOpen);
+                              setBlockMenuSub('none');
+                              setSelectedBlockIndices(nextOpen !== null ? [idx] : []);
                             }
                           }}
-                          onDragStart={(e) => handleDragStartBlock(idx, e)}
+                          onDragStart={(e) => {
+                            setActiveBlockMenuIdx(null);
+                            handleDragStartBlock(idx, e);
+                          }}
                           onDragEnd={handleDragEnd}
                           className="w-6 h-6 text-white/45 hover:text-white hover:bg-white/10 rounded-lg cursor-grab active:cursor-grabbing transition-colors flex items-center justify-center"
-                          title="Klik (atau Shift+Klik) untuk seleksi / geser blok"
+                          title="Klik untuk menu blok (Ubah, Warna, Duplikat, Hapus) • Tarik untuk geser"
                         >
                           <GripVertical className="w-4 h-4" />
                         </div>
+
+                        {/* Notion-Style Block Action Menu (Anchored to 6-Dot Handle) */}
+                        {activeBlockMenuIdx === idx && (() => {
+                          const curClassified = classifyTextBlock(block.content || '');
+                          const curPlain = curClassified.kind === 'divider' ? '' : curClassified.content;
+                          const stripWrap = (s: string) =>
+                            s
+                              .replace(/^\^\^(?:[a-z]+|#[0-9a-fA-F]{3,6}):([\s\S]*)\^\^$/, '$1')
+                              .replace(/^==(?:[a-z]+:)?([\s\S]*)==$/, '$1');
+
+                          const applyTurnInto = (newPrefix: string) => {
+                            if (newPrefix === '---') {
+                              handleTextBlockUpdate(idx, '---');
+                            } else {
+                              handleTextBlockUpdate(idx, `${newPrefix}${curPlain}`);
+                            }
+                            setActiveBlockMenuIdx(null);
+                            setBlockMenuSub('none');
+                          };
+
+                          const applyBlockTextColor = (colorId: string) => {
+                            const prefix = curClassified.kind === 'divider' ? '' : curClassified.prefix;
+                            const core = stripWrap(curPlain);
+                            const nextBody = colorId === 'default' ? core : `^^${colorId}:${core}^^`;
+                            handleTextBlockUpdate(idx, `${prefix}${nextBody}`);
+                            setActiveBlockMenuIdx(null);
+                            setBlockMenuSub('none');
+                          };
+
+                          const applyBlockBgColor = (colorId: string) => {
+                            const prefix = curClassified.kind === 'divider' ? '' : curClassified.prefix;
+                            const core = stripWrap(curPlain);
+                            const nextBody = colorId === 'default' ? core : colorId === 'yellow' ? `==${core}==` : `==${colorId}:${core}==`;
+                            handleTextBlockUpdate(idx, `${prefix}${nextBody}`);
+                            setActiveBlockMenuIdx(null);
+                            setBlockMenuSub('none');
+                          };
+
+                          return (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className="block-action-menu absolute left-7 top-0 w-56 glass-popover rounded-2xl z-50 p-1.5 text-xs font-medium text-white/85 space-y-0.5 shadow-2xl"
+                            >
+                              {/* Ubah menjadi (Turn into) */}
+                              <button
+                                type="button"
+                                onClick={() => setBlockMenuSub(blockMenuSub === 'turninto' ? 'none' : 'turninto')}
+                                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-colors ${
+                                  blockMenuSub === 'turninto' ? 'bg-white/12 text-white' : 'hover:bg-white/10 hover:text-white'
+                                }`}
+                              >
+                                <span className="flex items-center gap-2">
+                                  <Type className="w-3.5 h-3.5 text-white/60" />
+                                  <span>Ubah menjadi</span>
+                                </span>
+                                <ChevronRight className={`w-3.5 h-3.5 text-white/45 transition-transform ${blockMenuSub === 'turninto' ? 'rotate-90' : ''}`} />
+                              </button>
+
+                              {blockMenuSub === 'turninto' && (
+                                <div className="px-1 py-1 grid grid-cols-2 gap-1 bg-white/[0.04] rounded-xl border border-white/10">
+                                  {[
+                                    { label: 'Teks', prefix: '' },
+                                    { label: 'Heading 1', prefix: '# ' },
+                                    { label: 'Heading 2', prefix: '## ' },
+                                    { label: 'Heading 3', prefix: '### ' },
+                                    { label: 'Heading 4', prefix: '#### ' },
+                                    { label: 'Bullet List', prefix: '• ' },
+                                    { label: 'Number List', prefix: '1. ' },
+                                    { label: 'Checklist', prefix: '- [ ] ' },
+                                    { label: 'Blockquote', prefix: '> ' },
+                                    { label: 'Divider', prefix: '---' },
+                                  ].map((opt) => (
+                                    <button
+                                      key={opt.label}
+                                      type="button"
+                                      onClick={() => applyTurnInto(opt.prefix)}
+                                      className="px-2 py-1 text-[11px] text-left rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                                    >
+                                      {opt.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Warna (Color & Highlight) */}
+                              <button
+                                type="button"
+                                onClick={() => setBlockMenuSub(blockMenuSub === 'color' ? 'none' : 'color')}
+                                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-colors ${
+                                  blockMenuSub === 'color' ? 'bg-white/12 text-white' : 'hover:bg-white/10 hover:text-white'
+                                }`}
+                              >
+                                <span className="flex items-center gap-2">
+                                  <Highlighter className="w-3.5 h-3.5 text-white/60" />
+                                  <span>Warna</span>
+                                </span>
+                                <ChevronRight className={`w-3.5 h-3.5 text-white/45 transition-transform ${blockMenuSub === 'color' ? 'rotate-90' : ''}`} />
+                              </button>
+
+                              {blockMenuSub === 'color' && (
+                                <div className="p-2 bg-white/[0.04] rounded-xl border border-white/10 space-y-2.5">
+                                  <div>
+                                    <div className="text-[10px] font-semibold uppercase tracking-wider text-white/50 mb-1.5">
+                                      Warna Teks
+                                    </div>
+                                    <div className="grid grid-cols-5 gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => applyBlockTextColor('default')}
+                                        className="w-7 h-7 rounded-lg bg-white/[0.06] border border-white/15 hover:border-white/40 flex items-center justify-center font-bold text-xs text-white/80"
+                                        title="Warna Default"
+                                      >
+                                        A
+                                      </button>
+                                      {NOTION_COLORS.map((c) => (
+                                        <button
+                                          key={`btxt-${c.id}`}
+                                          type="button"
+                                          onClick={() => applyBlockTextColor(c.id)}
+                                          className="w-7 h-7 rounded-lg bg-white/[0.06] border border-white/15 hover:border-white/40 flex items-center justify-center font-bold text-xs"
+                                          style={{ color: c.dotColor }}
+                                          title={`Teks ${c.name}`}
+                                        >
+                                          A
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="text-[10px] font-semibold uppercase tracking-wider text-white/50 mb-1.5">
+                                      Warna Latar
+                                    </div>
+                                    <div className="grid grid-cols-5 gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => applyBlockBgColor('default')}
+                                        className="w-7 h-7 rounded-lg bg-white/[0.06] border border-white/15 hover:border-white/40 flex items-center justify-center text-[11px] text-white/55"
+                                        title="Tanpa Latar"
+                                      >
+                                        ✕
+                                      </button>
+                                      {NOTION_COLORS.map((c) => (
+                                        <button
+                                          key={`bbg-${c.id}`}
+                                          type="button"
+                                          onClick={() => applyBlockBgColor(c.id)}
+                                          className={`w-7 h-7 rounded-lg ${c.bgClass} hover:scale-105 flex items-center justify-center transition-transform`}
+                                          title={`Latar ${c.name}`}
+                                        >
+                                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: c.dotColor }} />
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="my-1 border-t border-white/10" />
+
+                              <button
+                                type="button"
+                                onClick={() => handleDuplicateBlockByIdx(idx)}
+                                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-white/10 hover:text-white text-left transition-colors"
+                              >
+                                <Copy className="w-3.5 h-3.5 text-white/60" />
+                                <span>Duplikatkan</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleMoveBlockUp(idx)}
+                                disabled={idx === 0}
+                                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-white/10 hover:text-white text-left transition-colors disabled:opacity-30"
+                              >
+                                <ArrowUp className="w-3.5 h-3.5 text-white/60" />
+                                <span>Geser Ke Atas</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleMoveBlockDown(idx)}
+                                disabled={idx === parsedChronologicalBlocks.length - 1}
+                                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-white/10 hover:text-white text-left transition-colors disabled:opacity-30"
+                              >
+                                <ArrowDown className="w-3.5 h-3.5 text-white/60" />
+                                <span>Geser Ke Bawah</span>
+                              </button>
+
+                              <div className="my-1 border-t border-white/10" />
+
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteSelectedBlocks()}
+                                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-rose-500/15 text-rose-400 text-left transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Hapus</span>
+                              </button>
+                            </div>
+                          );
+                        })()}
                       </div>
 
-                      {/* 3-Dots Action Menu Button on Right - Mathematically Centered via Flexbox Line Height */}
+                      {/* 3-Dots Action Menu Button on Right */}
                       <div
                         className={`absolute right-1 top-0 h-[30px] flex items-center transition-opacity duration-75 z-20 ${
                           isSelected || activeBlockMenuIdx === idx
@@ -5637,50 +5846,14 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                             e.stopPropagation();
                             setSelectedBlockIndices([idx]);
                             setActiveBlockMenuIdx(activeBlockMenuIdx === idx ? null : idx);
+                            setBlockMenuSub('none');
                           }}
                           className="p-1 rounded-md text-zinc-500 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center"
                           title="Opsi Blok"
                         >
                           <MoreHorizontal className="w-3.5 h-3.5" />
                         </button>
-
-                          {/* Popover Dropdown Menu for Block */}
-                          {activeBlockMenuIdx === idx && (
-                            <div className="absolute right-0 top-7 w-44 glass-popover rounded-2xl z-50 overflow-hidden p-1.5 text-xs font-semibold q-text-secondary space-y-0.5">
-                              <button
-                                onClick={() => handleDuplicateBlockByIdx(idx)}
-                                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-white/10 hover:q-text-primary text-left transition-colors"
-                              >
-                                <Copy className="w-3.5 h-3.5 q-text-muted" />
-                                <span>Duplikat Blok</span>
-                              </button>
-                              <button
-                                onClick={() => handleMoveBlockUp(idx)}
-                                disabled={idx === 0}
-                                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-white/10 hover:q-text-primary text-left transition-colors disabled:opacity-30"
-                              >
-                                <ArrowUp className="w-3.5 h-3.5 q-text-muted" />
-                                <span>Geser Ke Atas</span>
-                              </button>
-                              <button
-                                onClick={() => handleMoveBlockDown(idx)}
-                                disabled={idx === parsedChronologicalBlocks.length - 1}
-                                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-white/10 hover:q-text-primary text-left transition-colors disabled:opacity-30"
-                              >
-                                <ArrowDown className="w-3.5 h-3.5 q-text-muted" />
-                                <span>Geser Ke Bawah</span>
-                              </button>
-                              <div className="my-1 border-t q-border" />
-                              <button
-                                onClick={() => handleDeleteSelectedBlocks()}
-                                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-rose-500/15 text-rose-400 text-left transition-colors"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                                <span>Hapus Blok</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                      </div>
 
                       {(() => {
                         const raw = block.content || '';
@@ -5940,7 +6113,9 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                             nested = (
                               <div
                                 key={d}
-                                className={`${quoteBorders[Math.min(d, quoteBorders.length - 1)]} pl-3.5 py-0.5`}
+                                className={`${quoteBorders[Math.min(d, quoteBorders.length - 1)]} pl-3.5 ${
+                                  d === 0 ? 'py-[3px]' : 'py-0.5'
+                                }`}
                               >
                                 {nested}
                               </div>
