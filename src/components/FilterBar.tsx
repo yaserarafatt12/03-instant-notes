@@ -613,8 +613,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       style={{ ['--sidebar-width' as string]: `${sidebarWidth}px` }}
       className={`w-full lg:w-[var(--sidebar-width)] shrink-0 px-2 py-3 flex flex-col justify-between h-full select-none font-sans overflow-hidden relative z-20 ${
         selectedNoteId
-          ? 'bg-[#0b1830]/60 backdrop-blur-xl border-r border-white/[0.07]'
-          : 'bg-[#0b1830]/65 backdrop-blur-xl border-r border-white/[0.08]'
+          ? 'bg-transparent border-0 shadow-none'
+          : 'bg-transparent border-0'
       } ${
         isResizing ? 'transition-none' : 'transition-[width] duration-150 ease-out'
       }`}
