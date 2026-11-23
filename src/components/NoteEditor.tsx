@@ -593,8 +593,7 @@ const LineNumberedEditor: React.FC<{
   placeholder?: string;
   onBlur?: () => void;
   autoFocus?: boolean;
-  onDeleteIfEmpty?: () => void;
-}> = ({ value, lang, onChange, placeholder, onBlur, autoFocus, onDeleteIfEmpty }) => {
+}> = ({ value, lang, onChange, placeholder, onBlur, autoFocus }) => {
   const lines = value.split('\n');
   const lineCount = Math.max(1, lines.length);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -697,11 +696,6 @@ const LineNumberedEditor: React.FC<{
               });
               return;
             }
-            if ((e.key === 'Backspace' || e.key === 'Delete') && !value.trim() && onDeleteIfEmpty) {
-              e.preventDefault();
-              onDeleteIfEmpty();
-              return;
-            }
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
               e.stopPropagation();
             }
@@ -778,12 +772,17 @@ const CodeBlockRenderer: React.FC<{
     const c = localCode.trim();
     if (!c) return 'AUTO';
     if (c.startsWith('<!') || c.startsWith('<html') || (c.startsWith('<') && c.includes('</'))) return 'HTML';
-    if (/^(import|export|interface|type|const|let|var|function|class\s+\w+)\s/m.test(c)) return 'JAVASCRIPT';
-    if (/^(def|class|import|from)\s/m.test(c) && (c.includes(':') || c.includes('print('))) return 'PYTHON';
+    if (/^(def |class\s+\w+.*:|from\s+\w+\s+import|print\(|elif\s+)/m.test(c) || (c.includes('self.') && c.includes(':'))) return 'PYTHON';
+    if (/^(?:interface|type)\s+\w+|:\s*(?:string|number|boolean|React\.FC)\b/m.test(c)) return 'TYPESCRIPT';
+    if (/^(import|export|const|let|var|function|class\s+\w+)\s/m.test(c) || c.includes('=>')) return 'JAVASCRIPT';
     if (/^(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)\s/i.test(c)) return 'SQL';
-    if (c.startsWith('{') || c.startsWith('[')) return 'JSON';
-    if (/^(\.|\#|[a-z0-9_-]+)\s*\{[\s\S]*?\}/m.test(c)) return 'CSS';
-    if (/^(curl|npm|yarn|pnpm|git|cd|ls|mkdir|docker|echo)\s/m.test(c)) return 'BASH';
+    if ((c.startsWith('{') || c.startsWith('[')) && /"[^"]+"\s*:/.test(c)) return 'JSON';
+    if (/^(\.|\#|:root|@media|@import|body|html|[a-z0-9_-]+)\s*\{[\s\S]*?:[\s\S]*?\}/m.test(c)) return 'CSS';
+    if (/^(curl|npm|yarn|pnpm|git|cd|ls|mkdir|docker|echo|export)\s/m.test(c) || c.startsWith('#!/bin/')) return 'BASH';
+    if (/^package\s+main\b|^func\s+\w+/m.test(c)) return 'GO';
+    if (/^fn\s+\w+|^let\s+mut\s+/m.test(c)) return 'RUST';
+    if (/^public\s+class\s+\w+/m.test(c)) return 'JAVA';
+    if (/^#include\s*</m.test(c)) return 'CPP';
     return 'CODE';
   }, [localCode, selectedLang]);
 
@@ -830,34 +829,34 @@ const CodeBlockRenderer: React.FC<{
 
       <div
         data-code-id={block.data.id}
-        className={`relative group/codecard rounded-xl transition-all ${
+        className={`relative group/codecard rounded-xl overflow-hidden bg-[#0b1526]/75 transition-all ${
         isSelected
           ? 'ring-1 ring-white/40 border border-white/40 shadow-md'
           : isAllSelected
           ? 'ring-1 ring-white/30 border border-white/30'
-          : 'border border-transparent'
+          : 'border border-white/[0.12]'
       }`}>
-        {/* Minimal Overlay Action Toolbar (Appears Top Right on Hover - Copy & Delete & Auto Lang Badge) */}
-        <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1.5 opacity-0 group-hover/codecard:opacity-100 transition-opacity select-none">
-          {/* Language Selector Button */}
+        {/* Clean Left-Anchored Header Strip (Never overlaps long code on the right) */}
+        <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/[0.08] bg-white/[0.02] select-none">
+          {/* Language Selector Button on Left */}
           <div className="relative">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setIsLangMenuOpen(!isLangMenuOpen);
               }}
-              className="text-[10px] font-semibold text-zinc-300 hover:text-white glass-control px-2 py-1 rounded-lg uppercase tracking-wider transition-all flex items-center gap-1 shadow-xs"
+              className="text-[10px] font-semibold text-zinc-300 hover:text-white glass-control px-2 py-0.5 rounded-lg uppercase tracking-wider transition-all flex items-center gap-1 shadow-xs"
               title="Pilih Bahasa Pemrograman"
             >
               <span>{detectedLang}</span>
               <ChevronRight className={`w-3 h-3 text-zinc-400 transition-transform ${isLangMenuOpen ? 'rotate-90' : ''}`} />
             </button>
 
-            {/* Language Popover Dropdown */}
+            {/* Language Popover Dropdown (Anchored Left) */}
             {isLangMenuOpen && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 top-7 w-36 max-h-56 glass-popover rounded-xl overflow-y-auto py-1 text-xs z-50 animate-in fade-in slide-in-from-top-1 duration-150"
+                className="absolute left-0 top-7 w-44 max-h-56 glass-popover rounded-xl overflow-y-auto py-1 text-xs z-50 animate-in fade-in slide-in-from-top-1 duration-150"
               >
                 {POPULAR_LANGUAGES.map((l) => (
                   <button
@@ -872,7 +871,11 @@ const CodeBlockRenderer: React.FC<{
                       (selectedLang === l.id || (!selectedLang && l.id === 'auto')) ? 'text-white font-bold bg-white/[0.12]' : 'text-zinc-300'
                     }`}
                   >
-                    <span>{l.label}</span>
+                    <span>
+                      {l.id === 'auto' && detectedLang !== 'AUTO' && detectedLang !== 'CODE'
+                        ? `Auto (${detectedLang})`
+                        : l.label}
+                    </span>
                     {(selectedLang === l.id || (!selectedLang && l.id === 'auto')) && <Check className="w-3 h-3" />}
                   </button>
                 ))}
@@ -880,27 +883,28 @@ const CodeBlockRenderer: React.FC<{
             )}
           </div>
 
-          <button
-            onClick={handleCopy}
-            className="p-1 glass-control rounded-lg text-zinc-400 hover:text-white transition-all shadow-xs"
-            title="Copy Kode"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />}
-          </button>
-          <button
-            onClick={() => onDeleteBlock(block.data.id)}
-            className="p-1 glass-control hover:bg-rose-500/20 hover:border-rose-500/30 rounded-lg text-zinc-400 hover:text-rose-400 transition-all shadow-xs"
-            title="Hapus Code Block"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          <div className="flex items-center gap-1 opacity-70 group-hover/codecard:opacity-100 transition-opacity">
+            <button
+              onClick={handleCopy}
+              className="p-1 glass-control rounded-lg text-zinc-400 hover:text-white transition-all shadow-xs"
+              title="Copy Kode"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />}
+            </button>
+            <button
+              onClick={() => onDeleteBlock(block.data.id)}
+              className="p-1 glass-control hover:bg-rose-500/20 hover:border-rose-500/30 rounded-lg text-zinc-400 hover:text-rose-400 transition-all shadow-xs"
+              title="Hapus Code Block"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
 
         <LineNumberedEditor
           value={localCode}
           lang={detectedLang.toLowerCase()}
           onChange={handleCodeChange}
-          onDeleteIfEmpty={() => onDeleteBlock(block.data.id)}
           placeholder="Tulis atau tempel kode di sini..."
           autoFocus={!localCode || isSelected}
         />
@@ -1057,7 +1061,6 @@ const MermaidBlockRenderer: React.FC<{
                 value={localCode}
                 lang="markdown"
                 onChange={handleCodeChange}
-                onDeleteIfEmpty={() => onDeleteBlock(block.data.id)}
                 placeholder="graph TD;\n  A[Mulai] --> B[Proses];\n  B --> C[Selesai];"
                 autoFocus
               />
@@ -1533,8 +1536,8 @@ const RichTextBlock: React.FC<RichTextBlockProps> = ({
         if (onDrop) onDrop(e);
       }}
       data-placeholder={placeholder}
-      className={`rich-text-editor w-full bg-transparent border-none focus:outline-none resize-none py-0 select-text cursor-text min-h-[26px] empty:before:content-[attr(data-placeholder)] empty:before:text-zinc-600 empty:before:italic ${
-        className || 'text-zinc-200 text-[15px] leading-[26px] tracking-[-0.01em] font-normal'
+      className={`rich-text-editor w-full bg-transparent border-none focus:outline-none resize-none py-0 select-text cursor-text min-h-[23px] empty:before:content-[attr(data-placeholder)] empty:before:text-zinc-600 empty:before:italic ${
+        className || 'text-zinc-200 text-[15px] leading-[23px] tracking-[-0.01em] font-normal'
       }`}
     />
   );
@@ -3846,7 +3849,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
   // Floating toolbar: detect text selection in text block
   const handleTextSelect = useCallback((blockIdx: number) => {
-    // Don't show B/I/U toolbar when Ctrl+A all-selected â€” only show when user highlights specific text
+    // Don't show B/I/U toolbar when Ctrl+A all-selected — only show when user highlights specific text
     if (isAllSelected) return;
 
     const selection = window.getSelection();
@@ -3970,7 +3973,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           code: pNode?.tagName.toLowerCase() === 'code',
           math: pNode?.classList.contains('bg-indigo-950/50') ?? false,
         });
-        return; // Don't close toolbar â€” keep it open for further toggling
+        return; // Don't close toolbar — keep it open for further toggling
       }
     }
     setSelectionToolbar(null);
@@ -4092,7 +4095,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     e.target.value = '';
   };
 
-  // Insert Subpage Block â€” Create inline block directly inside document box without pop-up modal jumpscare!
+  // Insert Subpage Block — Create inline block directly inside document box without pop-up modal jumpscare!
   const handleInsertPage = () => {
     if (subPageStack.length >= 4) {
       setMaxDepthWarning('Mencapai batas maksimal sub-halaman (Maksimal 4 tingkat).');
@@ -4281,7 +4284,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     return lines.join(' - ');
   };
 
-  // Render a single media block â€” uniform left alignment, smooth drag, real image resize
+  // Render a single media block — uniform left alignment, smooth drag, real image resize
   const renderSingleMediaBlock = (block: ChronoBlock, idx: number) => {
     const isDragging = draggedBlockIdx === idx;
 
@@ -4309,7 +4312,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             />
           )}
           
-          {/* 6-dot grip â€” symmetrical left gutter rail */}
+          {/* 6-dot grip — symmetrical left gutter rail */}
           <div
             draggable
             onDragStart={(e) => handleDragStartBlock(idx, e)}
@@ -4475,7 +4478,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                     <span className="px-2 py-0.5 rounded-md bg-white/[0.06] border border-white/10 text-white/80 font-semibold">
                       ðŸ“„ {wordCountSub} Kata
                     </span>
-                    <span>â€¢</span>
+                    <span>•</span>
                     <span className="text-zinc-400">Sub-halaman</span>
                   </div>
                   <span className="text-white/80 group-hover/craftcard:text-white group-hover/craftcard:translate-x-0.5 transition-all inline-flex items-center gap-1 font-semibold text-xs">
@@ -4548,7 +4551,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   </p>
                 ) : (
                   <p className="text-[11px] text-zinc-500 line-clamp-1 mt-0.5 font-normal">
-                    Sub-halaman Â· {wordCountSub} Kata
+                    Sub-halaman · {wordCountSub} Kata
                   </p>
                 )}
               </div>
@@ -4666,7 +4669,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       const initialWidth = att.width || imageWidths[att.id] || 380;
       const currentWidth = imageWidths[att.id] || initialWidth;
 
-      // Inline Image Block â€” resizable via corner drag handle
+      // Inline Image Block — resizable via corner drag handle
       if (att.isInlineImage) {
         return (
           <div
@@ -4684,7 +4687,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               />
             )}
             
-            {/* Drag grip handle â€” symmetrical left gutter rail */}
+            {/* Drag grip handle — symmetrical left gutter rail */}
             <div
               draggable
               onDragStart={(e) => handleDragStartBlock(idx, e)}
@@ -4728,25 +4731,25 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                 }}
               />
 
-              {/* Floating Overlay Toolbar */}
-              <div className="absolute top-2 right-2 opacity-0 group-hover/block:opacity-100 transition-opacity bg-black/70 backdrop-blur-md rounded-lg p-1 flex items-center gap-1 border border-white/10 shadow-2xl z-10">
+              {/* Floating Overlay Toolbar (Midnight Navy Tempered Glass) */}
+              <div className="absolute top-2 right-2 opacity-0 group-hover/block:opacity-100 transition-opacity glass-popover rounded-xl p-1 flex items-center gap-0.5 border border-white/15 shadow-2xl z-10">
                 <button
                   onClick={() => setPreviewAttachment(att)}
-                  className="p-1 hover:bg-white/20 rounded-md text-zinc-300 hover:text-white transition-colors"
+                  className="p-1.5 hover:bg-white/12 rounded-lg text-white/75 hover:text-white transition-colors"
                   title="Preview"
                 >
                   <Eye className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => handleRenameAttachment(att.id, att.name)}
-                  className="p-1 hover:bg-white/20 rounded-md text-zinc-300 hover:text-white transition-colors"
+                  className="p-1.5 hover:bg-white/12 rounded-lg text-white/75 hover:text-white transition-colors"
                   title="Rename"
                 >
                   <CraftRenameIcon className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => handleDeleteAttachment(att.id)}
-                  className="p-1 hover:bg-rose-600/60 rounded-md text-zinc-300 hover:text-white transition-colors"
+                  className="p-1.5 hover:bg-rose-500/20 rounded-lg text-white/75 hover:text-rose-400 transition-colors"
                   title="Hapus"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -4764,7 +4767,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         );
       }
 
-      // File Attachment Block â€” Craft Docs layout modes: 'small' | 'regular' | 'card'
+      // File Attachment Block — Craft Docs layout modes: 'small' | 'regular' | 'card'
       const layoutMode = att.layout || 'regular';
       const isAudio = att.mime.startsWith('audio/') || ['mp3', 'wav', 'ogg', 'm4a'].some((ext) => att.name.toLowerCase().endsWith('.' + ext));
       const isMenuOpen = activeAttachmentMenuId === att.id;
@@ -4785,7 +4788,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             />
           )}
           
-          {/* Drag grip handle â€” symmetrical left gutter rail */}
+          {/* Drag grip handle — symmetrical left gutter rail */}
           <div
             draggable
             onDragStart={(e) => handleDragStartBlock(idx, e)}
@@ -4858,7 +4861,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                 {att.name}
               </p>
               <p className="text-[11px] text-zinc-400 truncate mt-1 font-normal">
-                {getReadableFileTypeLabel(att.mime, att.name)} Â· {att.size}
+                {getReadableFileTypeLabel(att.mime, att.name)} · {att.size}
               </p>
 
               {/* Inline Audio Player if Audio */}
@@ -4884,7 +4887,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   {att.name}
                 </p>
                 <p className="text-[11px] text-zinc-400 line-clamp-1 mt-0.5 font-normal">
-                  {getReadableFileTypeLabel(att.mime, att.name)} Â· {att.size}
+                  {getReadableFileTypeLabel(att.mime, att.name)} · {att.size}
                 </p>
 
                 {/* Inline Audio Player if Audio */}
@@ -5114,8 +5117,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         accept="image/png, image/jpeg, image/webp, image/svg+xml, image/gif"
       />
 
-      {/* Top Floating Tempered Glass Editor Header Dock (Breadcrumb Path + In-Note Word Search + Actions) */}
-      <div className="mx-3 sm:mx-5 mt-3 mb-1 px-4 h-13 rounded-2xl glass-sidebar flex items-center justify-between gap-4 shrink-0 select-none">
+      {/* Unified Midnight Navy Tempered Glass Workspace Shell (Header + Editor + Right Panel) */}
+      <div className="flex-1 flex flex-col m-2 sm:m-3 rounded-3xl glass-editor-sheet overflow-hidden border border-white/[0.12]">
+        {/* Integrated Top Header Bar */}
+        <div className="px-4 sm:px-5 h-12 border-b border-white/[0.08] flex items-center justify-between gap-4 shrink-0 select-none">
         {/* Left: Folder Path Breadcrumb */}
         <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-400 overflow-x-auto max-w-[42%] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden shrink-0">
           {!isSidebarOpen && onToggleSidebar && (
@@ -5277,14 +5282,14 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         </div>
       )}
 
-      {/* Main Body Area: Central Inset Tempered Glass Editor Card + Right Sidebar */}
-      <div className="flex-1 flex overflow-hidden bg-transparent px-2 sm:px-4 pt-2 pb-3 gap-3">
-        {/* Main Editor Canvas Inset Card */}
+      {/* Main Body Area inside Unified Shell */}
+      <div className="flex-1 flex overflow-hidden bg-transparent">
+        {/* Main Editor Canvas */}
         <div
           ref={canvasScrollRef}
           onClick={handleEmptyCanvasClick}
           onMouseDown={handleMouseDownCanvas}
-          className="flex-1 flex flex-col p-6 sm:p-10 overflow-y-auto space-y-1 max-w-[860px] w-full mx-auto pb-32 cursor-text select-text glass-editor-sheet rounded-3xl [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="flex-1 flex flex-col px-6 sm:px-10 pt-6 sm:pt-8 overflow-y-auto space-y-0.5 max-w-[880px] w-full mx-auto pb-32 cursor-text select-text [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         >
           {/* Title Input */}
           <input
@@ -5506,7 +5511,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                         className="w-7 h-7 rounded-lg bg-[#2e2e32] border border-white/10 hover:border-white/40 flex items-center justify-center text-zinc-400 text-xs transition-all"
                         title="Tanpa Highlight"
                       >
-                        âœ•
+                        ✕
                       </button>
                       {NOTION_COLORS.map((c) => (
                         <button
@@ -5575,8 +5580,8 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                     <div
                       key={block.id}
                       data-block-idx={idx}
-                      className={`group/tblock relative transition-colors duration-75 w-full leading-[25px] px-1.5 ${
-                        isQuoteBlock ? 'py-0' : 'py-[3px]'
+                      className={`group/tblock relative transition-colors duration-75 w-full leading-[23px] px-1.5 ${
+                        isQuoteBlock ? 'py-0' : 'py-[1px]'
                       } ${selectedRadiusClass} ${
                         isSelected
                           ? 'bg-white/[0.08] text-white'
@@ -5592,9 +5597,9 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                         />
                       )}
 
-                      {/* 6-dot Grip Handle — Identical -left-7 w-6 h-6 Rail + Notion-Style Block Menu */}
+                      {/* 6-dot Grip Handle — Centered Vertically on Line 1 */}
                       <div
-                        className={`absolute -left-7 top-[1px] w-6 h-[28px] flex items-center justify-center select-none transition-all duration-75 z-30 ${
+                        className={`absolute -left-7 top-0 h-[25px] w-6 flex items-center justify-center select-none transition-all duration-75 z-30 ${
                           isSelected || activeBlockMenuIdx === idx
                             ? 'opacity-100'
                             : 'opacity-0 group-hover/tblock:opacity-100'
@@ -5867,7 +5872,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                                 setSelectedBlockIndices([idx]);
                               }}
                               className="py-3 w-full flex items-center cursor-pointer group/hr"
-                              title="Divider â€” klik lalu tekan Backspace/Delete untuk hapus"
+                              title="Divider — klik lalu tekan Backspace/Delete untuk hapus"
                             >
                               <hr className="w-full border-0 border-t border-white/25 group-hover/hr:border-white/45 transition-colors" />
                             </div>
@@ -5921,7 +5926,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                                 if (classified.kind === 'checklist') {
                                   handleTextBlockUpdate(idx, `${nextIndent}- [${classified.checked ? 'x' : ' '}] ${classified.content}`);
                                 } else if (classified.kind === 'bullet') {
-                                  handleTextBlockUpdate(idx, `${nextIndent}â€¢ ${classified.content}`);
+                                  handleTextBlockUpdate(idx, `${nextIndent}• ${classified.content}`);
                                 } else {
                                   handleTextBlockUpdate(idx, `${nextIndent}${classified.ordinal}. ${classified.content}`);
                                 }
@@ -5977,7 +5982,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                                   handleTextBlockUpdate(idx, '');
                                   return;
                                 }
-                                handleSplitBlockAtCaret(idx, `${blockPrefix}${before}`, `${classified.indent}â€¢ ${after}`);
+                                handleSplitBlockAtCaret(idx, `${blockPrefix}${before}`, `${classified.indent}• ${after}`);
                                 return;
                               }
                               if (classified.kind === 'ordered') {
@@ -6194,9 +6199,9 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           />
         </div>
 
-        {/* Tempered Glass Right Sidebar Panel */}
+        {/* Integrated Right Sidebar Panel */}
         {isRightSidebarOpen && (
-          <aside className="w-56 sm:w-60 glass-sidebar border-t border-l rounded-tl-3xl px-3 py-3 flex flex-col justify-between shrink-0 overflow-y-auto animate-in slide-in-from-right duration-200 select-none font-sans relative">
+          <aside className="w-56 sm:w-60 border-l border-white/[0.08] bg-white/[0.02] px-3 py-3 flex flex-col justify-between shrink-0 overflow-y-auto animate-in slide-in-from-right duration-200 select-none font-sans relative">
             <div className="space-y-4">
               {/* True iOS 26 Liquid Glass Sliding Lens Panel Tabs */}
               <div className="py-1.5 overflow-visible">
@@ -6261,7 +6266,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                       draggable
                       onDragStart={(e) => handleSidebarDragStart('attachment', 'File Attachment', e)}
                       onDragEnd={handleDragEnd}
-                      onClick={() => fileAttachmentInputRef.current?.click()}
+                      onClick={() => {
+                        targetInsertIndexRef.current = null;
+                        fileAttachmentInputRef.current?.click();
+                      }}
                       className="w-full flex items-center justify-between py-2 px-3 glass-control rounded-xl group cursor-grab active:cursor-grabbing select-none"
                       title="Klik atau tarik ke dokumen untuk menyisipkan File"
                     >
@@ -6277,7 +6285,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                       draggable
                       onDragStart={(e) => handleSidebarDragStart('image', 'Image Block', e)}
                       onDragEnd={handleDragEnd}
-                      onClick={() => imageBlockInputRef.current?.click()}
+                      onClick={() => {
+                        targetInsertIndexRef.current = null;
+                        imageBlockInputRef.current?.click();
+                      }}
                       className="w-full flex items-center justify-between py-2 px-3 glass-control rounded-xl group cursor-grab active:cursor-grabbing select-none"
                       title="Klik atau tarik ke dokumen untuk menyisipkan Gambar"
                     >
@@ -6417,7 +6428,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   <p className="text-[10px] q-text-muted font-semibold px-1">Tipografi Dokumen</p>
                   <div className="p-3 bg-white/[0.05] border border-white/[0.12] rounded-xl space-y-1">
                     <p className="text-xs font-semibold q-text-primary">Font Utama</p>
-                    <p className="text-xs q-text-muted">Inter â€” Clean Sans</p>
+                    <p className="text-xs q-text-muted">Inter — Clean Sans</p>
                   </div>
                 </div>
               )}
@@ -6482,6 +6493,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           </aside>
         )}
       </div>
+      </div>
 
       {/* File Attachment Preview Modal */}
       {previewAttachment && (
@@ -6494,13 +6506,13 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             className="w-full max-w-3xl glass-panel rounded-3xl overflow-hidden flex flex-col max-h-[85vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-b q-border bg-white/[0.04]">
+            {/* Unified Modal Header (Seamless Tempered Glass — no two-tone seam) */}
+            <div className="flex items-center justify-between px-5 py-3.5 bg-transparent">
               <div className="flex items-center gap-3 min-w-0 pr-4">
                 <CraftFileTypeBadge mime={previewAttachment.mime} name={previewAttachment.name} />
                 <div className="min-w-0">
                   <h3 className="text-xs sm:text-sm font-bold q-text-primary truncate">{previewAttachment.name}</h3>
-                  <p className="text-[10px] q-text-muted">{previewAttachment.size} â€¢ {previewAttachment.mime || 'File'}</p>
+                  <p className="text-[10px] q-text-muted">{previewAttachment.size} · {previewAttachment.mime || 'File'}</p>
                 </div>
               </div>
 
@@ -6521,8 +6533,8 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               </div>
             </div>
 
-            {/* Modal Body Preview Area */}
-            <div className="flex-1 p-6 overflow-y-auto flex items-center justify-center glass-recessed min-h-[300px]">
+            {/* Modal Body Preview Area (Unified Tempered Glass) */}
+            <div className="flex-1 px-6 pb-6 pt-2 overflow-y-auto flex items-center justify-center bg-transparent min-h-[300px]">
               {previewAttachment.mime.startsWith('image/') ||
               ['png', 'jpg', 'jpeg', 'svg', 'webp', 'gif'].some((ext) => previewAttachment.name.toLowerCase().endsWith('.' + ext)) ? (
                 <img
@@ -6538,7 +6550,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   </div>
                   <div>
                     <h4 className="text-sm font-bold q-text-primary truncate max-w-xs">{previewAttachment.name}</h4>
-                    <p className="text-xs q-text-muted mt-0.5">{previewAttachment.size} â€¢ File Audio</p>
+                    <p className="text-xs q-text-muted mt-0.5">{previewAttachment.size} • File Audio</p>
                   </div>
                   <audio controls autoPlay src={previewAttachment.url} className="w-full mt-2 rounded-xl" />
                 </div>

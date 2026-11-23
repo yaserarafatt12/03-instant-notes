@@ -22,7 +22,6 @@ import {
   Search,
   Folder,
   Code,
-  Hash,
   Image as ImageIcon,
   Home,
   X,
@@ -732,16 +731,34 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                         }
                       }}
                       className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium q-text-secondary hover:q-text-primary hover:bg-white/10 transition-colors text-left truncate group"
-                      style={{ paddingLeft: item.level ? `${item.level * 8}px` : '8px' }}
+                      style={{ paddingLeft: item.level ? `${Math.max(8, item.level * 10)}px` : '8px' }}
                     >
                       {item.type === 'page' ? (
                         <FileText className="w-3.5 h-3.5 q-text-muted shrink-0" />
                       ) : item.type === 'heading' ? (
-                        <Hash className="w-3 h-3 q-text-muted shrink-0" />
+                        <span
+                          className={`rounded-full shrink-0 transition-colors ${
+                            (item.level || 1) === 1
+                              ? 'w-1.5 h-1.5 bg-white/75'
+                              : (item.level || 1) === 2
+                              ? 'w-1.5 h-1.5 bg-white/45'
+                              : 'w-1 h-1 bg-white/30'
+                          }`}
+                        />
                       ) : (
                         <Code className="w-3 h-3 q-text-muted shrink-0" />
                       )}
-                      <span className="truncate">{item.title}</span>
+                      <span
+                        className={`truncate ${
+                          item.type === 'heading' && (item.level || 1) === 1
+                            ? 'font-semibold text-white/90'
+                            : item.type === 'heading' && (item.level || 1) === 2
+                            ? 'font-medium text-white/75'
+                            : ''
+                        }`}
+                      >
+                        {item.title}
+                      </span>
                     </button>
                   ))}
                   {tocItems.length === 0 && (
