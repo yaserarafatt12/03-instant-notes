@@ -156,8 +156,10 @@ describe('Batch 2 Rich Text & Paste Engine', () => {
   });
 
   it('9. classifies horizontal dividers cleanly', () => {
-    expect(classifyTextBlock('---')).toEqual({ kind: 'divider' });
-    expect(classifyTextBlock('***')).toEqual({ kind: 'divider' });
+    expect(classifyTextBlock('---')).toEqual({ kind: 'divider', variant: 'solid' });
+    expect(classifyTextBlock('***')).toEqual({ kind: 'divider', variant: 'dots' });
+    expect(classifyTextBlock('...')).toEqual({ kind: 'divider', variant: 'dotted' });
+    expect(classifyTextBlock('===')).toEqual({ kind: 'divider', variant: 'bold' });
   });
 
   it('10. renders text decorations, colors, highlights, superscript, and subscript', () => {

@@ -1,5 +1,7 @@
+export type DividerVariant = 'solid' | 'bold' | 'dotted' | 'dots';
+
 export type ClassifiedBlock =
-  | { kind: 'divider' }
+  | { kind: 'divider'; variant: DividerVariant }
   | { kind: 'heading'; level: 1 | 2 | 3 | 4 | 5 | 6; prefix: string; content: string }
   | { kind: 'checklist'; indent: string; depth: number; checked: boolean; prefix: string; content: string }
   | { kind: 'blockquote'; depth: number; prefix: string; content: string }
@@ -12,9 +14,19 @@ const BULLET_MARKERS = ['•', '◦', '▪'];
 export function classifyTextBlock(rawInput: string): ClassifiedBlock {
   const raw = rawInput || '';
 
-  // 1. Horizontal Divider (---, ***, ___)
-  if (/^\s*([-*_])\1{2,}\s*$/.test(raw)) {
-    return { kind: 'divider' };
+  // 1. Horizontal Dividers (--- solid, === bold, ... dotted, *** 3-dots, ___ solid)
+  const trimmed = raw.trim();
+  if (/^\*{3,}$/.test(trimmed)) {
+    return { kind: 'divider', variant: 'dots' };
+  }
+  if (/^\.{3,}$/.test(trimmed)) {
+    return { kind: 'divider', variant: 'dotted' };
+  }
+  if (/^={3,}$/.test(trimmed)) {
+    return { kind: 'divider', variant: 'bold' };
+  }
+  if (/^([-_])\1{2,}$/.test(trimmed)) {
+    return { kind: 'divider', variant: 'solid' };
   }
 
   // 2. Headings H1–H6

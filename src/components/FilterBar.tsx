@@ -16,13 +16,14 @@ import {
   FolderInput,
   List,
   CheckCircle2,
+  Circle,
   Paperclip,
-  Search,
+  Link2,
+  ArrowUpRight,
   Folder,
   Code,
   Image as ImageIcon,
   Home,
-  X,
 } from 'lucide-react';
 import type { FilterCategory, Note } from '../types/note';
 import { ConfirmModal } from './ConfirmModal';
@@ -283,10 +284,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
   const [showAllFolders, setShowAllFolders] = useState(false);
 
-  // TOC Sidebar Mode & Tabs State
+  // TOC Sidebar Mode & Tabs State (3-Tab: Outline | Tasks | Links & Media)
   const [sidebarView, setSidebarView] = useState<'folders' | 'toc'>('folders');
-  const [tocTab, setTocTab] = useState<'list' | 'tasks' | 'attachments' | 'search'>('list');
-  const [tocSearchQuery, setTocSearchQuery] = useState('');
+  const [tocTab, setTocTab] = useState<'list' | 'tasks' | 'attachments'>('list');
 
   // Automatically switch to TOC view when inside a note
   useEffect(() => {
@@ -373,34 +373,124 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   // Extract tasks/TODO checkboxes from active note
   const extractedTasks = useMemo(() => {
     if (!activeNote || !activeNote.content) return [];
-    const tasks: { id: string; text: string; completed: boolean }[] = [];
+    const tasks: { id: string; lineIndex: number; text: string; completed: boolean }[] = [];
     const lines = activeNote.content.split('\n');
     lines.forEach((line: string, idx: number) => {
-      const match = line.match(/^\s*-\s*\[([ xX])\]\s*(.+)$/);
+      const match = line.match(/^\s*-\s*\[([ xX])\]\s*(.*)$/);
       if (match) {
-        tasks.push({
-          id: `task-${idx}`,
-          completed: match[1].toLowerCase() === 'x',
-          text: match[2].trim(),
-        });
+        const cleanText = match[2]
+          .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1')
+          .replace(/\*\*\*([^*]+)\*\*\*/g, '$1')
+          .replace(/\*\*([^*]+)\*\*/g, '$1')
+          .replace(/\*([^*]+)\*/g, '$1')
+          .replace(/~~([^~]+)~~/g, '$1')
+          .replace(/`([^`]+)`/g, '$1')
+          .replace(/<\/?(?:u|sup|sub|span|mark)[^>]*>/gi, '')
+          .trim();
+        if (cleanText) {
+          tasks.push({
+            id: `task-${idx}`,
+            lineIndex: idx,
+            completed: match[1].toLowerCase() === 'x',
+            text: cleanText,
+          });
+        }
       }
     });
     return tasks;
   }, [activeNote]);
 
-  // Extract attachments/images from active note
-  const extractedAttachments = useMemo(() => {
-    if (!activeNote || !activeNote.content) return [];
-    const atts: { id: string; title: string; url?: string; type: string }[] = [];
+  // Extract links, attachments, and images from active note
+  const extractedLinksAndMedia = useMemo(() => {
+    if (!activeNote || !activeNote.content) {
+      return { links: [] as { id: string; title: string; url: string; host: string }[], media: [] as { id: string; title: string; type: 'image' | 'file' }[] };
+    }
+    const links: { id: string; title: string; url: string; host: string }[] = [];
+    const media: { id: string; title: string; type: 'image' | 'file' }[] = [];
+    const seenUrls = new Set<string>();
+
+    const parseHost = (rawUrl: string) => {
+      try {
+        return new URL(rawUrl).hostname.replace(/^www\./, '');
+      } catch {
+        return rawUrl;
+      }
+    };
+
+    // 1. Extract :::attachment{...} blocks
+    const attRegex = /:::attachment\{([^}]+)\}/gi;
+    let attMatch: RegExpExecArray | null;
+    let attCounter = 0;
+    while ((attMatch = attRegex.exec(activeNote.content)) !== null) {
+      const attrs = attMatch[1];
+      const nameMatch = attrs.match(/name="([^"]+)"/i);
+      const isInlineMatch = attrs.match(/isInline="(true|false)"/i);
+      const mimeMatch = attrs.match(/mime="([^"]+)"/i);
+      const isImg = isInlineMatch?.[1] === 'true' || (mimeMatch?.[1]?.startsWith('image/') ?? false);
+      const name = nameMatch?.[1] || (isImg ? (isEn ? 'Image' : 'Gambar') : (isEn ? 'Attachment' : 'Lampiran'));
+      media.push({ id: `blk-att-${attCounter++}`, title: name, type: isImg ? 'image' : 'file' });
+    }
+
+    // 2. Scan lines for Markdown images, Markdown links, and bare URLs
     const lines = activeNote.content.split('\n');
+    let insideFence = false;
     lines.forEach((line: string, idx: number) => {
-      const imgMatch = line.match(/!\[([^\]]*)\]\(([^\)]+)\)/);
-      if (imgMatch) {
-        atts.push({ id: `att-${idx}`, title: imgMatch[1] || 'Gambar', url: imgMatch[2], type: 'image' });
+      const trimmed = line.trim();
+      if (trimmed.startsWith('```') || trimmed.startsWith(':::whiteboard') || trimmed.startsWith(':::attachment')) {
+        if (trimmed.startsWith('```')) insideFence = !insideFence;
+        return;
+      }
+      if (insideFence) return;
+
+      // Markdown images ![alt](url)
+      const imgRegex = /!\[([^\]]*)\]\(([^\)]+)\)/g;
+      let im: RegExpExecArray | null;
+      let imIdx = 0;
+      while ((im = imgRegex.exec(line)) !== null) {
+        media.push({ id: `img-${idx}-${imIdx++}`, title: im[1] || (isEn ? 'Image' : 'Gambar'), type: 'image' });
+      }
+
+      // Remove markdown images before scanning links so image URLs aren't treated as web links
+      const lineWithoutImages = line.replace(/!\[([^\]]*)\]\(([^\)]+)\)/g, '');
+
+      // Markdown links [Label](https://...)
+      const mdLinkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+      let lm: RegExpExecArray | null;
+      let lmIdx = 0;
+      while ((lm = mdLinkRegex.exec(lineWithoutImages)) !== null) {
+        const url = lm[2];
+        if (!seenUrls.has(url)) {
+          seenUrls.add(url);
+          links.push({
+            id: `link-${idx}-${lmIdx++}`,
+            title: lm[1].trim() || parseHost(url),
+            url,
+            host: parseHost(url),
+          });
+        }
+      }
+
+      // Bare URLs https://...
+      const lineWithoutMdLinks = lineWithoutImages.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '');
+      const bareUrlRegex = /(https?:\/\/[^\s<>()[\]"']+)/g;
+      let bm: RegExpExecArray | null;
+      let bmIdx = 0;
+      while ((bm = bareUrlRegex.exec(lineWithoutMdLinks)) !== null) {
+        const url = bm[1].replace(/[.,;:!?]+$/, '');
+        if (!seenUrls.has(url)) {
+          seenUrls.add(url);
+          links.push({
+            id: `bare-${idx}-${bmIdx++}`,
+            title: parseHost(url),
+            url,
+            host: parseHost(url),
+          });
+        }
       }
     });
-    return atts;
-  }, [activeNote]);
+
+    return { links, media };
+  }, [activeNote, isEn]);
 
   const renderFolderNode = (node: FolderNode, depth = 0) => {
     // Limit subfolder nesting depth to 3 levels max
@@ -681,7 +771,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               )}
             </div>
 
-            {/* True iOS 26 Liquid Glass 4-Tab Sliding Lens Toolbar */}
+            {/* True iOS 26 Liquid Glass 3-Tab Sliding Lens Toolbar (Pages | Tasks | Links & Media) */}
             <div className="py-1 overflow-visible">
               <LiquidSegmentedControl
                 fullWidth
@@ -689,10 +779,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 value={tocTab}
                 onChange={setTocTab}
                 options={[
-                  { value: 'list', icon: <List className="w-3.5 h-3.5" />, title: isEn ? 'Outline' : 'Daftar Isi' },
+                  { value: 'list', icon: <List className="w-3.5 h-3.5" />, title: isEn ? 'Outline & Pages' : 'Halaman & Struktur' },
                   { value: 'tasks', icon: <CheckCircle2 className="w-3.5 h-3.5" />, title: isEn ? 'Tasks' : 'Daftar Tugas' },
-                  { value: 'attachments', icon: <Paperclip className="w-3.5 h-3.5" />, title: isEn ? 'Media & Files' : 'Media & Lampiran' },
-                  { value: 'search', icon: <Search className="w-3.5 h-3.5" />, title: isEn ? 'Find in Note' : 'Cari dalam Catatan' },
+                  { value: 'attachments', icon: <Link2 className="w-3.5 h-3.5" />, title: isEn ? 'Links & Media' : 'Tautan & Media' },
                 ]}
               />
             </div>
@@ -762,104 +851,106 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               </div>
             )}
 
-            {/* Tab 2: Tasks / TODOs */}
+            {/* Tab 2: Interactive Tasks / Checklists */}
             {tocTab === 'tasks' && (
               <div className="space-y-1 flex-1 overflow-y-auto pr-1">
-                <div className="text-[10px] font-semibold q-text-muted uppercase tracking-wider px-1 mb-2">
-                  {isEn ? `Tasks (${extractedTasks.length})` : `Daftar Tugas (${extractedTasks.length})`}
+                <div className="flex items-center justify-between px-1 mb-2">
+                  <span className="text-[10px] font-semibold q-text-muted uppercase tracking-wider">
+                    {isEn ? `Tasks (${extractedTasks.length})` : `Daftar Tugas (${extractedTasks.length})`}
+                  </span>
+                  {extractedTasks.length > 0 && (
+                    <span className="text-[10px] text-white/45 font-medium tabular-nums">
+                      {extractedTasks.filter((t) => t.completed).length}/{extractedTasks.length}
+                    </span>
+                  )}
                 </div>
-                {extractedTasks.map((t: { id: string; text: string; completed: boolean }) => (
-                  <div key={t.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/[0.04] text-xs q-text-secondary">
-                    <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${t.completed ? 'text-white' : 'q-text-muted'}`} />
-                    <span className={`truncate ${t.completed ? 'line-through q-text-muted' : ''}`}>{t.text}</span>
-                  </div>
+                {extractedTasks.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => {
+                      window.dispatchEvent(
+                        new CustomEvent('toggle-note-task', {
+                          detail: { lineIndex: t.lineIndex, completed: !t.completed },
+                        })
+                      );
+                    }}
+                    className="w-full flex items-start gap-2 px-2 py-1.5 rounded-lg hover:bg-white/[0.06] text-xs q-text-secondary text-left transition-colors group"
+                    title={t.completed ? (isEn ? 'Mark incomplete' : 'Tandai belum selesai') : (isEn ? 'Mark complete' : 'Tandai selesai')}
+                  >
+                    {t.completed ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-400" />
+                    ) : (
+                      <Circle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-white/35 group-hover:text-white/75 transition-colors" />
+                    )}
+                    <span className={`leading-snug break-words ${t.completed ? 'line-through text-white/40' : 'text-white/85'}`}>
+                      {t.text}
+                    </span>
+                  </button>
                 ))}
                 {extractedTasks.length === 0 && (
                   <div className="text-[11px] q-text-muted italic px-2 py-2">
-                    {isEn ? 'No checklist tasks in this note.' : 'Tidak ada tugas di catatan ini.'}
+                    {isEn ? 'No checklist tasks in this note yet.' : 'Belum ada daftar tugas (- [ ]) di catatan ini.'}
                   </div>
                 )}
               </div>
             )}
 
-            {/* Tab 3: Attachments */}
+            {/* Tab 3: Links, Images & File Attachments */}
             {tocTab === 'attachments' && (
-              <div className="space-y-1 flex-1 overflow-y-auto pr-1">
-                <div className="text-[10px] font-semibold q-text-muted uppercase tracking-wider px-1 mb-2">
-                  {isEn ? `Media & Files (${extractedAttachments.length})` : `Media & Lampiran (${extractedAttachments.length})`}
-                </div>
-                {extractedAttachments.map((a: { id: string; title: string; url?: string; type: string }) => (
-                  <div key={a.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/[0.04] text-xs q-text-secondary">
-                    <ImageIcon className="w-3.5 h-3.5 q-text-muted shrink-0" />
-                    <span className="truncate">{a.title}</span>
+              <div className="space-y-3 flex-1 overflow-y-auto pr-1">
+                {/* Links Section */}
+                <div className="space-y-1">
+                  <div className="text-[10px] font-semibold q-text-muted uppercase tracking-wider px-1">
+                    {isEn ? `Links (${extractedLinksAndMedia.links.length})` : `Tautan (${extractedLinksAndMedia.links.length})`}
                   </div>
-                ))}
-                {extractedAttachments.length === 0 && (
-                  <div className="text-[11px] q-text-muted italic px-2 py-2">
-                    {isEn ? 'No media attachments in this note.' : 'Belum ada lampiran media di catatan ini.'}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Tab 4: Search in Active Document */}
-            {tocTab === 'search' && (
-              <div className="space-y-2.5 flex-1 overflow-y-auto pr-1">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-white/55" />
-                  <input
-                    type="text"
-                    value={tocSearchQuery}
-                    onChange={(e) => setTocSearchQuery(e.target.value)}
-                    placeholder="Cari kata dalam catatan..."
-                    autoFocus
-                    className="w-full pl-8 pr-7 py-1.5 glass-input rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none"
-                  />
-                  {tocSearchQuery && (
-                    <button
-                      onClick={() => setTocSearchQuery('')}
-                      className="absolute right-2 top-2 p-0.5 text-zinc-400 hover:text-white"
+                  {extractedLinksAndMedia.links.map((lk) => (
+                    <a
+                      key={lk.id}
+                      href={lk.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg hover:bg-white/[0.06] text-xs text-white/80 hover:text-white transition-colors group"
+                      title={lk.url}
                     >
-                      <X className="w-3 h-3" />
-                    </button>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Link2 className="w-3.5 h-3.5 text-white/45 group-hover:text-white/80 shrink-0" />
+                        <div className="min-w-0">
+                          <div className="truncate font-medium leading-tight">{lk.title}</div>
+                          {lk.title !== lk.host && (
+                            <div className="truncate text-[10px] text-white/40 leading-tight mt-0.5">{lk.host}</div>
+                          )}
+                        </div>
+                      </div>
+                      <ArrowUpRight className="w-3 h-3 text-white/35 group-hover:text-white/80 shrink-0" />
+                    </a>
+                  ))}
+                  {extractedLinksAndMedia.links.length === 0 && (
+                    <div className="text-[11px] q-text-muted italic px-2 py-1">
+                      {isEn ? 'No links found.' : 'Belum ada tautan.'}
+                    </div>
                   )}
                 </div>
 
-                {/* Live Matches List */}
-                {tocSearchQuery.trim() ? (
-                  <div className="space-y-1 pt-1">
-                    {(() => {
-                      const lines = activeNote.content.split('\n');
-                      const matches = lines
-                        .map((line: string, lineIdx: number) => ({ line: line.trim(), lineIdx }))
-                        .filter((item: { line: string; lineIdx: number }) => item.line.toLowerCase().includes(tocSearchQuery.toLowerCase().trim()));
-
-                      if (matches.length === 0) {
-                        return (
-                          <div className="text-[11px] text-zinc-500 italic px-1 py-2">
-                            Tidak ada kata "{tocSearchQuery}" ditemukan.
-                          </div>
-                        );
-                      }
-
-                      return matches.map((m: { line: string; lineIdx: number }) => (
-                        <button
-                          key={m.lineIdx}
-                          onClick={() => {
-                            const el = document.querySelector('.select-text');
-                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                          }}
-                          className="w-full text-left p-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] transition-colors text-xs text-zinc-300 truncate"
-                        >
-                          <div className="font-semibold text-white truncate text-[11px]">Baris {m.lineIdx + 1}</div>
-                          <div className="truncate text-zinc-400 text-[11px]">{m.line}</div>
-                        </button>
-                      ));
-                    })()}
-                  </div>
-                ) : (
-                  <div className="text-[11px] text-zinc-500 italic px-1 py-1">
-                    Ketik kata kunci untuk mencari kata di catatan ini.
+                {/* Media & Files Section */}
+                {extractedLinksAndMedia.media.length > 0 && (
+                  <div className="space-y-1 pt-1 border-t border-white/[0.06]">
+                    <div className="text-[10px] font-semibold q-text-muted uppercase tracking-wider px-1">
+                      {isEn ? `Media & Files (${extractedLinksAndMedia.media.length})` : `Media & File (${extractedLinksAndMedia.media.length})`}
+                    </div>
+                    {extractedLinksAndMedia.media.map((m) => (
+                      <div
+                        key={m.id}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/[0.03] text-xs q-text-secondary"
+                      >
+                        {m.type === 'image' ? (
+                          <ImageIcon className="w-3.5 h-3.5 q-text-muted shrink-0" />
+                        ) : (
+                          <Paperclip className="w-3.5 h-3.5 q-text-muted shrink-0" />
+                        )}
+                        <span className="truncate">{m.title}</span>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

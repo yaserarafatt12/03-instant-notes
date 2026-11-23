@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useMemo, useCallback, Suspense } from 'react';
 import { flushSync } from 'react-dom';
 import {
   Trash2,
@@ -47,6 +47,7 @@ import {
   RotateCcw,
   Search,
   FilePlus,
+  PenTool,
 } from 'lucide-react';
 import mermaid from 'mermaid';
 import 'katex/dist/katex.min.css';
@@ -128,6 +129,8 @@ mermaid.initialize({
 });
 import type { Note, CollectionData } from '../types/note';
 import { CollectionBlockRenderer, createDefaultCollection } from './CollectionBlockRenderer';
+
+const WhiteboardBlockRenderer = React.lazy(() => import('./WhiteboardBlockRenderer'));
 import { exportNoteAsTXT } from '../lib/storage/db';
 import { saveVersionLog } from '../lib/storage/versionHistory';
 import { VersionHistoryModal } from './VersionHistoryModal';
@@ -181,13 +184,20 @@ interface MermaidBlockData {
   code: string;
 }
 
+interface WhiteboardBlockData {
+  id: string;
+  title: string;
+  sceneJson: string;
+}
+
 type ChronoBlock =
   | { type: 'text'; id: string; content: string }
   | { type: 'subpage'; id: string; data: SubPage }
   | { type: 'attachment'; id: string; data: FileAttachment }
   | { type: 'code'; id: string; data: CodeBlockData }
   | { type: 'mermaid'; id: string; data: MermaidBlockData }
-  | { type: 'collection'; id: string; data: CollectionData };
+  | { type: 'collection'; id: string; data: CollectionData }
+  | { type: 'whiteboard'; id: string; data: WhiteboardBlockData };
 
 // Global In-Memory Attachment Data Store
 const globalAttachmentMap = new Map<string, FileAttachment>();
@@ -2118,12 +2128,14 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
   // Version History Modal State
   const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
+  // Craft-style Interactive Table Grid Picker hover state (cols x rows)
+  const [tablePickerHover, setTablePickerHover] = useState<{ cols: number; rows: number } | null>(null);
 
   const parseTextToBlocks = useCallback((sourceText: string): ChronoBlock[] => {
     if (!sourceText) return [{ type: 'text', id: 't-root-0', content: '' }];
 
     const rawBlocks: ChronoBlock[] = [];
-    const splitRegex = /(:::(?:subpage|attachment|code|mermaid|collection)\{[\s\S]*?:::)/g;
+    const splitRegex = /(:::(?:subpage|attachment|code|mermaid|collection|whiteboard)\{[\s\S]*?:::)/g;
     const parts = sourceText.split(splitRegex);
 
     let lastPrecedingId = 'root';
@@ -2251,6 +2263,25 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         return;
       }
 
+      const whiteboardMatch = /^:::whiteboard\{id="([^"]+)"(?: title="([^"]*)")?\}[\r\n]*([\s\S]*?)[\r\n]*:::$/i.exec(trimmedPart);
+      if (whiteboardMatch) {
+        const wbId = whiteboardMatch[1];
+        const wbTitle = unescapeAttr(whiteboardMatch[2] || '') || 'Whiteboard';
+        const wbScene = decodeSubPageContent(whiteboardMatch[3] || '');
+        rawBlocks.push({
+          type: 'whiteboard',
+          id: wbId,
+          data: {
+            id: wbId,
+            title: wbTitle,
+            sceneJson: wbScene,
+          },
+        });
+        lastPrecedingId = wbId;
+        textLineIndexUnderBlock = 0;
+        return;
+      }
+
       // Regular text block:
       let cleanPart = part;
       // Strip leading delimiter \n ONLY if preceding part was a directive
@@ -2310,6 +2341,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       if (b.type === 'collection') {
         const encodedJson = encodeSubPageContent(JSON.stringify(b.data));
         return `:::collection{id="${b.data.id}" title="${escapeAttr(b.data.title)}"}\n${encodedJson}\n:::`;
+      }
+      if (b.type === 'whiteboard') {
+        const encodedScene = encodeSubPageContent(b.data.sceneJson || '');
+        return `:::whiteboard{id="${b.data.id}" title="${escapeAttr(b.data.title || 'Whiteboard')}"}\n${encodedScene}\n:::`;
       }
       return '';
     });
@@ -2630,6 +2665,31 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       window.removeEventListener('open-subpage-from-toc', handleOpenSubpageFromToc);
     };
   }, []);
+
+  // Listen for interactive task toggling from the Left Sidebar Tasks tab
+  useEffect(() => {
+    const handleToggleSidebarTask = (e: Event) => {
+      const customEvt = e as CustomEvent<{ lineIndex: number; completed: boolean }>;
+      if (!customEvt.detail) return;
+      const { lineIndex, completed } = customEvt.detail;
+      const lines = content.split('\n');
+      if (lineIndex < 0 || lineIndex >= lines.length) return;
+      const line = lines[lineIndex];
+      const toggled = line.replace(/^(\s*-\s*\[)[ xX](\]\s*.*)$/, `$1${completed ? 'x' : ' '}$2`);
+      if (toggled !== line) {
+        lines[lineIndex] = toggled;
+        const nextContent = lines.join('\n');
+        setContent(nextContent);
+        if (note) {
+          onSave({ ...note, title, content: nextContent, subject, tags, updatedAt: Date.now() });
+        }
+        pushHistory({ title, content: nextContent, subject, tags }, true);
+      }
+    };
+
+    window.addEventListener('toggle-note-task', handleToggleSidebarTask);
+    return () => window.removeEventListener('toggle-note-task', handleToggleSidebarTask);
+  }, [content, note, title, subject, tags, onSave, pushHistory]);
 
   // Global KeyDown listener for Ctrl+A selection, Undo/Redo, and Backspace/Delete wiping!
   useEffect(() => {
@@ -3464,6 +3524,88 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     focusNeighborTextBlock(targetIdx >= 0 ? targetIdx : 0, filtered);
   };
 
+  // Update Whiteboard Block
+  const handleUpdateWhiteboardBlock = (wbId: string, sceneJson: string, nextTitle?: string) => {
+    const updated = parsedChronologicalBlocks.map((b) => {
+      if (b.type === 'whiteboard' && b.id === wbId) {
+        return {
+          ...b,
+          data: {
+            ...b.data,
+            sceneJson,
+            title: nextTitle !== undefined ? nextTitle : b.data.title,
+          },
+        };
+      }
+      return b;
+    });
+    reassembleAndSaveBlocks(updated, false);
+  };
+
+  // Delete Whiteboard Block
+  const handleDeleteWhiteboardBlock = (wbId: string) => {
+    const targetIdx = parsedChronologicalBlocks.findIndex((b) => b.type === 'whiteboard' && b.id === wbId);
+    const filtered = parsedChronologicalBlocks.filter((b) => !(b.type === 'whiteboard' && b.id === wbId));
+    reassembleAndSaveBlocks(filtered);
+    setSelectedBlockIndices([]);
+    focusNeighborTextBlock(targetIdx >= 0 ? targetIdx : 0, filtered);
+  };
+
+  // Insert Whiteboard Block (Excalidraw)
+  const handleInsertWhiteboardBlock = () => {
+    const wbId = 'wb-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+    const blockMd = `:::whiteboard{id="${wbId}" title="Whiteboard"}\n\n:::`;
+    insertBlockAtActivePosition(blockMd);
+  };
+
+  // Insert TeX Formula Block (KaTeX display math)
+  const handleInsertFormulaBlock = () => {
+    insertBlockAtActivePosition('$$E = mc^2$$');
+  };
+
+  // Insert Divider Line (4 styles: dots, dotted, solid, bold)
+  const handleInsertDivider = (variant: 'dots' | 'dotted' | 'solid' | 'bold') => {
+    const syntaxMap = {
+      dots: '***',
+      dotted: '...',
+      solid: '---',
+      bold: '===',
+    };
+    insertBlockAtActivePosition(syntaxMap[variant]);
+  };
+
+  // Insert Simple Table with exact cols x rows from Craft-style Grid Picker
+  const handleInsertSimpleTable = (cols: number, rows: number) => {
+    const colId = 'col-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+    const viewId = 'v1';
+    const columns = Array.from({ length: cols }, (_, cIdx) => ({
+      id: `c_${cIdx + 1}`,
+      name: `Kolom ${cIdx + 1}`,
+      type: 'text' as const,
+      width: Math.max(120, Math.floor(620 / Math.max(1, cols))),
+    }));
+    const rowData = Array.from({ length: rows }, (_, rIdx) => {
+      const cells: Record<string, string> = {};
+      columns.forEach((col) => {
+        cells[col.id] = '';
+      });
+      return { id: `r_${rIdx + 1}`, cells };
+    });
+    const tableData: CollectionData = {
+      id: colId,
+      title: 'Tabel',
+      simple: true,
+      views: [{ id: viewId, name: 'Table', type: 'table' }],
+      activeViewId: viewId,
+      columns,
+      rows: rowData,
+    };
+    const encodedJson = encodeSubPageContent(JSON.stringify(tableData));
+    const blockMd = `:::collection{id="${tableData.id}" title="${tableData.title}"}\n${encodedJson}\n:::`;
+    insertBlockAtActivePosition(blockMd);
+    setTablePickerHover(null);
+  };
+
   // Insert Text Block at Active Position with Direct Auto-Focus
   const handleInsertTextBlock = () => {
     const currentBlocks = [...parsedChronologicalBlocks];
@@ -3803,6 +3945,47 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             mmdEl?.focus({ preventScroll: true });
           }, 35);
         });
+        return;
+      }
+
+      if (type === 'whiteboard') {
+        const wbId = 'wb-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+        const wbBlock: ChronoBlock = {
+          type: 'whiteboard',
+          id: wbId,
+          data: { id: wbId, title: 'Whiteboard', sceneJson: '' },
+        };
+        const currentAtInsert = updated[insertIdx];
+        if (currentAtInsert && currentAtInsert.type === 'text' && !currentAtInsert.content.trim()) {
+          updated[insertIdx] = wbBlock;
+        } else {
+          updated.splice(insertIdx, 0, wbBlock);
+        }
+        reassembleAndSaveBlocks(updated);
+        draggedSidebarItemRef.current = null;
+        dropIndicatorStateRef.current = null;
+        setDraggedSidebarItem(null);
+        setDropIndicatorState(null);
+        return;
+      }
+
+      if (type === 'formula') {
+        const fBlock: ChronoBlock = {
+          type: 'text',
+          id: `t-formula-${Date.now()}`,
+          content: '$$E = mc^2$$',
+        };
+        const currentAtInsert = updated[insertIdx];
+        if (currentAtInsert && currentAtInsert.type === 'text' && !currentAtInsert.content.trim()) {
+          updated[insertIdx] = fBlock;
+        } else {
+          updated.splice(insertIdx, 0, fBlock);
+        }
+        reassembleAndSaveBlocks(updated);
+        draggedSidebarItemRef.current = null;
+        dropIndicatorStateRef.current = null;
+        setDraggedSidebarItem(null);
+        setDropIndicatorState(null);
         return;
       }
 
@@ -5371,6 +5554,51 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       );
     }
 
+    if (block.type === 'whiteboard') {
+      return (
+        <div
+          key={block.id}
+          className={`group/block relative my-2 ${isDragging ? 'opacity-30 scale-[0.98]' : ''}`}
+          onDragOver={(e) => handleDragOverBlock(idx, e)}
+          onDrop={(e) => handleDropOnBlock(idx, e)}
+        >
+          {dropIndicatorState?.index === idx && (
+            <DropIndicatorLine
+              position={dropIndicatorState.position}
+              label={dropIndicatorState.label}
+            />
+          )}
+
+          {/* Drag grip handle — left gutter rail */}
+          <div
+            draggable
+            onDragStart={(e) => handleDragStartBlock(idx, e)}
+            onDragEnd={handleDragEnd}
+            className="absolute -left-7 top-2.5 w-6 h-6 opacity-0 group-hover/block:opacity-100 transition-all text-white/40 group-hover/block:text-white/80 hover:text-white hover:bg-white/10 rounded-lg cursor-grab active:cursor-grabbing z-20 flex items-center justify-center"
+            title="Geser Whiteboard"
+          >
+            <GripVertical className="w-4 h-4" />
+          </div>
+
+          <Suspense
+            fallback={
+              <div className="w-full h-[420px] rounded-2xl border border-white/[0.10] bg-[#0e1320] flex items-center justify-center text-xs text-white/50">
+                Memuat Excalidraw Whiteboard...
+              </div>
+            }
+          >
+            <WhiteboardBlockRenderer
+              id={block.data.id}
+              title={block.data.title}
+              initialSceneJson={block.data.sceneJson}
+              onSaveScene={(sceneJson, nextTitle) => handleUpdateWhiteboardBlock(block.id, sceneJson, nextTitle)}
+              onDelete={() => handleDeleteWhiteboardBlock(block.id)}
+            />
+          </Suspense>
+        </div>
+      );
+    }
+
     return null;
   };
 
@@ -5977,10 +6205,22 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                                 e.stopPropagation();
                                 setSelectedBlockIndices([idx]);
                               }}
-                              className="py-3 w-full flex items-center cursor-pointer group/hr"
+                              className="py-3 w-full flex items-center justify-center cursor-pointer group/hr"
                               title="Divider — klik lalu tekan Backspace/Delete untuk hapus"
                             >
-                              <hr className="w-full border-0 border-t border-white/25 group-hover/hr:border-white/45 transition-colors" />
+                              {classified.variant === 'dots' ? (
+                                <div className="flex items-center gap-3 text-white/40 group-hover/hr:text-white/70 transition-colors select-none">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                                </div>
+                              ) : classified.variant === 'dotted' ? (
+                                <hr className="w-full border-0 border-t-2 border-dotted border-white/25 group-hover/hr:border-white/50 transition-colors" />
+                              ) : classified.variant === 'bold' ? (
+                                <hr className="w-full border-0 border-t-[2.5px] border-white/45 group-hover/hr:border-white/70 transition-colors rounded-full" />
+                              ) : (
+                                <hr className="w-full border-0 border-t border-white/25 group-hover/hr:border-white/45 transition-colors" />
+                              )}
                             </div>
                           );
                         }
@@ -6437,6 +6677,118 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                         <span className="text-xs font-semibold q-text-primary">Mermaid Diagram</span>
                       </div>
                       <GripVertical className="w-3.5 h-3.5 q-text-muted" />
+                    </div>
+
+                    {/* 7. TeX Formula (KaTeX) */}
+                    <div
+                      draggable
+                      onDragStart={(e) => handleSidebarDragStart('formula', 'TeX Formula', e)}
+                      onDragEnd={handleDragEnd}
+                      onClick={handleInsertFormulaBlock}
+                      className="w-full flex items-center justify-between py-2 px-3 glass-control rounded-xl group cursor-grab active:cursor-grabbing select-none"
+                      title="Klik atau tarik ke dokumen untuk menyisipkan Rumus Matematika (KaTeX)"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Sigma className="w-4 h-4 q-text-primary group-hover:scale-105 transition-transform" />
+                        <span className="text-xs font-semibold q-text-primary">TeX Formula</span>
+                      </div>
+                      <GripVertical className="w-3.5 h-3.5 q-text-muted" />
+                    </div>
+
+                    {/* 8. Whiteboard (Excalidraw) */}
+                    <div
+                      draggable
+                      onDragStart={(e) => handleSidebarDragStart('whiteboard', 'Whiteboard', e)}
+                      onDragEnd={handleDragEnd}
+                      onClick={handleInsertWhiteboardBlock}
+                      className="w-full flex items-center justify-between py-2 px-3 glass-control rounded-xl group cursor-grab active:cursor-grabbing select-none"
+                      title="Klik atau tarik ke dokumen untuk menyisipkan Papan Gambar Excalidraw"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <PenTool className="w-4 h-4 q-text-primary group-hover:scale-105 transition-transform" />
+                        <span className="text-xs font-semibold q-text-primary">Whiteboard</span>
+                      </div>
+                      <GripVertical className="w-3.5 h-3.5 q-text-muted" />
+                    </div>
+                  </div>
+
+                  {/* Craft-style Insert Line (4 Divider Styles) */}
+                  <div className="space-y-2 pt-2 border-t q-border">
+                    <p className="text-[10px] font-semibold q-text-muted uppercase tracking-wider px-1">Insert Line</p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleInsertDivider('dots')}
+                        className="h-9 rounded-xl glass-control flex items-center justify-center gap-1.5 text-white/60 hover:text-white transition-colors"
+                        title="Sisipkan pemisah 3 titik (***)"
+                      >
+                        <span className="w-1 h-1 rounded-full bg-current" />
+                        <span className="w-1 h-1 rounded-full bg-current" />
+                        <span className="w-1 h-1 rounded-full bg-current" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleInsertDivider('dotted')}
+                        className="h-9 rounded-xl glass-control flex items-center justify-center px-3 text-white/60 hover:text-white transition-colors"
+                        title="Sisipkan garis titik-titik (...)"
+                      >
+                        <span className="w-full border-t-2 border-dotted border-current" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleInsertDivider('solid')}
+                        className="h-9 rounded-xl glass-control flex items-center justify-center px-3 text-white/60 hover:text-white transition-colors"
+                        title="Sisipkan garis tipis (---)"
+                      >
+                        <span className="w-full border-t border-current" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleInsertDivider('bold')}
+                        className="h-9 rounded-xl glass-control flex items-center justify-center px-3 text-white/75 hover:text-white transition-colors"
+                        title="Sisipkan garis tebal (===)"
+                      >
+                        <span className="w-full border-t-[2.5px] border-current rounded-full" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Craft-style Insert Table Interactive Grid Picker (6 x 5) */}
+                  <div className="space-y-2 pt-2 border-t q-border">
+                    <div className="flex items-center justify-between px-1">
+                      <p className="text-[10px] font-semibold q-text-muted uppercase tracking-wider">Insert Table</p>
+                      <span className="text-[10px] font-semibold text-white/60 tabular-nums">
+                        {tablePickerHover ? `${tablePickerHover.cols} × ${tablePickerHover.rows}` : 'Pilih ukuran'}
+                      </span>
+                    </div>
+                    <div
+                      onMouseLeave={() => setTablePickerHover(null)}
+                      className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.08] grid grid-cols-6 gap-1 select-none"
+                    >
+                      {Array.from({ length: 5 }, (_, r) =>
+                        Array.from({ length: 6 }, (_, c) => {
+                          const rowNum = r + 1;
+                          const colNum = c + 1;
+                          const isActive =
+                            tablePickerHover !== null &&
+                            colNum <= tablePickerHover.cols &&
+                            rowNum <= tablePickerHover.rows;
+                          return (
+                            <button
+                              key={`tbl-${rowNum}-${colNum}`}
+                              type="button"
+                              onMouseEnter={() => setTablePickerHover({ cols: colNum, rows: rowNum })}
+                              onClick={() => handleInsertSimpleTable(colNum, rowNum)}
+                              className={`h-4 rounded-[4px] border transition-colors ${
+                                isActive
+                                  ? 'bg-sky-400/35 border-sky-300/70'
+                                  : 'bg-white/[0.04] border-white/[0.10] hover:border-white/25'
+                              }`}
+                              title={`Sisipkan tabel ${colNum} kolom × ${rowNum} baris`}
+                            />
+                          );
+                        })
+                      )}
                     </div>
                   </div>
 
