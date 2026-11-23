@@ -78,6 +78,15 @@ import {
   parsePastedTextToChronoBlocks,
 } from '../lib/editor/clipboardParser';
 import { classifyTextBlock, isRtlText } from '../lib/editor/blockClassifier';
+import {
+  saveAttachmentBlob,
+  resolveAttachmentUrl,
+  getCachedAttachmentUrl,
+  deleteAttachmentBlob,
+  isIdbAttachmentUrl,
+  compressImageToWebP,
+  formatFileSize,
+} from '../lib/storage/attachmentStore';
 export { NOTION_COLORS };
 
 mermaid.initialize({
@@ -1274,22 +1283,15 @@ const RichTextBlock: React.FC<RichTextBlockProps> = ({
       const file = imageItem.getAsFile();
       if (!file) return;
 
-      const formattedSize =
-        file.size > 1024 * 1024
-          ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
-          : `${Math.round(file.size / 1024)} KB`;
-
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        const dataUrl = evt.target?.result as string;
-        if (!dataUrl) return;
-
+      void (async () => {
+        const compressed = await compressImageToWebP(file);
         const attachId = 'img-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
         const imageName = file.name && file.name !== 'image.png' ? file.name : 'Pasted Image';
-        const attachmentBlock = `:::attachment{id="${attachId}" name="${imageName}" size="${formattedSize}" mime="${file.type || 'image/png'}" isInline="true" url="${dataUrl}"}\n:::`;
+        const refUrl = await saveAttachmentBlob(attachId, compressed.blob, imageName, compressed.mime);
+        const formattedSize = formatFileSize(compressed.blob.size);
+        const attachmentBlock = `:::attachment{id="${attachId}" name="${imageName}" size="${formattedSize}" mime="${compressed.mime}" isInline="true" url="${refUrl}"}\n:::`;
         onInsertImageBlock(attachmentBlock);
-      };
-      reader.readAsDataURL(file);
+      })();
       return;
     }
 
@@ -1650,6 +1652,15 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
   const [selectedBlockIndices, setSelectedBlockIndices] = useState<number[]>([]);
   const [activeBlockMenuIdx, setActiveBlockMenuIdx] = useState<number | null>(null);
   const [blockMenuSub, setBlockMenuSub] = useState<'none' | 'turninto' | 'color'>('none');
+  const [resolvedBlobUrls, setResolvedBlobUrls] = useState<Record<string, string>>({});
+
+  const getDisplayUrl = useCallback(
+    (url: string) => {
+      if (!isIdbAttachmentUrl(url)) return url;
+      return resolvedBlobUrls[url] || getCachedAttachmentUrl(url) || '';
+    },
+    [resolvedBlobUrls]
+  );
 
   // Marquee Drag Selection State (Matching Screenshots 2 & 3 - Continuous Auto-Scroll & Infinite Drag)
   const marqueeBoxRef = useRef<HTMLDivElement>(null);
@@ -2727,6 +2738,43 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     const activeTextSource = activeSubPage ? activeSubPage.content : content;
     return parseTextToBlocks(activeTextSource);
   }, [activeSubPage, content, parseTextToBlocks]);
+
+  // Resolve any idb-att:// binary Blob URLs stored in IndexedDB into ObjectURLs
+  useEffect(() => {
+    const idbUrls = new Set<string>();
+    parsedChronologicalBlocks.forEach((b) => {
+      if (b.type === 'attachment' && isIdbAttachmentUrl(b.data.url)) {
+        idbUrls.add(b.data.url);
+      }
+    });
+    if (previewAttachment && isIdbAttachmentUrl(previewAttachment.url)) {
+      idbUrls.add(previewAttachment.url);
+    }
+
+    const missing = Array.from(idbUrls).filter((u) => !resolvedBlobUrls[u]);
+    if (missing.length === 0) return;
+
+    let cancelled = false;
+    void Promise.all(
+      missing.map(async (u) => {
+        const objUrl = await resolveAttachmentUrl(u);
+        return [u, objUrl] as const;
+      })
+    ).then((entries) => {
+      if (cancelled) return;
+      const next: Record<string, string> = {};
+      entries.forEach(([k, v]) => {
+        if (v) next[k] = v;
+      });
+      if (Object.keys(next).length > 0) {
+        setResolvedBlobUrls((prev) => ({ ...prev, ...next }));
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [parsedChronologicalBlocks, previewAttachment, resolvedBlobUrls]);
 
   // Insert block right after active position without adding extra \n
   const insertBlockAtActivePosition = (snippetText: string) => {
@@ -3979,21 +4027,22 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     setSelectionToolbar(null);
   }, [selectionToolbar, handleTextBlockUpdate]);
 
-  // Upload via File Attachment
+  // Upload via File Attachment -> Stored as binary Blob in IndexedDB (zero Base64 bloat / zero lag!)
   const handleFileAttachmentSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const formattedSize =
-      file.size > 1024 * 1024
-        ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
-        : `${Math.round(file.size / 1024)} KB`;
+    const formattedSize = formatFileSize(file.size);
+    const attachId = 'att-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+    const mime = file.type || 'application/octet-stream';
 
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const dataUrl = evt.target?.result as string;
-      const attachId = 'att-' + Date.now().toString(36);
-      const attachmentBlock = `:::attachment{id="${attachId}" name="${file.name}" size="${formattedSize}" mime="${file.type}" isInline="false" url="${dataUrl}"}\n:::`;
+    void (async () => {
+      const refUrl = await saveAttachmentBlob(attachId, file, file.name, mime);
+      const cachedObj = getCachedAttachmentUrl(refUrl);
+      if (cachedObj) {
+        setResolvedBlobUrls((prev) => ({ ...prev, [refUrl]: cachedObj }));
+      }
+      const attachmentBlock = `:::attachment{id="${attachId}" name="${file.name}" size="${formattedSize}" mime="${mime}" isInline="false" url="${refUrl}"}\n:::`;
       if (targetInsertIndexRef.current !== null) {
         const idx = targetInsertIndexRef.current;
         targetInsertIndexRef.current = null;
@@ -4005,9 +4054,9 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
             id: attachId,
             name: file.name,
             size: formattedSize,
-            mime: file.type,
+            mime,
             isInlineImage: false,
-            url: dataUrl,
+            url: refUrl,
           },
         };
         currentBlocks.splice(idx, 0, newBlock);
@@ -4018,79 +4067,66 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       } else {
         insertBlockAtActivePosition(attachmentBlock);
       }
-    };
-    reader.readAsDataURL(file);
+    })();
 
     e.target.value = '';
   };
 
-  // Upload via Image with smart aspect-ratio default sizing
+  // Upload via Image -> Auto-compress to WebP + binary Blob store + smart aspect-ratio default sizing
   const handleImageBlockSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const formattedSize =
-      file.size > 1024 * 1024
-        ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
-        : `${Math.round(file.size / 1024)} KB`;
+    const attachId = 'img-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
 
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const dataUrl = evt.target?.result as string;
-      const attachId = 'img-' + Date.now().toString(36);
+    void (async () => {
+      const compressed = await compressImageToWebP(file);
+      const formattedSize = formatFileSize(compressed.blob.size);
+      const refUrl = await saveAttachmentBlob(attachId, compressed.blob, file.name, compressed.mime);
+      const cachedObj = getCachedAttachmentUrl(refUrl);
+      if (cachedObj) {
+        setResolvedBlobUrls((prev) => ({ ...prev, [refUrl]: cachedObj }));
+      }
 
-      const img = new Image();
-      img.onload = () => {
-        const naturalWidth = img.naturalWidth || 1;
-        const naturalHeight = img.naturalHeight || 1;
-        const ratio = naturalWidth / naturalHeight;
+      const ratio = compressed.width && compressed.height ? compressed.width / compressed.height : 1;
+      let calculatedWidth = 380;
+      if (ratio < 0.75) {
+        calculatedWidth = 240;
+      } else if (ratio < 0.95) {
+        calculatedWidth = 300;
+      } else if (ratio <= 1.2) {
+        calculatedWidth = 380;
+      } else {
+        calculatedWidth = 460;
+      }
 
-        // Aspect ratio intelligent default sizing:
-        // - 9:16 vertical portrait (ratio < 0.75): width = 240px
-        // - 3:4 portrait (0.75 <= ratio < 0.95): width = 300px
-        // - 1:1 square (0.95 <= ratio <= 1.2): width = 380px (pas)
-        // - 16:9 widescreen landscape (ratio > 1.2): width = 460px (sedikit lebih ramping)
-        let calculatedWidth = 380;
-        if (ratio < 0.75) {
-          calculatedWidth = 240;
-        } else if (ratio < 0.95) {
-          calculatedWidth = 300;
-        } else if (ratio <= 1.2) {
-          calculatedWidth = 380;
-        } else {
-          calculatedWidth = 460;
-        }
-
-        const attachmentBlock = `:::attachment{id="${attachId}" name="${file.name}" size="${formattedSize}" mime="${file.type}" isInline="true" width="${calculatedWidth}" url="${dataUrl}"}\n:::`;
-        if (targetInsertIndexRef.current !== null) {
-          const idx = targetInsertIndexRef.current;
-          targetInsertIndexRef.current = null;
-          const currentBlocks = [...parsedChronologicalBlocks];
-          const newBlock: ChronoBlock = {
-            type: 'attachment',
+      const attachmentBlock = `:::attachment{id="${attachId}" name="${file.name}" size="${formattedSize}" mime="${compressed.mime}" isInline="true" width="${calculatedWidth}" url="${refUrl}"}\n:::`;
+      if (targetInsertIndexRef.current !== null) {
+        const idx = targetInsertIndexRef.current;
+        targetInsertIndexRef.current = null;
+        const currentBlocks = [...parsedChronologicalBlocks];
+        const newBlock: ChronoBlock = {
+          type: 'attachment',
+          id: attachId,
+          data: {
             id: attachId,
-            data: {
-              id: attachId,
-              name: file.name,
-              size: formattedSize,
-              mime: file.type,
-              isInlineImage: true,
-              width: calculatedWidth,
-              url: dataUrl,
-            },
-          };
-          currentBlocks.splice(idx, 0, newBlock);
-          if (idx + 1 >= currentBlocks.length || currentBlocks[idx + 1].type !== 'text') {
-            currentBlocks.splice(idx + 1, 0, { type: 'text', id: `t-after-${attachId}`, content: '' });
-          }
-          reassembleAndSaveBlocks(currentBlocks);
-        } else {
-          insertBlockAtActivePosition(attachmentBlock);
+            name: file.name,
+            size: formattedSize,
+            mime: compressed.mime,
+            isInlineImage: true,
+            width: calculatedWidth,
+            url: refUrl,
+          },
+        };
+        currentBlocks.splice(idx, 0, newBlock);
+        if (idx + 1 >= currentBlocks.length || currentBlocks[idx + 1].type !== 'text') {
+          currentBlocks.splice(idx + 1, 0, { type: 'text', id: `t-after-${attachId}`, content: '' });
         }
-      };
-      img.src = dataUrl;
-    };
-    reader.readAsDataURL(file);
+        reassembleAndSaveBlocks(currentBlocks);
+      } else {
+        insertBlockAtActivePosition(attachmentBlock);
+      }
+    })();
 
     e.target.value = '';
   };
@@ -4160,6 +4196,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     const targetIdx = parsedChronologicalBlocks.findIndex((b) => b.type === 'attachment' && b.data.id === attId);
     const filtered = parsedChronologicalBlocks.filter((b) => b.type !== 'attachment' || b.data.id !== attId);
     globalAttachmentMap.delete(attId);
+    void deleteAttachmentBlob(attId);
     reassembleAndSaveBlocks(filtered);
     setSelectedBlockIndices([]);
     focusNeighborTextBlock(targetIdx >= 0 ? targetIdx : 0, filtered);
@@ -4208,10 +4245,12 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
   };
 
   // Download File Attachment
-  const handleDownloadAttachment = (att: FileAttachment, e?: React.MouseEvent) => {
+  const handleDownloadAttachment = async (att: FileAttachment, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    const resolved = await resolveAttachmentUrl(att.url);
+    if (!resolved) return;
     const a = document.createElement('a');
-    a.href = att.url;
+    a.href = resolved;
     a.download = att.name;
     a.click();
   };
@@ -4706,7 +4745,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               }`}
             >
               <img
-                src={att.url}
+                src={getDisplayUrl(att.url)}
                 alt={att.name}
                 className="w-full h-auto object-cover rounded-xl"
                 draggable={false}
@@ -6541,7 +6580,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               {previewAttachment.mime.startsWith('image/') ||
               ['png', 'jpg', 'jpeg', 'svg', 'webp', 'gif'].some((ext) => previewAttachment.name.toLowerCase().endsWith('.' + ext)) ? (
                 <img
-                  src={previewAttachment.url}
+                  src={getDisplayUrl(previewAttachment.url)}
                   alt={previewAttachment.name}
                   className="max-h-[60vh] max-w-full object-contain rounded-xl shadow-lg border q-border"
                 />
@@ -6553,9 +6592,9 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   </div>
                   <div>
                     <h4 className="text-sm font-bold q-text-primary truncate max-w-xs">{previewAttachment.name}</h4>
-                    <p className="text-xs q-text-muted mt-0.5">{previewAttachment.size} • File Audio</p>
+                    <p className="text-xs q-text-muted mt-0.5">{previewAttachment.size} · File Audio</p>
                   </div>
-                  <audio controls autoPlay src={previewAttachment.url} className="w-full mt-2 rounded-xl" />
+                  <audio controls autoPlay src={getDisplayUrl(previewAttachment.url)} className="w-full mt-2 rounded-xl" />
                 </div>
               ) : previewAttachment.mime.startsWith('video/') ||
                 ['mp4', 'webm', 'ogv', 'mov', 'mkv', 'avi'].some((ext) => previewAttachment.name.toLowerCase().endsWith('.' + ext)) ? (
@@ -6563,7 +6602,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                   <video
                     controls
                     autoPlay
-                    src={previewAttachment.url}
+                    src={getDisplayUrl(previewAttachment.url)}
                     className="max-h-[60vh] max-w-full rounded-2xl shadow-2xl border q-border"
                   />
                   <span className="text-xs q-text-muted font-medium flex items-center gap-1.5">
@@ -6573,14 +6612,14 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                 </div>
               ) : previewAttachment.mime.includes('pdf') || previewAttachment.name.toLowerCase().endsWith('.pdf') ? (
                 <iframe
-                  src={previewAttachment.url}
+                  src={getDisplayUrl(previewAttachment.url)}
                   title={previewAttachment.name}
                   className="w-full h-[60vh] rounded-xl border q-border bg-white"
                 />
               ) : previewAttachment.url.startsWith('data:text') ||
                 ['txt', 'json', 'csv', 'js', 'ts', 'html', 'css', 'py'].some((ext) => previewAttachment.name.toLowerCase().endsWith('.' + ext)) ? (
                 <iframe
-                  src={previewAttachment.url}
+                  src={getDisplayUrl(previewAttachment.url)}
                   title={previewAttachment.name}
                   className="w-full h-[50vh] rounded-xl border q-border bg-white/[0.04] q-text-primary p-4 font-mono text-xs"
                 />
