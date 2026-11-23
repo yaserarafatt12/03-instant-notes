@@ -587,15 +587,24 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                   </th>
 
                   {/* Property Columns */}
-                  {collection.columns.map((col) => (
+                  {collection.columns.map((col) => {
+                    const alignClass =
+                      col.align === 'center'
+                        ? 'text-center justify-center'
+                        : col.align === 'right'
+                        ? 'text-right justify-end'
+                        : 'text-left justify-between';
+                    return (
                     <th
                       key={col.id}
                       style={{ width: col.width || 200, minWidth: 120 }}
-                      className="relative px-3 py-2 border-r border-white/5 group/th"
+                      className={`relative px-3 py-2 border-r border-white/5 group/th ${
+                        col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
+                      }`}
                     >
                       <div
                         onClick={() => setActiveMenuColumnId(activeMenuColumnId === col.id ? null : col.id)}
-                        className="flex items-center justify-between gap-1.5 cursor-pointer hover:text-white transition-colors"
+                        className={`flex items-center gap-1.5 cursor-pointer hover:text-white transition-colors ${alignClass}`}
                       >
                         <div className="flex items-center gap-1.5 truncate">
                           <span className="text-white/70">{getColumnTypeIcon(col.type)}</span>
@@ -668,7 +677,8 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                         title="Tarik untuk mengubah lebar kolom"
                       />
                     </th>
-                  ))}
+                    );
+                  })}
 
                   {/* Add Column Button Header */}
                   <th className="w-12 px-2 py-2 text-center">
@@ -751,12 +761,19 @@ export const CollectionBlockRenderer: React.FC<CollectionBlockRendererProps> = (
                                   else cellInputRefs.current.delete(key);
                                 }}
                                 type="text"
+                                dir="auto"
                                 value={cellVal || ''}
                                 onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
                                 onKeyDown={(e) => handleCellKeyDown(e, rowIdx, colIdx)}
                                 onFocus={() => setActiveCell({ rowId: row.id, colId: col.id })}
                                 placeholder="Empty"
-                                className="w-full bg-transparent border-none focus:outline-none text-zinc-200 text-xs placeholder-zinc-600 truncate py-0.5"
+                                className={`w-full bg-transparent border-none focus:outline-none text-zinc-200 text-xs placeholder-zinc-600 truncate py-0.5 ${
+                                  col.align === 'center'
+                                    ? 'text-center'
+                                    : col.align === 'right'
+                                    ? 'text-right'
+                                    : 'text-left'
+                                }`}
                               />
                               {isFocused && (
                                 <button

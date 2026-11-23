@@ -54,11 +54,14 @@ export interface CollectionColumnOption {
   color: string;
 }
 
+export type CollectionColumnAlign = 'left' | 'center' | 'right';
+
 export interface CollectionColumn {
   id: string;
   name: string;
   type: CollectionColumnType;
   width?: number;
+  align?: CollectionColumnAlign;
   options?: CollectionColumnOption[];
 }
 
