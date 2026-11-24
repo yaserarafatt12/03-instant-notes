@@ -173,7 +173,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                 }}
                 className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all shrink-0 ${
                   isMultiSelected
-                    ? 'bg-white border-white text-[#071124]'
+                    ? 'bg-white border-white text-[#09090b]'
                     : 'border-white/25 bg-white/[0.06] group-hover:border-white/45'
                 }`}
               >

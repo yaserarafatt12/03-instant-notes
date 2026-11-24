@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Excalidraw } from '@excalidraw/excalidraw';
 import '@excalidraw/excalidraw/index.css';
 import './whiteboard-glass.css';
@@ -137,13 +138,17 @@ const WhiteboardBlockRendererInner: React.FC<WhiteboardBlockRendererProps> = ({
     <div
       className={
         isFullscreen
-          ? 'fixed inset-0 z-[120] bg-[#070b16]/90 backdrop-blur-xl flex flex-col p-3 sm:p-5'
+          ? 'fixed inset-0 z-[99999] w-screen h-screen bg-[#08080a]/96 backdrop-blur-xl flex flex-col p-2.5 sm:p-4'
           : 'w-full rounded-2xl overflow-hidden glass-card shadow-2xl'
       }
       onClick={(e) => e.stopPropagation()}
     >
       {/* Tempered Glass Header Bar */}
-      <div className="flex items-center justify-between px-3.5 py-2 border-b border-white/[0.08] bg-white/[0.03] backdrop-blur-md select-none">
+      <div
+        className={`flex items-center justify-between px-3.5 py-2 border-b border-white/[0.08] bg-white/[0.03] backdrop-blur-md select-none ${
+          isFullscreen ? 'rounded-t-2xl border border-white/[0.10]' : ''
+        }`}
+      >
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <div className="w-6 h-6 rounded-lg bg-white/[0.06] border border-white/[0.08] flex items-center justify-center shrink-0">
             <PenTool className="w-3.5 h-3.5 text-white/75" />
@@ -219,6 +224,17 @@ const WhiteboardBlockRendererInner: React.FC<WhiteboardBlockRendererProps> = ({
       </div>
     </div>
   );
+
+  if (isFullscreen && typeof document !== 'undefined') {
+    return (
+      <>
+        <div className="w-full h-[420px] rounded-2xl border border-white/[0.08] bg-white/[0.02] flex items-center justify-center text-xs text-white/45 select-none">
+          Whiteboard sedang dibuka di mode layar penuh...
+        </div>
+        {createPortal(canvasNode, document.body)}
+      </>
+    );
+  }
 
   return canvasNode;
 };

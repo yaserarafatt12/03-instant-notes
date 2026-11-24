@@ -100,29 +100,29 @@ mermaid.initialize({
   themeVariables: {
     darkMode: true,
     background: 'transparent',
-    primaryColor: '#162848',
-    primaryBorderColor: 'rgba(255, 255, 255, 0.26)',
+    primaryColor: '#18181b',
+    primaryBorderColor: 'rgba(255, 255, 255, 0.24)',
     primaryTextColor: '#ffffff',
-    secondaryColor: '#11213D',
-    secondaryBorderColor: 'rgba(255, 255, 255, 0.20)',
+    secondaryColor: '#141417',
+    secondaryBorderColor: 'rgba(255, 255, 255, 0.18)',
     secondaryTextColor: '#ffffff',
-    tertiaryColor: '#0E1C35',
+    tertiaryColor: '#111113',
     lineColor: 'rgba(255, 255, 255, 0.65)',
     textColor: '#ffffff',
-    mainBkg: '#162848',
-    nodeBorder: 'rgba(255, 255, 255, 0.26)',
+    mainBkg: '#18181b',
+    nodeBorder: 'rgba(255, 255, 255, 0.24)',
     clusterBkg: 'rgba(255, 255, 255, 0.04)',
     clusterBorder: 'rgba(255, 255, 255, 0.16)',
-    actorBkg: '#162848',
-    actorBorder: 'rgba(255, 255, 255, 0.26)',
+    actorBkg: '#18181b',
+    actorBorder: 'rgba(255, 255, 255, 0.24)',
     actorTextColor: '#ffffff',
     actorLineColor: 'rgba(255, 255, 255, 0.35)',
     signalColor: 'rgba(255, 255, 255, 0.85)',
     signalTextColor: '#ffffff',
-    labelBoxBkgColor: '#162848',
+    labelBoxBkgColor: '#18181b',
     labelBoxBorderColor: 'rgba(255, 255, 255, 0.22)',
     labelTextColor: '#ffffff',
-    noteBkgColor: '#192E52',
+    noteBkgColor: '#1e1e22',
     noteBorderColor: 'rgba(255, 255, 255, 0.22)',
     noteTextColor: '#ffffff',
   },
@@ -654,7 +654,7 @@ const LineNumberedEditor: React.FC<{
   return (
     <div
       onClick={() => textareaRef.current?.focus({ preventScroll: true })}
-      className="flex w-full bg-[#0b1526]/75 hover:bg-[#0d1a30]/85 rounded-xl border border-white/[0.12] hover:border-white/20 overflow-hidden font-mono text-xs shadow-md relative group/editor cursor-text min-h-[56px] transition-colors"
+      className="flex w-full bg-[#111114]/85 hover:bg-[#16161a]/90 rounded-xl border border-white/[0.11] hover:border-white/20 overflow-hidden font-mono text-xs shadow-md relative group/editor cursor-text min-h-[56px] transition-colors"
     >
       {/* Left Line Numbers Column with Clean Vertical Divider */}
       <div className="py-3 px-3 bg-transparent border-r border-white/10 text-zinc-500/80 select-none text-right font-mono text-xs leading-relaxed shrink-0 min-w-[34px]">
@@ -848,7 +848,7 @@ const CodeBlockRenderer: React.FC<{
 
       <div
         data-code-id={block.data.id}
-        className={`relative group/codecard rounded-xl overflow-hidden bg-[#0b1526]/75 transition-all ${
+        className={`relative group/codecard rounded-xl overflow-hidden bg-[#111114]/85 transition-all ${
         isSelected
           ? 'ring-1 ring-white/40 border border-white/40 shadow-md'
           : isAllSelected
@@ -5582,7 +5582,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
           <Suspense
             fallback={
-              <div className="w-full h-[420px] rounded-2xl border border-white/[0.10] bg-[#0e1320] flex items-center justify-center text-xs text-white/50">
+              <div className="w-full h-[420px] rounded-2xl border border-white/[0.10] bg-[#111114] flex items-center justify-center text-xs text-white/50">
                 Memuat Excalidraw Whiteboard...
               </div>
             }
@@ -6401,7 +6401,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                                 }}
                                 className={`mt-[4px] w-[18px] h-[18px] rounded-[5px] border flex items-center justify-center shrink-0 transition-all ${
                                   classified.checked
-                                    ? 'bg-white/90 border-white text-[#071124] shadow-xs'
+                                    ? 'bg-white/90 border-white text-[#09090b] shadow-xs'
                                     : 'bg-white/[0.05] border-white/25 hover:border-white/50 text-transparent'
                                 }`}
                                 title={classified.checked ? 'Tandai belum selesai' : 'Tandai selesai'}
