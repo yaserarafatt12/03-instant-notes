@@ -25,8 +25,8 @@ import { exportBackupJSON, importBackupJSON } from '../lib/storage/db';
 import { LiquidSegmentedControl } from './LiquidSegmentedControl';
 import { BrandLogo } from './BrandLogo';
 
-const SEENOTE_REPO_URL = 'https://github.com/yaserarafatt12/03-instant-notes';
-const SEENOTE_DOWNLOAD_URL = 'https://github.com/yaserarafatt12/03-instant-notes/releases';
+const SEENOTE_REPO_URL = 'https://github.com/yaserarafatt12/SeeNotes';
+const SEENOTE_DOWNLOAD_URL = 'https://github.com/yaserarafatt12/SeeNotes/releases';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
