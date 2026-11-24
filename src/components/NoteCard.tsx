@@ -283,8 +283,17 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMovePopoverOpen, setIsMovePopoverOpen] = useState(false);
   const [isCoverPopoverOpen, setIsCoverPopoverOpen] = useState(false);
+  const [submenuSide, setSubmenuSide] = useState<'right' | 'left'>('right');
   const menuRef = useRef<HTMLDivElement>(null);
   const coverUploadRef = useRef<HTMLInputElement>(null);
+
+  const openMenuWithSmartSide = (nextOpen: boolean) => {
+    if (nextOpen && menuRef.current) {
+      const rect = menuRef.current.getBoundingClientRect();
+      setSubmenuSide(window.innerWidth - rect.right < 240 ? 'left' : 'right');
+    }
+    setIsMenuOpen(nextOpen);
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -354,7 +363,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   const handleCustomCoverFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
-    if (!file || !onUpdateCover) return;
+    if (!file || !file.type.startsWith('image/') || !onUpdateCover) return;
     try {
       const compressed = await compressImageToWebP(file);
       const blobId = `cover-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
@@ -381,7 +390,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         e.preventDefault();
         e.stopPropagation();
         if (!isSelectionMode) {
-          setIsMenuOpen(true);
+          openMenuWithSmartSide(true);
         }
       }}
       className={`group relative rounded-[22px] transition-all duration-300 cursor-pointer select-none font-sans flex flex-col justify-between min-h-[272px] glass-card ${
@@ -447,7 +456,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           {!isSelectionMode && (
             <div className="relative" ref={menuRef} onClick={(e) => e.stopPropagation()}>
               <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                onClick={() => openMenuWithSmartSide(!isMenuOpen)}
                 className="w-6 h-6 rounded-full bg-black/45 backdrop-blur-md border border-white/15 q-text-muted hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                 title="Opsi Catatan"
               >
@@ -530,7 +539,11 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                           </button>
 
                           {isMovePopoverOpen && (
-                            <div className="absolute right-full top-0 mr-1.5 w-40 glass-popover rounded-2xl p-1.5 z-50 max-h-36 overflow-y-auto space-y-0.5 font-sans">
+                            <div
+                              className={`absolute top-1/2 -translate-y-1/2 w-40 glass-popover rounded-2xl p-1.5 z-50 max-h-36 overflow-y-auto space-y-0.5 font-sans ${
+                                submenuSide === 'right' ? 'left-full ml-1.5' : 'right-full mr-1.5'
+                              }`}
+                            >
                               {allExistingFolders.map((f) => (
                                 <button
                                   key={f}
@@ -573,7 +586,11 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                           </button>
 
                           {isCoverPopoverOpen && (
-                            <div className="absolute right-full top-0 mr-1.5 w-52 glass-popover rounded-2xl p-2 z-50 space-y-2 font-sans">
+                            <div
+                              className={`absolute top-1/2 -translate-y-1/2 w-52 glass-popover rounded-2xl p-2 z-50 space-y-2 font-sans ${
+                                submenuSide === 'right' ? 'left-full ml-1.5' : 'right-full mr-1.5'
+                              }`}
+                            >
                               <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45 px-1">
                                 Pilih Wallpaper
                               </p>
