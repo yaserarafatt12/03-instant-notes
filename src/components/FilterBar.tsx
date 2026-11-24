@@ -370,35 +370,128 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     return items;
   }, [activeNote]);
 
-  // Extract tasks/TODO checkboxes from active note
-  const extractedTasks = useMemo(() => {
-    if (!activeNote || !activeNote.content) return [];
-    const tasks: { id: string; lineIndex: number; text: string; completed: boolean }[] = [];
+  // Extract tasks/TODO checkboxes grouped per distinct to-do list block
+  const extractedTaskGroups = useMemo(() => {
+    if (!activeNote || !activeNote.content) {
+      return {
+        groups: [] as {
+          id: string;
+          title: string;
+          tasks: { id: string; lineIndex: number; text: string; completed: boolean; depth: number }[];
+        }[],
+        totalCount: 0,
+        completedCount: 0,
+      };
+    }
+
+    const cleanInlineMd = (raw: string) =>
+      raw
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1')
+        .replace(/\*\*\*([^*]+)\*\*\*/g, '$1')
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        .replace(/\*([^*]+)\*/g, '$1')
+        .replace(/~~([^~]+)~~/g, '$1')
+        .replace(/`([^`]+)`/g, '$1')
+        .replace(/<\/?(?:u|sup|sub|span|mark)[^>]*>/gi, '')
+        .trim();
+
+    const groups: {
+      id: string;
+      title: string;
+      tasks: { id: string; lineIndex: number; text: string; completed: boolean; depth: number }[];
+    }[] = [];
+
     const lines = activeNote.content.split('\n');
+    let insideFence = false;
+    let currentHeading = '';
+    let pendingLabel = '';
+    let activeGroup: (typeof groups)[number] | null = null;
+    let totalCount = 0;
+    let completedCount = 0;
+
     lines.forEach((line: string, idx: number) => {
-      const match = line.match(/^\s*-\s*\[([ xX])\]\s*(.*)$/);
-      if (match) {
-        const cleanText = match[2]
-          .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1')
-          .replace(/\*\*\*([^*]+)\*\*\*/g, '$1')
-          .replace(/\*\*([^*]+)\*\*/g, '$1')
-          .replace(/\*([^*]+)\*/g, '$1')
-          .replace(/~~([^~]+)~~/g, '$1')
-          .replace(/`([^`]+)`/g, '$1')
-          .replace(/<\/?(?:u|sup|sub|span|mark)[^>]*>/gi, '')
-          .trim();
-        if (cleanText) {
-          tasks.push({
-            id: `task-${idx}`,
-            lineIndex: idx,
-            completed: match[1].toLowerCase() === 'x',
-            text: cleanText,
-          });
+      const trimmed = line.trim();
+
+      if (trimmed.startsWith('```')) {
+        insideFence = !insideFence;
+        activeGroup = null;
+        return;
+      }
+      if (insideFence) return;
+
+      // Directives break task groups
+      if (trimmed.startsWith(':::')) {
+        activeGroup = null;
+        pendingLabel = '';
+        return;
+      }
+
+      // Check for checklist line
+      const taskMatch = line.match(/^(\s*)-\s*\[([ xX])\]\s*(.*)$/);
+      if (taskMatch) {
+        const cleanText = cleanInlineMd(taskMatch[3]);
+        if (!cleanText) return;
+
+        if (!activeGroup) {
+          const fallbackName = isEn ? `Checklist ${groups.length + 1}` : `Daftar ${groups.length + 1}`;
+          const groupTitle = pendingLabel || currentHeading || fallbackName;
+          activeGroup = {
+            id: `task-group-${idx}`,
+            title: groupTitle.length > 48 ? `${groupTitle.slice(0, 45)}...` : groupTitle,
+            tasks: [],
+          };
+          groups.push(activeGroup);
+          pendingLabel = '';
         }
+
+        const indent = taskMatch[1].replace(/\t/g, '  ');
+        const depth = Math.min(3, Math.floor(indent.length / 2));
+        const completed = taskMatch[2].toLowerCase() === 'x';
+
+        activeGroup.tasks.push({
+          id: `task-${idx}`,
+          lineIndex: idx,
+          completed,
+          text: cleanText,
+          depth,
+        });
+        totalCount += 1;
+        if (completed) completedCount += 1;
+        return;
+      }
+
+      // Non-checklist line ends the current contiguous to-do list group
+      activeGroup = null;
+
+      if (!trimmed) {
+        return;
+      }
+
+      // Heading updates current section context
+      const headingMatch = trimmed.match(/^#{1,6}\s+(.+)$/);
+      if (headingMatch) {
+        currentHeading = cleanInlineMd(headingMatch[1]);
+        pendingLabel = currentHeading;
+        return;
+      }
+
+      // Ignore dividers and plain bullet/ordered items as group labels
+      if (/^([-*_=.])\1{2,}$/.test(trimmed) || /^(?:•|◦|▪|[-*+]|\d+\.)\s+/.test(trimmed)) {
+        pendingLabel = '';
+        return;
+      }
+
+      // Short descriptive line right above a checklist (e.g. "Daily Tasks:" or "**To-Do:**")
+      const candidateLabel = cleanInlineMd(trimmed).replace(/:$/, '').trim();
+      if (candidateLabel.length > 0 && candidateLabel.length <= 64) {
+        pendingLabel = candidateLabel;
+      } else {
+        pendingLabel = '';
       }
     });
-    return tasks;
-  }, [activeNote]);
+
+    return { groups, totalCount, completedCount };
+  }, [activeNote, isEn]);
 
   // Extract links, attachments, and images from active note
   const extractedLinksAndMedia = useMemo(() => {
@@ -851,44 +944,79 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               </div>
             )}
 
-            {/* Tab 2: Interactive Tasks / Checklists */}
+            {/* Tab 2: Interactive Tasks / Checklists (Grouped per To-Do List) */}
             {tocTab === 'tasks' && (
-              <div className="space-y-1 flex-1 overflow-y-auto pr-1">
-                <div className="flex items-center justify-between px-1 mb-2">
+              <div className="space-y-3 flex-1 overflow-y-auto pr-1">
+                <div className="flex items-center justify-between px-1">
                   <span className="text-[10px] font-semibold q-text-muted uppercase tracking-wider">
-                    {isEn ? `Tasks (${extractedTasks.length})` : `Daftar Tugas (${extractedTasks.length})`}
+                    {isEn
+                      ? `Tasks (${extractedTaskGroups.totalCount})`
+                      : `Daftar Tugas (${extractedTaskGroups.totalCount})`}
                   </span>
-                  {extractedTasks.length > 0 && (
+                  {extractedTaskGroups.totalCount > 0 && (
                     <span className="text-[10px] text-white/45 font-medium tabular-nums">
-                      {extractedTasks.filter((t) => t.completed).length}/{extractedTasks.length}
+                      {extractedTaskGroups.completedCount}/{extractedTaskGroups.totalCount}
                     </span>
                   )}
                 </div>
-                {extractedTasks.map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => {
-                      window.dispatchEvent(
-                        new CustomEvent('toggle-note-task', {
-                          detail: { lineIndex: t.lineIndex, completed: !t.completed },
-                        })
-                      );
-                    }}
-                    className="w-full flex items-start gap-2 px-2 py-1.5 rounded-lg hover:bg-white/[0.06] text-xs q-text-secondary text-left transition-colors group"
-                    title={t.completed ? (isEn ? 'Mark incomplete' : 'Tandai belum selesai') : (isEn ? 'Mark complete' : 'Tandai selesai')}
-                  >
-                    {t.completed ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-400" />
-                    ) : (
-                      <Circle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-white/35 group-hover:text-white/75 transition-colors" />
-                    )}
-                    <span className={`leading-snug break-words ${t.completed ? 'line-through text-white/40' : 'text-white/85'}`}>
-                      {t.text}
-                    </span>
-                  </button>
-                ))}
-                {extractedTasks.length === 0 && (
+
+                {extractedTaskGroups.groups.map((group) => {
+                  const groupDone = group.tasks.filter((t) => t.completed).length;
+                  return (
+                    <div
+                      key={group.id}
+                      className="rounded-xl bg-white/[0.025] border border-white/[0.06] p-1.5 space-y-0.5"
+                    >
+                      <div className="flex items-center justify-between gap-2 px-1.5 pt-0.5 pb-1">
+                        <span className="text-[11px] font-semibold text-white/65 truncate" title={group.title}>
+                          {group.title}
+                        </span>
+                        <span className="text-[10px] text-white/35 font-medium tabular-nums shrink-0">
+                          {groupDone}/{group.tasks.length}
+                        </span>
+                      </div>
+                      {group.tasks.map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => {
+                            window.dispatchEvent(
+                              new CustomEvent('toggle-note-task', {
+                                detail: { lineIndex: t.lineIndex, completed: !t.completed },
+                              })
+                            );
+                          }}
+                          style={{ paddingLeft: `${8 + t.depth * 14}px` }}
+                          className="w-full flex items-start gap-2 pr-2 py-1.5 rounded-lg hover:bg-white/[0.06] text-xs q-text-secondary text-left transition-colors group"
+                          title={
+                            t.completed
+                              ? isEn
+                                ? 'Mark incomplete'
+                                : 'Tandai belum selesai'
+                              : isEn
+                              ? 'Mark complete'
+                              : 'Tandai selesai'
+                          }
+                        >
+                          {t.completed ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-400" />
+                          ) : (
+                            <Circle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-white/35 group-hover:text-white/75 transition-colors" />
+                          )}
+                          <span
+                            className={`leading-snug break-words ${
+                              t.completed ? 'line-through text-white/40' : 'text-white/85'
+                            }`}
+                          >
+                            {t.text}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })}
+
+                {extractedTaskGroups.totalCount === 0 && (
                   <div className="text-[11px] q-text-muted italic px-2 py-2">
                     {isEn ? 'No checklist tasks in this note yet.' : 'Belum ada daftar tugas (- [ ]) di catatan ini.'}
                   </div>
