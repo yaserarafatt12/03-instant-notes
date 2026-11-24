@@ -1,8 +1,34 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Star, FolderOpen, Clock, MoreHorizontal, CopyPlus, Trash2, FolderInput, ChevronRight, Check, Undo2, FileText, FileUp, Code2, GitGraph } from 'lucide-react';
+import {
+  Star,
+  FolderOpen,
+  Clock,
+  MoreHorizontal,
+  CopyPlus,
+  Trash2,
+  FolderInput,
+  ChevronRight,
+  Check,
+  Undo2,
+  FileText,
+  FileUp,
+  Code2,
+  GitGraph,
+  PenTool,
+  Table2,
+  Sigma,
+  Circle,
+  CheckCircle2,
+  Sparkles,
+} from 'lucide-react';
 import type { Note } from '../types/note';
 import { HighlightText } from './HighlightText';
 import { formatRelativeTime } from '../lib/dateUtils';
+import {
+  getCachedAttachmentUrl,
+  isIdbAttachmentUrl,
+  resolveAttachmentUrl,
+} from '../lib/storage/attachmentStore';
 
 interface NoteCardProps {
   note: Note;
@@ -23,48 +49,177 @@ interface NoteCardProps {
 
 type MiniBlock =
   | { type: 'text'; text: string }
+  | { type: 'checklist'; text: string; checked: boolean }
   | { type: 'subpage'; title: string }
   | { type: 'attachment'; name: string; size?: string }
   | { type: 'code'; lang?: string; code: string }
-  | { type: 'mermaid'; code: string };
+  | { type: 'mermaid'; code: string }
+  | { type: 'whiteboard'; title: string }
+  | { type: 'collection'; title: string }
+  | { type: 'formula'; expr: string };
 
-function parseNoteToMiniBlocks(rawContent: string): MiniBlock[] {
-  if (!rawContent || !rawContent.trim()) return [];
+interface ParsedCardPreview {
+  blocks: MiniBlock[];
+  coverImageUrl: string | null;
+  hasWhiteboard: boolean;
+  hasCode: boolean;
+  hasTable: boolean;
+}
+
+// Soft obsidian atmospheric gradients (deterministic per note ID for curated editorial variety)
+const SOFT_COVER_PALETTES = [
+  'radial-gradient(120% 100% at 15% 0%, rgba(148, 163, 184, 0.16) 0%, rgba(39, 39, 42, 0.08) 55%, transparent 100%)',
+  'radial-gradient(120% 100% at 85% 0%, rgba(125, 211, 252, 0.13) 0%, rgba(56, 189, 248, 0.04) 55%, transparent 100%)',
+  'radial-gradient(120% 100% at 20% 0%, rgba(167, 243, 208, 0.12) 0%, rgba(16, 185, 129, 0.03) 55%, transparent 100%)',
+  'radial-gradient(120% 100% at 80% 0%, rgba(196, 181, 253, 0.13) 0%, rgba(139, 92, 246, 0.04) 55%, transparent 100%)',
+  'radial-gradient(120% 100% at 25% 0%, rgba(253, 230, 138, 0.11) 0%, rgba(245, 158, 11, 0.03) 55%, transparent 100%)',
+  'radial-gradient(120% 100% at 75% 0%, rgba(253, 164, 175, 0.12) 0%, rgba(244, 63, 94, 0.03) 55%, transparent 100%)',
+];
+
+function getSoftPaletteForNote(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) | 0;
+  }
+  return SOFT_COVER_PALETTES[Math.abs(hash) % SOFT_COVER_PALETTES.length];
+}
+
+function parseTextSegmentToMiniBlocks(textSegment: string, outBlocks: MiniBlock[], state: { coverImageUrl: string | null }) {
+  const lines = textSegment.split('\n');
+  let paragraphLines: string[] = [];
+
+  const flushParagraph = () => {
+    const joined = paragraphLines.join(' ').replace(/\s+/g, ' ').trim();
+    if (joined) {
+      outBlocks.push({ type: 'text', text: joined });
+    }
+    paragraphLines = [];
+  };
+
+  for (const rawLine of lines) {
+    const trimmed = rawLine.trim();
+    if (!trimmed) {
+      flushParagraph();
+      continue;
+    }
+
+    // Markdown image ![alt](url)
+    const mdImgMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (mdImgMatch) {
+      if (!state.coverImageUrl) {
+        state.coverImageUrl = mdImgMatch[2];
+      }
+      continue;
+    }
+
+    // Divider lines (---, ***, ..., ===)
+    if (/^([-*_=.])\1{2,}$/.test(trimmed)) {
+      continue;
+    }
+
+    // Display math block $$...$$
+    const mathMatch = trimmed.match(/^\$\$([\s\S]+?)\$\$$/);
+    if (mathMatch) {
+      flushParagraph();
+      outBlocks.push({ type: 'formula', expr: mathMatch[1].trim() });
+      continue;
+    }
+
+    // Checklist item - [ ] / - [x]
+    const taskMatch = trimmed.match(/^-\s+\[([ xX])\]\s*(.*)$/);
+    if (taskMatch) {
+      flushParagraph();
+      const taskText = taskMatch[2]
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1')
+        .replace(/<[^>]*>/g, '')
+        .replace(/[*~_`]/g, '')
+        .trim();
+      if (taskText) {
+        outBlocks.push({
+          type: 'checklist',
+          checked: taskMatch[1].toLowerCase() === 'x',
+          text: taskText,
+        });
+      }
+      continue;
+    }
+
+    // Clean inline markdown text
+    const cleanLine = trimmed
+      .replace(/^#{1,6}\s+/, '')
+      .replace(/^((?:>\s*)+)/, '')
+      .replace(/^(?:•|◦|▪|[-*+])\s+/, '')
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '')
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1')
+      .replace(/<[^>]*>/g, '')
+      .replace(/[*~_`]/g, '')
+      .trim();
+
+    if (cleanLine) {
+      paragraphLines.push(cleanLine);
+    }
+  }
+
+  flushParagraph();
+}
+
+function parseNoteToMiniBlocks(rawContent: string): ParsedCardPreview {
+  const empty: ParsedCardPreview = {
+    blocks: [],
+    coverImageUrl: null,
+    hasWhiteboard: false,
+    hasCode: false,
+    hasTable: false,
+  };
+  if (!rawContent || !rawContent.trim()) return empty;
 
   const blocks: MiniBlock[] = [];
-  const blockRegex = /(:::(?:subpage|attachment|code|mermaid)\{[\s\S]*?:::|```(?:mermaid|[a-zA-Z0-9_-]*)\n[\s\S]*?```)/g;
+  const state = { coverImageUrl: null as string | null };
+  let hasWhiteboard = false;
+  let hasCode = false;
+  let hasTable = false;
+
+  const blockRegex = /(:::(?:subpage|attachment|code|mermaid|collection|whiteboard)\{[\s\S]*?:::|```(?:mermaid|[a-zA-Z0-9_-]*)\n[\s\S]*?```)/g;
 
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
   while ((match = blockRegex.exec(rawContent)) !== null) {
-    // Text segment before block
     const textSegment = rawContent.slice(lastIndex, match.index).trim();
     if (textSegment) {
-      const cleanText = textSegment
-        .replace(/^#{1,6}\s+/gm, '')
-        .replace(/<[^>]*>/g, '')
-        .replace(/[*~_`]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-      if (cleanText) {
-        blocks.push({ type: 'text', text: cleanText });
-      }
+      parseTextSegmentToMiniBlocks(textSegment, blocks, state);
     }
 
     const blockStr = match[0];
 
     if (blockStr.startsWith(':::subpage')) {
       const titleMatch = blockStr.match(/title="([^"]*)"/);
-      const title = titleMatch ? titleMatch[1] : 'Halaman Tanpa Judul';
+      const title = titleMatch?.[1]?.trim() || 'Sub-halaman';
       blocks.push({ type: 'subpage', title });
     } else if (blockStr.startsWith(':::attachment')) {
       const nameMatch = blockStr.match(/name="([^"]*)"/);
       const sizeMatch = blockStr.match(/size="([^"]*)"/);
-      const name = nameMatch ? nameMatch[1] : 'File Attachment';
-      const size = sizeMatch ? sizeMatch[1] : '';
-      blocks.push({ type: 'attachment', name, size });
+      const isInlineMatch = blockStr.match(/isInline="(true|false)"/i);
+      const mimeMatch = blockStr.match(/mime="([^"]*)"/i);
+      const urlMatch = blockStr.match(/url="([^"]*)"/);
+      const isImg = isInlineMatch?.[1] === 'true' || (mimeMatch?.[1]?.startsWith('image/') ?? false);
+      if (isImg && urlMatch?.[1] && !state.coverImageUrl) {
+        state.coverImageUrl = urlMatch[1];
+      } else {
+        const name = nameMatch?.[1] || 'File Attachment';
+        const size = sizeMatch?.[1] || '';
+        blocks.push({ type: 'attachment', name, size });
+      }
+    } else if (blockStr.startsWith(':::whiteboard')) {
+      hasWhiteboard = true;
+      const titleMatch = blockStr.match(/title="([^"]*)"/);
+      blocks.push({ type: 'whiteboard', title: titleMatch?.[1]?.trim() || 'Whiteboard' });
+    } else if (blockStr.startsWith(':::collection')) {
+      hasTable = true;
+      const titleMatch = blockStr.match(/title="([^"]*)"/);
+      blocks.push({ type: 'collection', title: titleMatch?.[1]?.trim() || 'Tabel & Koleksi' });
     } else if (blockStr.startsWith(':::code')) {
+      hasCode = true;
       const langMatch = blockStr.match(/lang="([^"]*)"/);
       const contentInside = blockStr.replace(/:::code\{[\s\S]*?\}\n?/, '').replace(/\n?:::$/, '');
       blocks.push({ type: 'code', lang: langMatch ? langMatch[1] : 'code', code: contentInside.trim() });
@@ -75,6 +230,7 @@ function parseNoteToMiniBlocks(rawContent: string): MiniBlock[] {
       const code = blockStr.replace(/^```mermaid\n?/, '').replace(/\n?```$/, '');
       blocks.push({ type: 'mermaid', code: code.trim() });
     } else if (blockStr.startsWith('```')) {
+      hasCode = true;
       const langMatch = blockStr.match(/^```([a-zA-Z0-9_-]*)\n/);
       const code = blockStr.replace(/^```[a-zA-Z0-9_-]*\n?/, '').replace(/\n?```$/, '');
       blocks.push({ type: 'code', lang: langMatch ? langMatch[1] : 'code', code: code.trim() });
@@ -83,21 +239,18 @@ function parseNoteToMiniBlocks(rawContent: string): MiniBlock[] {
     lastIndex = match.index + blockStr.length;
   }
 
-  // Text after last block
   const remainingText = rawContent.slice(lastIndex).trim();
   if (remainingText) {
-    const cleanText = remainingText
-      .replace(/^#{1,6}\s+/gm, '')
-      .replace(/<[^>]*>/g, '')
-      .replace(/[*~_`]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    if (cleanText) {
-      blocks.push({ type: 'text', text: cleanText });
-    }
+    parseTextSegmentToMiniBlocks(remainingText, blocks, state);
   }
 
-  return blocks;
+  return {
+    blocks,
+    coverImageUrl: state.coverImageUrl,
+    hasWhiteboard,
+    hasCode,
+    hasTable,
+  };
 }
 
 export const NoteCard: React.FC<NoteCardProps> = ({
@@ -139,8 +292,44 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     }
   };
 
-  // Parse chronological mini blocks (text, mermaid, attachment, subpage, code)
-  const miniBlocks = useMemo(() => parseNoteToMiniBlocks(note.content), [note.content]);
+  // Parse chronological mini blocks + soft cover image URL
+  const preview = useMemo(() => parseNoteToMiniBlocks(note.content), [note.content]);
+  const miniBlocks = preview.blocks;
+
+  const [resolvedCoverUrl, setResolvedCoverUrl] = useState<string | null>(() => {
+    const raw = preview.coverImageUrl;
+    if (!raw) return null;
+    if (!isIdbAttachmentUrl(raw)) return raw;
+    return getCachedAttachmentUrl(raw) || null;
+  });
+
+  useEffect(() => {
+    const raw = preview.coverImageUrl;
+    if (!raw) {
+      setResolvedCoverUrl(null);
+      return;
+    }
+    if (!isIdbAttachmentUrl(raw)) {
+      setResolvedCoverUrl(raw);
+      return;
+    }
+    const cached = getCachedAttachmentUrl(raw);
+    if (cached) {
+      setResolvedCoverUrl(cached);
+      return;
+    }
+    let cancelled = false;
+    resolveAttachmentUrl(raw).then((resolved) => {
+      if (!cancelled && resolved) {
+        setResolvedCoverUrl(resolved);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [preview.coverImageUrl]);
+
+  const softPalette = useMemo(() => getSoftPaletteForNote(note.id || note.title), [note.id, note.title]);
 
   return (
     <div
@@ -152,250 +341,332 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           setIsMenuOpen(true);
         }
       }}
-      className={`group relative p-4.5 rounded-2xl transition-all duration-200 cursor-pointer select-none font-sans flex flex-col justify-between min-h-[260px] glass-card ${
+      className={`group relative rounded-[22px] overflow-hidden transition-all duration-300 cursor-pointer select-none font-sans flex flex-col justify-between min-h-[272px] glass-card ${
         isMultiSelected
           ? '!border-white/45 ring-2 ring-white/25'
           : isSelected
           ? '!border-white/35 ring-1 ring-white/20'
-          : 'hover:-translate-y-0.5'
+          : 'hover:-translate-y-1'
       }`}
     >
-      {/* Top Section: Multi-select Checkbox, Clean Full Title, & Context Menu */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 overflow-hidden flex-1">
-            {/* Multi-selection Checkbox Indicator */}
-            {isSelectionMode && (
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleMultiSelect(note.id);
-                }}
-                className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all shrink-0 ${
-                  isMultiSelected
-                    ? 'bg-white border-white text-[#09090b]'
-                    : 'border-white/25 bg-white/[0.06] group-hover:border-white/45'
-                }`}
-              >
-                {isMultiSelected && <Check className="w-3 h-3" />}
-              </div>
-            )}
-
-            <h3 className="font-semibold text-[15px] text-white line-clamp-1 transition-colors tracking-tight">
-              <HighlightText text={note.title || 'Catatan Tanpa Judul'} query={searchQuery} />
-            </h3>
-          </div>
-
-          <div className="flex items-center gap-1 shrink-0">
-            {/* Context Menu Trigger */}
-            {!isSelectionMode && (
-              <div className="relative" ref={menuRef} onClick={(e) => e.stopPropagation()}>
-                <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="p-1 q-text-muted hover:q-text-primary rounded-lg hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Opsi Catatan"
-                >
-                  <MoreHorizontal className="w-4 h-4" />
-                </button>
-
-                {/* Tempered Glass Context Dropdown */}
-                {isMenuOpen && (
-                  <div className="absolute right-0 top-6 w-44 glass-popover rounded-2xl p-1.5 z-50 space-y-0.5 font-sans">
-                    {note.isTrash ? (
-                      <>
-                        {onToggleTrash && (
-                          <button
-                            onClick={() => {
-                              onToggleTrash(note.id);
-                              setIsMenuOpen(false);
-                            }}
-                            className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold q-text-primary hover:bg-white/10 rounded-xl transition-colors"
-                          >
-                            <Undo2 className="w-3.5 h-3.5 q-text-muted" />
-                            <span>Pulihkan</span>
-                          </button>
-                        )}
-
-                        {onDeletePermanently && (
-                          <button
-                            onClick={() => {
-                              onDeletePermanently(note.id);
-                              setIsMenuOpen(false);
-                            }}
-                            className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/15 rounded-xl transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span>Hapus Permanen</span>
-                          </button>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        {onToggleFavorite && (
-                          <button
-                            onClick={() => {
-                              onToggleFavorite(note.id);
-                              setIsMenuOpen(false);
-                            }}
-                            className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold q-text-secondary hover:q-text-primary hover:bg-white/10 rounded-xl transition-colors"
-                          >
-                            <Star className={`w-3.5 h-3.5 ${note.isFavorite ? 'text-white fill-current' : 'q-text-muted'}`} />
-                            <span>{note.isFavorite ? 'Hapus Favorit' : 'Tandai Favorit'}</span>
-                          </button>
-                        )}
-
-                        {onDuplicateNote && (
-                          <button
-                            onClick={() => {
-                              onDuplicateNote(note);
-                              setIsMenuOpen(false);
-                            }}
-                            className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold q-text-secondary hover:q-text-primary hover:bg-white/10 rounded-xl transition-colors"
-                          >
-                            <CopyPlus className="w-3.5 h-3.5 q-text-muted" />
-                            <span>Duplikat</span>
-                          </button>
-                        )}
-
-                        {onMoveNote && (
-                          <div className="relative">
-                            <button
-                              onClick={() => setIsMovePopoverOpen(!isMovePopoverOpen)}
-                              className="w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-semibold q-text-secondary hover:q-text-primary hover:bg-white/10 rounded-xl transition-colors"
-                            >
-                              <div className="flex items-center gap-2">
-                                <FolderInput className="w-3.5 h-3.5 q-text-muted" />
-                                <span>Pindah Folder</span>
-                              </div>
-                              <ChevronRight className="w-3.5 h-3.5 q-text-muted" />
-                            </button>
-
-                            {isMovePopoverOpen && (
-                              <div className="absolute left-full top-0 ml-1.5 w-40 glass-popover rounded-2xl p-1.5 z-50 max-h-36 overflow-y-auto space-y-0.5 font-sans">
-                                {allExistingFolders.map((f) => (
-                                  <button
-                                    key={f}
-                                    onClick={() => {
-                                      onMoveNote(note, f);
-                                      setIsMovePopoverOpen(false);
-                                      setIsMenuOpen(false);
-                                    }}
-                                    className="w-full text-left px-2 py-1 text-xs truncate rounded-lg q-text-secondary hover:q-text-primary hover:bg-white/10"
-                                  >
-                                    {f}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {onToggleTrash && (
-                          <button
-                            onClick={() => {
-                              onToggleTrash(note.id);
-                              setIsMenuOpen(false);
-                            }}
-                            className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/15 rounded-xl transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span>Hapus</span>
-                          </button>
-                        )}
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Metadata Row: Folder Name, Star Badge, & Updated Relative Time */}
-        <div className="flex items-center gap-1.5 text-[11.5px] text-white/55 font-medium">
-          <FolderOpen className="w-3.5 h-3.5 text-white/50 shrink-0" />
-          <span className="truncate text-white/70">{note.subject || 'Umum'}</span>
-
-          {note.isFavorite && (
-            <Star className="w-3 h-3 text-white fill-current shrink-0 ml-0.5" />
-          )}
-
-          <span className="opacity-40">•</span>
-          <Clock className="w-3.5 h-3.5 text-white/50 shrink-0" />
-          <span className="text-white/55">{formatRelativeTime(note.updatedAt)}</span>
-        </div>
-      </div>
-
-      {/* Middle Document Preview (Clean Card Surface Hierarchy) */}
-      <div className="flex-1 my-3 py-1 overflow-hidden text-left flex flex-col justify-start gap-2">
-        {miniBlocks.length === 0 ? (
-          <p className="text-[12.5px] text-white/40 italic select-none">
-            Belum ada konten catatan.
-          </p>
+      {/* Top Soft Visual Cover Banner (Real Image Soft-Fade OR Atmospheric Tempered Mesh) */}
+      <div className="relative h-20 w-full shrink-0 overflow-hidden border-b border-white/[0.06]">
+        {resolvedCoverUrl ? (
+          <>
+            <img
+              src={resolvedCoverUrl}
+              alt=""
+              loading="lazy"
+              className="w-full h-full object-cover opacity-65 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-[#121215]/45 to-[#141417]/95" />
+          </>
         ) : (
-          miniBlocks.slice(0, 3).map((b, i) => {
-            if (b.type === 'text') {
-              return (
-                <p key={i} className="text-[13px] text-white/75 font-normal leading-relaxed line-clamp-3 select-none">
-                  <HighlightText text={b.text} query={searchQuery} />
-                </p>
-              );
-            }
+          <div
+            className="w-full h-full relative"
+            style={{ background: softPalette }}
+          >
+            {preview.hasWhiteboard && (
+              <div
+                className="absolute inset-0 opacity-35"
+                style={{
+                  backgroundImage: 'radial-gradient(rgba(255,255,255,0.22) 1px, transparent 1px)',
+                  backgroundSize: '14px 14px',
+                }}
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#141417]/80" />
+            <div className="absolute left-4 bottom-2.5 flex items-center gap-1.5 text-white/40 group-hover:text-white/65 transition-colors">
+              {preview.hasWhiteboard ? (
+                <PenTool className="w-3.5 h-3.5" />
+              ) : preview.hasTable ? (
+                <Table2 className="w-3.5 h-3.5" />
+              ) : preview.hasCode ? (
+                <Code2 className="w-3.5 h-3.5" />
+              ) : (
+                <Sparkles className="w-3.5 h-3.5 opacity-70" />
+              )}
+            </div>
+          </div>
+        )}
 
-            if (b.type === 'mermaid') {
-              return (
-                <div key={i} className="px-2.5 py-1.5 bg-white/[0.06] border border-white/[0.12] rounded-lg flex items-center gap-2 select-none shrink-0">
-                  <GitGraph className="w-3.5 h-3.5 text-white/70 shrink-0" />
-                  <span className="text-[11px] font-medium q-text-primary truncate">Diagram Mermaid</span>
+        {/* Top Right Overlay: Star & Context Menu Trigger */}
+        <div className="absolute top-2.5 right-2.5 flex items-center gap-1 z-20">
+          {note.isFavorite && (
+            <div className="w-6 h-6 rounded-full bg-black/45 backdrop-blur-md border border-white/15 flex items-center justify-center">
+              <Star className="w-3 h-3 text-white fill-current" />
+            </div>
+          )}
+          {!isSelectionMode && (
+            <div className="relative" ref={menuRef} onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="w-6 h-6 rounded-full bg-black/45 backdrop-blur-md border border-white/15 q-text-muted hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Opsi Catatan"
+              >
+                <MoreHorizontal className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Tempered Glass Context Dropdown */}
+              {isMenuOpen && (
+                <div className="absolute right-0 top-7 w-44 glass-popover rounded-2xl p-1.5 z-50 space-y-0.5 font-sans">
+                  {note.isTrash ? (
+                    <>
+                      {onToggleTrash && (
+                        <button
+                          onClick={() => {
+                            onToggleTrash(note.id);
+                            setIsMenuOpen(false);
+                          }}
+                          className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold q-text-primary hover:bg-white/10 rounded-xl transition-colors"
+                        >
+                          <Undo2 className="w-3.5 h-3.5 q-text-muted" />
+                          <span>Pulihkan</span>
+                        </button>
+                      )}
+
+                      {onDeletePermanently && (
+                        <button
+                          onClick={() => {
+                            onDeletePermanently(note.id);
+                            setIsMenuOpen(false);
+                          }}
+                          className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/15 rounded-xl transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Hapus Permanen</span>
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {onToggleFavorite && (
+                        <button
+                          onClick={() => {
+                            onToggleFavorite(note.id);
+                            setIsMenuOpen(false);
+                          }}
+                          className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold q-text-secondary hover:q-text-primary hover:bg-white/10 rounded-xl transition-colors"
+                        >
+                          <Star className={`w-3.5 h-3.5 ${note.isFavorite ? 'text-white fill-current' : 'q-text-muted'}`} />
+                          <span>{note.isFavorite ? 'Hapus Favorit' : 'Tandai Favorit'}</span>
+                        </button>
+                      )}
+
+                      {onDuplicateNote && (
+                        <button
+                          onClick={() => {
+                            onDuplicateNote(note);
+                            setIsMenuOpen(false);
+                          }}
+                          className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold q-text-secondary hover:q-text-primary hover:bg-white/10 rounded-xl transition-colors"
+                        >
+                          <CopyPlus className="w-3.5 h-3.5 q-text-muted" />
+                          <span>Duplikat</span>
+                        </button>
+                      )}
+
+                      {onMoveNote && (
+                        <div className="relative">
+                          <button
+                            onClick={() => setIsMovePopoverOpen(!isMovePopoverOpen)}
+                            className="w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-semibold q-text-secondary hover:q-text-primary hover:bg-white/10 rounded-xl transition-colors"
+                          >
+                            <div className="flex items-center gap-2">
+                              <FolderInput className="w-3.5 h-3.5 q-text-muted" />
+                              <span>Pindah Folder</span>
+                            </div>
+                            <ChevronRight className="w-3.5 h-3.5 q-text-muted" />
+                          </button>
+
+                          {isMovePopoverOpen && (
+                            <div className="absolute right-full top-0 mr-1.5 w-40 glass-popover rounded-2xl p-1.5 z-50 max-h-36 overflow-y-auto space-y-0.5 font-sans">
+                              {allExistingFolders.map((f) => (
+                                <button
+                                  key={f}
+                                  onClick={() => {
+                                    onMoveNote(note, f);
+                                    setIsMovePopoverOpen(false);
+                                    setIsMenuOpen(false);
+                                  }}
+                                  className="w-full text-left px-2 py-1 text-xs truncate rounded-lg q-text-secondary hover:q-text-primary hover:bg-white/10"
+                                >
+                                  {f}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {onToggleTrash && (
+                        <button
+                          onClick={() => {
+                            onToggleTrash(note.id);
+                            setIsMenuOpen(false);
+                          }}
+                          className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/15 rounded-xl transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Hapus</span>
+                        </button>
+                      )}
+                    </>
+                  )}
                 </div>
-              );
-            }
+              )}
+            </div>
+          )}
+        </div>
 
-            if (b.type === 'attachment') {
-              return (
-                <div key={i} className="px-2.5 py-1.5 bg-white/[0.06] border border-white/[0.12] rounded-lg flex items-center gap-2 select-none shrink-0">
-                  <FileUp className="w-3.5 h-3.5 text-white/70 shrink-0" />
-                  <div className="overflow-hidden flex-1 leading-tight">
-                    <div className="text-[11px] font-medium q-text-primary truncate">{b.name}</div>
-                    {b.size && <div className="text-[9.5px] q-text-muted">{b.size}</div>}
-                  </div>
-                </div>
-              );
-            }
-
-            if (b.type === 'subpage') {
-              return (
-                <div key={i} className="px-2.5 py-1.5 bg-white/[0.06] border border-white/[0.12] rounded-lg flex items-center gap-2 select-none shrink-0">
-                  <FileText className="w-3.5 h-3.5 text-white/70 shrink-0" />
-                  <span className="text-[11px] font-medium q-text-primary truncate">{b.title}</span>
-                </div>
-              );
-            }
-
-            if (b.type === 'code') {
-              return (
-                <div key={i} className="px-2.5 py-1.5 bg-white/[0.06] border border-white/[0.12] rounded-lg flex items-center gap-2 font-mono select-none shrink-0">
-                  <Code2 className="w-3.5 h-3.5 text-white/70 shrink-0" />
-                  <span className="text-[10px] q-text-secondary truncate font-mono">{b.code.slice(0, 45) || 'Code Block'}</span>
-                </div>
-              );
-            }
-
-            return null;
-          })
+        {/* Multi-selection Checkbox Indicator (top-left of cover) */}
+        {isSelectionMode && (
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleMultiSelect(note.id);
+            }}
+            className={`absolute top-2.5 left-2.5 z-20 w-4 h-4 rounded-md border flex items-center justify-center transition-all shrink-0 ${
+              isMultiSelected
+                ? 'bg-white border-white text-[#09090b]'
+                : 'border-white/35 bg-black/45 backdrop-blur-md group-hover:border-white/60'
+            }`}
+          >
+            {isMultiSelected && <Check className="w-3 h-3" />}
+          </div>
         )}
       </div>
 
-      {/* Bottom Inline Tags (Monochrome Tempered Glass) */}
-      <div className="flex items-center gap-1.5 text-[10px] font-medium overflow-hidden">
-        {note.tags.slice(0, 3).map((t, i) => (
-          <span key={i} className="px-2 py-0.5 rounded-full glass-control q-text-secondary">
-            #{t}
-          </span>
-        ))}
-        {note.tags.length > 3 && (
-          <span className="q-text-muted">+{note.tags.length - 3}</span>
-        )}
+      {/* Main Card Body */}
+      <div className="p-4 pt-3 flex-1 flex flex-col justify-between">
+        {/* Title & Metadata */}
+        <div className="space-y-1.5">
+          <h3 className="font-semibold text-[15px] text-white line-clamp-1 transition-colors tracking-tight">
+            <HighlightText text={note.title || 'Catatan Tanpa Judul'} query={searchQuery} />
+          </h3>
+
+          <div className="flex items-center gap-1.5 text-[11px] text-white/50 font-medium">
+            <FolderOpen className="w-3 h-3 text-white/45 shrink-0" />
+            <span className="truncate text-white/65">{note.subject || 'Umum'}</span>
+            <span className="opacity-40">•</span>
+            <Clock className="w-3 h-3 text-white/45 shrink-0" />
+            <span>{formatRelativeTime(note.updatedAt)}</span>
+          </div>
+        </div>
+
+        {/* Middle Document Preview (Clean Pills & Rich Text Snippets) */}
+        <div className="flex-1 my-3 overflow-hidden text-left flex flex-col justify-start gap-1.5">
+          {miniBlocks.length === 0 ? (
+            <p className="text-[12px] text-white/30 select-none">
+              Catatan kosong — klik untuk menulis
+            </p>
+          ) : (
+            miniBlocks.slice(0, 3).map((b, i) => {
+              if (b.type === 'text') {
+                return (
+                  <p key={i} className="text-[12.5px] text-white/70 font-normal leading-relaxed line-clamp-2 select-none">
+                    <HighlightText text={b.text} query={searchQuery} />
+                  </p>
+                );
+              }
+
+              if (b.type === 'checklist') {
+                return (
+                  <div key={i} className="flex items-center gap-1.5 text-[12px] text-white/65 select-none">
+                    {b.checked ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400/90 shrink-0" />
+                    ) : (
+                      <Circle className="w-3.5 h-3.5 text-white/35 shrink-0" />
+                    )}
+                    <span className={`truncate ${b.checked ? 'line-through text-white/35' : ''}`}>
+                      {b.text}
+                    </span>
+                  </div>
+                );
+              }
+
+              if (b.type === 'whiteboard') {
+                return (
+                  <div key={i} className="px-2.5 py-1.5 bg-white/[0.045] border border-white/[0.09] rounded-xl flex items-center gap-2 select-none shrink-0">
+                    <PenTool className="w-3.5 h-3.5 text-white/65 shrink-0" />
+                    <span className="text-[11px] font-medium text-white/80 truncate">{b.title}</span>
+                  </div>
+                );
+              }
+
+              if (b.type === 'collection') {
+                return (
+                  <div key={i} className="px-2.5 py-1.5 bg-white/[0.045] border border-white/[0.09] rounded-xl flex items-center gap-2 select-none shrink-0">
+                    <Table2 className="w-3.5 h-3.5 text-white/65 shrink-0" />
+                    <span className="text-[11px] font-medium text-white/80 truncate">{b.title}</span>
+                  </div>
+                );
+              }
+
+              if (b.type === 'formula') {
+                return (
+                  <div key={i} className="px-2.5 py-1.5 bg-white/[0.045] border border-white/[0.09] rounded-xl flex items-center gap-2 font-mono select-none shrink-0">
+                    <Sigma className="w-3.5 h-3.5 text-white/65 shrink-0" />
+                    <span className="text-[10.5px] text-white/70 truncate">{b.expr}</span>
+                  </div>
+                );
+              }
+
+              if (b.type === 'mermaid') {
+                return (
+                  <div key={i} className="px-2.5 py-1.5 bg-white/[0.045] border border-white/[0.09] rounded-xl flex items-center gap-2 select-none shrink-0">
+                    <GitGraph className="w-3.5 h-3.5 text-white/65 shrink-0" />
+                    <span className="text-[11px] font-medium text-white/80 truncate">Diagram Mermaid</span>
+                  </div>
+                );
+              }
+
+              if (b.type === 'attachment') {
+                return (
+                  <div key={i} className="px-2.5 py-1.5 bg-white/[0.045] border border-white/[0.09] rounded-xl flex items-center gap-2 select-none shrink-0">
+                    <FileUp className="w-3.5 h-3.5 text-white/65 shrink-0" />
+                    <div className="overflow-hidden flex-1 flex items-center justify-between gap-2 leading-tight">
+                      <span className="text-[11px] font-medium text-white/80 truncate">{b.name}</span>
+                      {b.size && <span className="text-[9.5px] text-white/40 shrink-0">{b.size}</span>}
+                    </div>
+                  </div>
+                );
+              }
+
+              if (b.type === 'subpage') {
+                return (
+                  <div key={i} className="px-2.5 py-1.5 bg-white/[0.045] border border-white/[0.09] rounded-xl flex items-center gap-2 select-none shrink-0">
+                    <FileText className="w-3.5 h-3.5 text-white/65 shrink-0" />
+                    <span className="text-[11px] font-medium text-white/80 truncate">{b.title}</span>
+                  </div>
+                );
+              }
+
+              if (b.type === 'code') {
+                return (
+                  <div key={i} className="px-2.5 py-1.5 bg-white/[0.045] border border-white/[0.09] rounded-xl flex items-center gap-2 font-mono select-none shrink-0">
+                    <Code2 className="w-3.5 h-3.5 text-white/65 shrink-0" />
+                    <span className="text-[10px] text-white/70 truncate font-mono">{b.code.slice(0, 42) || 'Code Block'}</span>
+                  </div>
+                );
+              }
+
+              return null;
+            })
+          )}
+        </div>
+
+        {/* Bottom Inline Tags */}
+        <div className="flex items-center gap-1.5 text-[10px] font-medium overflow-hidden pt-1">
+          {note.tags.slice(0, 3).map((t, i) => (
+            <span key={i} className="px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-white/60">
+              #{t}
+            </span>
+          ))}
+          {note.tags.length > 3 && (
+            <span className="text-white/40">+{note.tags.length - 3}</span>
+          )}
+        </div>
       </div>
     </div>
   );

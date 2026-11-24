@@ -914,9 +914,9 @@ export function App() {
 
             {/* Content Cards Grid / List */}
             {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-64 rounded-2xl glass-card animate-pulse" />
+                  <div key={i} className="h-[272px] rounded-[22px] glass-card animate-pulse" />
                 ))}
               </div>
             ) : searchResults.length === 0 ? (
@@ -926,7 +926,7 @@ export function App() {
                 language={settings.language}
               />
             ) : viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {searchResults.map(({ note, snippet }) => (
                   <NoteCard
                     key={note.id}
@@ -970,7 +970,7 @@ export function App() {
                         <div
                           className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all ${
                             selectedNoteIds.includes(note.id)
-                              ? 'bg-white border-white text-[#071124]'
+                              ? 'bg-white border-white text-[#09090b]'
                               : 'border-white/25 bg-white/[0.06]'
                           }`}
                         >

@@ -48,8 +48,8 @@ export function sanitizeSnippetText(rawContent: string): string {
   if (!rawContent) return 'Belum ada konten catatan.';
 
   let text = rawContent
-    // Strip :::attachment{...} :::subpage{...} :::code{...} :::mermaid{...} blocks
-    .replace(/:::(?:attachment|subpage|code|mermaid)\{[\s\S]*?:::/g, '')
+    // Strip :::attachment{...} :::subpage{...} :::code{...} :::mermaid{...} :::collection{...} :::whiteboard{...} blocks
+    .replace(/:::(?:attachment|subpage|code|mermaid|collection|whiteboard)\{[\s\S]*?:::/g, '')
     // Strip code blocks ```mermaid...``` or ```lang...```
     .replace(/```[\s\S]*?```/g, '')
     // Strip inline backticks `code`
