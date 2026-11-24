@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   X,
   Moon,
@@ -14,10 +14,24 @@ import {
   Upload,
   Check,
   ShieldCheck,
+  Info,
+  ArrowUpRight,
+  Copy,
+  Laptop,
+  Code2,
 } from 'lucide-react';
 import type { SortOption, FontSizeOption, Note } from '../types/note';
 import { exportBackupJSON, importBackupJSON } from '../lib/storage/db';
 import { LiquidSegmentedControl } from './LiquidSegmentedControl';
+import { BrandLogo } from './BrandLogo';
+
+const SEENOTE_REPO_URL = 'https://github.com/yaserarafatt12/03-instant-notes';
+const SEENOTE_DOWNLOAD_URL = 'https://github.com/yaserarafatt12/03-instant-notes/releases';
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 
 export interface AppSettings {
   theme: 'light' | 'dark' | 'system';
@@ -46,7 +60,7 @@ interface SettingsModalProps {
   onNotesImported?: (notes: Note[]) => void;
 }
 
-type TabType = 'general' | 'appearance' | 'language' | 'archive' | 'storage';
+type TabType = 'general' | 'appearance' | 'language' | 'archive' | 'storage' | 'about';
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
@@ -61,10 +75,60 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [activeTab, setActiveTab] = useState<TabType>('general');
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstalledPwa, setIsInstalledPwa] = useState(false);
+  const [installHintVisible, setInstallHintVisible] = useState(false);
+  const [copiedAppLink, setCopiedAppLink] = useState(false);
+
+  useEffect(() => {
+    const isStandalone =
+      window.matchMedia?.('(display-mode: standalone)')?.matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+    setIsInstalledPwa(Boolean(isStandalone));
+
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredInstallPrompt(e as BeforeInstallPromptEvent);
+    };
+    const handleAppInstalled = () => {
+      setIsInstalledPwa(true);
+      setDeferredInstallPrompt(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', handleAppInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
 
   if (!isOpen) return null;
 
   const isEn = settings.language === 'en';
+
+  const handleInstallApp = async () => {
+    if (deferredInstallPrompt) {
+      await deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        setIsInstalledPwa(true);
+      }
+      setDeferredInstallPrompt(null);
+    } else {
+      setInstallHintVisible(true);
+    }
+  };
+
+  const handleCopyAppLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.origin);
+      setCopiedAppLink(true);
+      setTimeout(() => setCopiedAppLink(false), 1800);
+    } catch {
+      // ignore clipboard errors
+    }
+  };
 
   const handleExport = async () => {
     const jsonStr = await exportBackupJSON(notes);
@@ -105,12 +169,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     reader.readAsText(file);
   };
 
-  const navItems: { id: TabType; label: string; Icon: React.FC<{ className?: string }> }[] = [
+  const generalNavItems: { id: TabType; label: string; Icon: React.FC<{ className?: string }> }[] = [
     { id: 'general', label: isEn ? 'General' : 'Umum', Icon: Settings },
     { id: 'appearance', label: isEn ? 'Appearance' : 'Tampilan', Icon: Palette },
     { id: 'language', label: isEn ? 'Language' : 'Bahasa', Icon: Globe },
-    { id: 'archive', label: isEn ? 'History & Reset' : 'Riwayat & Reset', Icon: Archive },
+  ];
+
+  const dataNavItems: { id: TabType; label: string; Icon: React.FC<{ className?: string }> }[] = [
     { id: 'storage', label: isEn ? 'Backup & Storage' : 'Cadangan & Data', Icon: HardDrive },
+    { id: 'archive', label: isEn ? 'History & Reset' : 'Riwayat & Reset', Icon: Archive },
   ];
 
   return (
@@ -124,9 +191,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Left Modal Sidebar */}
-        <div className="w-full md:w-56 bg-white/[0.04] p-3 border-b md:border-b-0 md:border-r q-border flex flex-col justify-between shrink-0">
-          <div className="space-y-1">
-            <div className="flex items-center justify-between px-2 py-2 mb-2">
+        <div className="w-full md:w-56 bg-white/[0.03] p-3 border-b md:border-b-0 md:border-r q-border flex flex-col justify-between shrink-0">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-2 py-1.5">
               <span className="text-sm font-bold q-text-primary tracking-tight flex items-center gap-2">
                 <Settings className="w-4 h-4 q-text-muted" />
                 <span>{isEn ? 'Settings' : 'Pengaturan'}</span>
@@ -139,28 +206,69 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </button>
             </div>
 
-            {navItems.map(({ id, label, Icon }) => {
-              const isActive = activeTab === id;
-              return (
-                <button
-                  key={id}
-                  onClick={() => setActiveTab(id)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                    isActive
-                      ? 'liquid-lens-active q-text-primary'
-                      : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'q-text-muted'}`} />
-                  <span>{label}</span>
-                </button>
-              );
-            })}
+            <div className="space-y-1">
+              <div className="px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider q-text-muted">
+                {isEn ? 'General Settings' : 'Pengaturan Umum'}
+              </div>
+              {generalNavItems.map(({ id, label, Icon }) => {
+                const isActive = activeTab === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => setActiveTab(id)}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                      isActive
+                        ? 'liquid-lens-active q-text-primary'
+                        : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'q-text-muted'}`} />
+                    <span>{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="space-y-1">
+              <div className="px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider q-text-muted">
+                {isEn ? 'Data & Privacy' : 'Data & Privasi'}
+              </div>
+              {dataNavItems.map(({ id, label, Icon }) => {
+                const isActive = activeTab === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => setActiveTab(id)}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                      isActive
+                        ? 'liquid-lens-active q-text-primary'
+                        : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'q-text-muted'}`} />
+                    <span>{label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="pt-2 border-t q-border px-2 text-[10px] q-text-muted flex items-center justify-between font-mono">
-            <span>SeeNote v1.0</span>
-            <ShieldCheck className="w-3.5 h-3.5 q-text-muted" />
+          <div className="pt-2 mt-3 border-t q-border space-y-1.5">
+            <button
+              onClick={() => setActiveTab('about')}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                activeTab === 'about'
+                  ? 'liquid-lens-active q-text-primary'
+                  : 'q-text-secondary hover:bg-white/[0.06] hover:q-text-primary border border-transparent'
+              }`}
+            >
+              <Info className={`w-4 h-4 ${activeTab === 'about' ? 'text-white' : 'q-text-muted'}`} />
+              <span>{isEn ? 'About & Download' : 'Tentang & Unduh'}</span>
+            </button>
+            <div className="px-2.5 text-[10px] q-text-muted flex items-center justify-between font-mono">
+              <span>SeeNote v1.0</span>
+              <ShieldCheck className="w-3.5 h-3.5 q-text-muted" />
+            </div>
           </div>
         </div>
 
@@ -369,6 +477,150 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 {errorMsg && (
                   <p className="text-xs text-rose-400 font-semibold">{errorMsg}</p>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 6: About & Download */}
+          {activeTab === 'about' && (
+            <div className="space-y-5">
+              <h3 className="text-base font-bold q-text-primary tracking-tight border-b q-border pb-2">
+                {isEn ? 'About & Download' : 'Tentang & Unduh SeeNote'}
+              </h3>
+
+              {/* Brand & Local Privacy Card */}
+              <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/[0.10] flex items-center justify-between gap-4">
+                <div className="space-y-1.5">
+                  <BrandLogo />
+                  <p className="text-[11px] q-text-muted leading-relaxed">
+                    {isEn
+                      ? 'Fast local-first workspace for notes, docs, checklists, math & whiteboards. Zero login required.'
+                      : 'Ruang kerja catatan lokal yang cepat untuk dokumen, checklist, rumus, dan whiteboard. Tanpa perlu login.'}
+                  </p>
+                </div>
+                <span className="shrink-0 px-2.5 py-1 rounded-full bg-white/[0.07] border border-white/[0.12] text-[10px] font-mono q-text-secondary">
+                  v1.0
+                </span>
+              </div>
+
+              {/* Download & Install Section */}
+              <div className="space-y-2.5">
+                <p className="text-[10px] font-semibold uppercase tracking-wider q-text-muted px-0.5">
+                  {isEn ? 'Get SeeNote on Your Device' : 'Pasang & Unduh SeeNote'}
+                </p>
+
+                {/* 1. Install as Desktop / Mobile App (PWA) */}
+                <button
+                  type="button"
+                  onClick={handleInstallApp}
+                  disabled={isInstalledPwa}
+                  className="w-full p-3.5 rounded-2xl glass-btn-primary flex items-center justify-between gap-3 text-left disabled:opacity-60"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-white/[0.08] border border-white/[0.14] flex items-center justify-center shrink-0">
+                      <Laptop className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-white">
+                        {isInstalledPwa
+                          ? isEn
+                            ? 'Installed as App'
+                            : 'Sudah Terpasang di Perangkat'
+                          : isEn
+                          ? 'Install Web App (Desktop & Mobile)'
+                          : 'Install Aplikasi (Desktop & HP)'}
+                      </p>
+                      <p className="text-[11px] text-white/60 truncate">
+                        {isInstalledPwa
+                          ? isEn
+                            ? 'Running in standalone app mode'
+                            : 'Berjalan dalam mode aplikasi mandiri'
+                          : isEn
+                          ? 'Works offline, opens in its own window'
+                          : 'Bisa jalan offline di jendela mandiri tanpa browser bar'}
+                      </p>
+                    </div>
+                  </div>
+                  {isInstalledPwa ? (
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  ) : (
+                    <Download className="w-4 h-4 text-white/80 shrink-0" />
+                  )}
+                </button>
+
+                {installHintVisible && !isInstalledPwa && (
+                  <p className="text-[11px] q-text-muted px-2 leading-relaxed">
+                    {isEn
+                      ? 'Tip: Click the install icon in your browser address bar, or open browser menu → "Install SeeNote" / "Add to Home Screen".'
+                      : 'Tips: Klik ikon install di kanan address bar browser, atau buka menu browser → "Install SeeNote" / "Tambahkan ke Layar Utama".'}
+                  </p>
+                )}
+
+                {/* 2. Download Link / Releases & GitHub Source */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <a
+                    href={SEENOTE_DOWNLOAD_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-2xl glass-control flex items-center justify-between gap-2 group"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Download className="w-4 h-4 q-text-muted group-hover:text-white shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold q-text-primary truncate">
+                          {isEn ? 'Download Releases' : 'Unduh Rilis'}
+                        </p>
+                        <p className="text-[10px] q-text-muted truncate">GitHub Releases</p>
+                      </div>
+                    </div>
+                    <ArrowUpRight className="w-3.5 h-3.5 q-text-muted group-hover:text-white shrink-0" />
+                  </a>
+
+                  <a
+                    href={SEENOTE_REPO_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 rounded-2xl glass-control flex items-center justify-between gap-2 group"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Code2 className="w-4 h-4 q-text-muted group-hover:text-white shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold q-text-primary truncate">
+                          {isEn ? 'GitHub Repository' : 'Kode Sumber'}
+                        </p>
+                        <p className="text-[10px] q-text-muted truncate">yaserarafatt12</p>
+                      </div>
+                    </div>
+                    <ArrowUpRight className="w-3.5 h-3.5 q-text-muted group-hover:text-white shrink-0" />
+                  </a>
+                </div>
+
+                {/* 3. Copy Share Link */}
+                <button
+                  type="button"
+                  onClick={handleCopyAppLink}
+                  className="w-full py-2.5 px-3.5 rounded-xl glass-control flex items-center justify-between text-xs font-semibold q-text-primary"
+                >
+                  <span className="flex items-center gap-2">
+                    {copiedAppLink ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5 q-text-muted" />
+                    )}
+                    <span>
+                      {copiedAppLink
+                        ? isEn
+                          ? 'App link copied!'
+                          : 'Link aplikasi disalin!'
+                        : isEn
+                        ? 'Copy Web App Link'
+                        : 'Salin Link Web App'}
+                    </span>
+                  </span>
+                  <span className="text-[10px] font-mono q-text-muted truncate max-w-[160px]">
+                    {window.location.host}
+                  </span>
+                </button>
               </div>
             </div>
           )}
