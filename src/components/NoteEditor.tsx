@@ -6941,51 +6941,38 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                         })}
                       </div>
 
-                      <div className="flex items-center gap-1.5">
-                        <input
-                          ref={editorCoverInputRef}
-                          type="file"
-                          accept="image/png, image/jpeg, image/webp, image/gif"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            e.target.value = '';
-                            if (!file) return;
-                            try {
-                              const compressed = await compressImageToWebP(file);
-                              const blobId = `cover-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-                              const idbUrl = await saveAttachmentBlob(
-                                blobId,
-                                compressed.blob,
-                                file.name,
-                                compressed.mime || file.type || 'image/webp'
-                              );
-                              onSave({ ...note, coverImage: idbUrl, updatedAt: Date.now() });
-                            } catch {
-                              // ignore upload errors
-                            }
-                          }}
-                          className="hidden"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => editorCoverInputRef.current?.click()}
-                          className="flex-1 py-2 px-3 rounded-xl glass-control text-xs font-semibold q-text-primary flex items-center justify-center gap-1.5"
-                        >
-                          <ImageIcon className="w-3.5 h-3.5 q-text-muted" />
-                          <span>Foto Sendiri</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onSave({ ...note, coverImage: 'minimal', updatedAt: Date.now() })}
-                          className={`py-2 px-3 rounded-xl border text-xs font-semibold transition-colors ${
-                            note.coverImage === 'minimal'
-                              ? 'liquid-lens-active text-white'
-                              : 'glass-control q-text-secondary'
-                          }`}
-                        >
-                          Minimal
-                        </button>
-                      </div>
+                      <input
+                        ref={editorCoverInputRef}
+                        type="file"
+                        accept="image/png, image/jpeg, image/webp, image/gif"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          e.target.value = '';
+                          if (!file || !file.type.startsWith('image/')) return;
+                          try {
+                            const compressed = await compressImageToWebP(file);
+                            const blobId = `cover-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+                            const idbUrl = await saveAttachmentBlob(
+                              blobId,
+                              compressed.blob,
+                              file.name,
+                              compressed.mime || file.type || 'image/webp'
+                            );
+                            onSave({ ...note, coverImage: idbUrl, updatedAt: Date.now() });
+                          } catch {
+                            // ignore upload errors
+                          }
+                        }}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => editorCoverInputRef.current?.click()}
+                        className="w-full py-2 px-3 rounded-xl glass-control text-xs font-semibold q-text-primary flex items-center justify-center gap-1.5"
+                      >
+                        <ImageIcon className="w-3.5 h-3.5 q-text-muted" />
+                        <span>Foto Sendiri</span>
+                      </button>
                     </div>
                   )}
                 </div>

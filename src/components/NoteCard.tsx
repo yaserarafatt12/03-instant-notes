@@ -628,22 +628,11 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    onUpdateCover(note, 'minimal');
-                                    setIsCoverPopoverOpen(false);
-                                    setIsMenuOpen(false);
-                                  }}
-                                  className="py-1.5 px-2 rounded-lg hover:bg-white/10 text-[11px] font-medium text-white/55 hover:text-white transition-colors"
-                                >
-                                  Minimal
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
                                     onUpdateCover(note, undefined);
                                     setIsCoverPopoverOpen(false);
                                     setIsMenuOpen(false);
                                   }}
-                                  className="py-1.5 px-2 rounded-lg hover:bg-white/10 text-[11px] font-medium text-white/55 hover:text-white transition-colors"
+                                  className="py-1.5 px-2.5 rounded-lg hover:bg-white/10 text-[11px] font-medium text-white/60 hover:text-white transition-colors"
                                 >
                                   Auto
                                 </button>
