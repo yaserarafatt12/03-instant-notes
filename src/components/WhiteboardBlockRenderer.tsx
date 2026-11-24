@@ -25,10 +25,30 @@ const WhiteboardBlockRendererInner: React.FC<WhiteboardBlockRendererProps> = ({
 }) => {
   const [title, setTitle] = useState(initialTitle || 'Whiteboard');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
   const saveTimerRef = useRef<number | null>(null);
   const latestSceneRef = useRef<string>(initialSceneJson || '');
   const onSaveRef = useRef(onSaveScene);
   onSaveRef.current = onSaveScene;
+
+  // Ensure mounted canvas never keeps an inverted opaque background (#0e1320 or #ffffff)
+  useEffect(() => {
+    if (!excalidrawAPI) return;
+    try {
+      const appState = excalidrawAPI.getAppState?.();
+      const bg = appState?.viewBackgroundColor;
+      if (!bg || bg === '#0e1320' || bg === '#ffffff' || bg === '#121212') {
+        excalidrawAPI.updateScene({
+          appState: {
+            viewBackgroundColor: 'transparent',
+            theme: 'dark',
+          },
+        });
+      }
+    } catch {
+      // ignore api errors
+    }
+  }, [excalidrawAPI]);
 
   useEffect(() => {
     setTitle(initialTitle || 'Whiteboard');
@@ -183,6 +203,7 @@ const WhiteboardBlockRendererInner: React.FC<WhiteboardBlockRendererProps> = ({
         }
       >
         <Excalidraw
+          excalidrawAPI={(api) => setExcalidrawAPI(api)}
           theme="dark"
           initialData={parsedInitialData}
           onChange={handleChange}
