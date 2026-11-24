@@ -1,0 +1,98 @@
+/* Midnight Navy Tempered Glass skin for Excalidraw Whiteboard */
+.seenote-excalidraw {
+  position: relative;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(148, 180, 255, 0.06), transparent 45%),
+    radial-gradient(circle at 85% 88%, rgba(120, 160, 240, 0.05), transparent 50%),
+    radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(13, 19, 34, 0.92) 0%, rgba(10, 15, 28, 0.96) 100%);
+  background-size: 100% 100%, 100% 100%, 22px 22px, 100% 100%;
+}
+
+.seenote-excalidraw .excalidraw {
+  --color-primary: #cbd5e1;
+  --color-primary-darker: #e2e8f0;
+  --color-primary-darkest: #f8fafc;
+  --color-primary-light: rgba(255, 255, 255, 0.14);
+  --color-primary-light-darker: rgba(255, 255, 255, 0.2);
+  --color-primary-hover: #e2e8f0;
+  --color-brand-hover: #e2e8f0;
+  --color-brand-active: #ffffff;
+  --color-selection: rgba(148, 197, 255, 0.6);
+  --color-surface-lowest: transparent;
+  --color-surface-low: rgba(255, 255, 255, 0.06);
+  --color-surface-mid: rgba(15, 22, 40, 0.84);
+  --color-surface-high: rgba(255, 255, 255, 0.12);
+  --color-surface-primary-container: rgba(255, 255, 255, 0.14);
+  --color-on-primary-container: #ffffff;
+  --island-bg-color: rgba(14, 21, 38, 0.78);
+  --popup-bg-color: rgba(14, 21, 38, 0.9);
+  --popup-secondary-bg-color: rgba(255, 255, 255, 0.06);
+  --button-gray-1: rgba(255, 255, 255, 0.06);
+  --button-gray-2: rgba(255, 255, 255, 0.12);
+  --button-gray-3: rgba(255, 255, 255, 0.18);
+  --button-hover-bg: rgba(255, 255, 255, 0.1);
+  --button-active-bg: rgba(255, 255, 255, 0.16);
+  --button-active-border: rgba(255, 255, 255, 0.28);
+  --default-border-color: rgba(255, 255, 255, 0.11);
+  --dialog-border-color: rgba(255, 255, 255, 0.14);
+  --sidebar-bg-color: rgba(13, 19, 35, 0.9);
+  --sidebar-border-color: rgba(255, 255, 255, 0.1);
+  --shadow-island: 0 8px 24px rgba(2, 6, 18, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  background: transparent !important;
+}
+
+.seenote-excalidraw .excalidraw.theme--dark {
+  --color-surface-lowest: transparent;
+  --island-bg-color: rgba(14, 21, 38, 0.78);
+  --color-surface-primary-container: rgba(255, 255, 255, 0.15);
+  --color-on-primary-container: #ffffff;
+  --icon-fill-color: rgba(241, 245, 249, 0.88);
+  --text-primary-color: rgba(241, 245, 249, 0.92);
+}
+
+/* Tempered glass pills for Excalidraw floating toolbars, islands, and panels */
+.seenote-excalidraw .excalidraw .Island,
+.seenote-excalidraw .excalidraw .App-toolbar,
+.seenote-excalidraw .excalidraw .App-bottom-bar,
+.seenote-excalidraw .excalidraw .dropdown-menu-container,
+.seenote-excalidraw .excalidraw .App-menu_top__left .dropdown-menu-button,
+.seenote-excalidraw .excalidraw .layer-ui__wrapper__top-right .ToolIcon__icon,
+.seenote-excalidraw .excalidraw .ToolIcon_type_floating,
+.seenote-excalidraw .excalidraw .undo-redo-buttons,
+.seenote-excalidraw .excalidraw .zoom-actions,
+.seenote-excalidraw .excalidraw .help-icon {
+  background: rgba(15, 23, 42, 0.76) !important;
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 8px 24px rgba(2, 6, 18, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+  border-radius: 14px !important;
+}
+
+/* Remove double borders inside grouped islands */
+.seenote-excalidraw .excalidraw .Island .ToolIcon__icon {
+  border-radius: 10px !important;
+}
+
+.seenote-excalidraw .excalidraw .ToolIcon_type_radio:checked + .ToolIcon__icon,
+.seenote-excalidraw .excalidraw .ToolIcon_type_checkbox:checked + .ToolIcon__icon {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+}
+
+.seenote-excalidraw .excalidraw .ToolIcon_type_radio:checked + .ToolIcon__icon svg,
+.seenote-excalidraw .excalidraw .ToolIcon_type_checkbox:checked + .ToolIcon__icon svg {
+  color: #ffffff !important;
+}
+
+/* Compact mobile/embedded bottom bar glass look */
+.seenote-excalidraw .excalidraw .App-bottom-bar {
+  background: rgba(14, 21, 38, 0.78) !important;
+}
+
+/* Make the canvas wrapper transparent so the Midnight Navy dot-grid glass shines through */
+.seenote-excalidraw .excalidraw .excalidraw__canvas {
+  background: transparent !important;
+}

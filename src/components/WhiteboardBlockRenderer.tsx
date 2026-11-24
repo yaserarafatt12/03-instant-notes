@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Excalidraw } from '@excalidraw/excalidraw';
 import '@excalidraw/excalidraw/index.css';
+import './whiteboard-glass.css';
 import { Maximize2, Minimize2, PenTool, Trash2, X } from 'lucide-react';
 
 interface WhiteboardBlockRendererProps {
@@ -56,19 +57,23 @@ const WhiteboardBlockRendererInner: React.FC<WhiteboardBlockRendererProps> = ({
   const parsedInitialData = useMemo(() => {
     const baseAppState = {
       theme: 'dark' as const,
-      viewBackgroundColor: '#0e1320',
-      currentItemStrokeColor: '#e2e8f0',
+      viewBackgroundColor: 'transparent',
+      currentItemStrokeColor: '#1e1e1e',
     };
     if (!initialSceneJson || !initialSceneJson.trim()) {
       return { elements: [], appState: baseAppState };
     }
     try {
       const parsed: StoredScene = JSON.parse(initialSceneJson);
+      const savedBg = parsed.appState?.viewBackgroundColor;
+      // Migrate old inverted dark hex (#0e1320) to transparent tempered glass
+      const safeBg = !savedBg || savedBg === '#0e1320' || savedBg === '#ffffff' ? 'transparent' : savedBg;
       return {
         elements: Array.isArray(parsed.elements) ? parsed.elements : [],
         appState: {
           ...baseAppState,
           ...(parsed.appState && typeof parsed.appState === 'object' ? parsed.appState : {}),
+          viewBackgroundColor: safeBg,
           collaborators: new Map(),
         },
       };
@@ -84,7 +89,7 @@ const WhiteboardBlockRendererInner: React.FC<WhiteboardBlockRendererProps> = ({
       const compactPayload = JSON.stringify({
         elements: activeElements,
         appState: {
-          viewBackgroundColor: appState?.viewBackgroundColor || '#0e1320',
+          viewBackgroundColor: appState?.viewBackgroundColor || 'transparent',
           gridSize: appState?.gridSize ?? null,
         },
       });
@@ -112,13 +117,13 @@ const WhiteboardBlockRendererInner: React.FC<WhiteboardBlockRendererProps> = ({
     <div
       className={
         isFullscreen
-          ? 'fixed inset-0 z-[120] bg-[#0a0f1c]/95 backdrop-blur-md flex flex-col p-3 sm:p-5'
-          : 'w-full rounded-2xl overflow-hidden border border-white/[0.10] bg-[#0e1320] shadow-xl'
+          ? 'fixed inset-0 z-[120] bg-[#070b16]/90 backdrop-blur-xl flex flex-col p-3 sm:p-5'
+          : 'w-full rounded-2xl overflow-hidden glass-card shadow-2xl'
       }
       onClick={(e) => e.stopPropagation()}
     >
       {/* Tempered Glass Header Bar */}
-      <div className="flex items-center justify-between px-3.5 py-2 border-b border-white/[0.08] bg-[#121829]/95 select-none">
+      <div className="flex items-center justify-between px-3.5 py-2 border-b border-white/[0.08] bg-white/[0.03] backdrop-blur-md select-none">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <div className="w-6 h-6 rounded-lg bg-white/[0.06] border border-white/[0.08] flex items-center justify-center shrink-0">
             <PenTool className="w-3.5 h-3.5 text-white/75" />
@@ -169,9 +174,13 @@ const WhiteboardBlockRendererInner: React.FC<WhiteboardBlockRendererProps> = ({
         </div>
       </div>
 
-      {/* Excalidraw Canvas Container */}
+      {/* Excalidraw Canvas Container — Tempered Glass Midnight Navy */}
       <div
-        className={isFullscreen ? 'flex-1 w-full rounded-b-2xl overflow-hidden' : 'w-full h-[420px] relative'}
+        className={
+          isFullscreen
+            ? 'seenote-excalidraw flex-1 w-full rounded-b-2xl overflow-hidden border border-t-0 border-white/[0.10]'
+            : 'seenote-excalidraw w-full h-[420px] relative'
+        }
       >
         <Excalidraw
           theme="dark"
