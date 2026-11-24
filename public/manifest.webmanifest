@@ -1,0 +1,17 @@
+{
+  "name": "SeeNote — Instant Notes",
+  "short_name": "SeeNote",
+  "description": "Fast local-first workspace for notes, checklists, math & whiteboards.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
