@@ -655,7 +655,7 @@ const LineNumberedEditor: React.FC<{
   return (
     <div
       onClick={() => textareaRef.current?.focus({ preventScroll: true })}
-      className="flex w-full bg-[#111114]/85 hover:bg-[#16161a]/90 rounded-xl border border-white/[0.11] hover:border-white/20 overflow-hidden font-mono text-xs shadow-md relative group/editor cursor-text min-h-[56px] transition-colors"
+      className="flex w-full code-card-surface rounded-xl border border-white/[0.11] hover:border-white/20 overflow-hidden font-mono text-xs shadow-md relative group/editor cursor-text min-h-[56px] transition-colors"
     >
       {/* Left Line Numbers Column with Clean Vertical Divider */}
       <div className="py-3 px-3 bg-transparent border-r border-white/10 text-zinc-500/80 select-none text-right font-mono text-xs leading-relaxed shrink-0 min-w-[34px]">
@@ -849,7 +849,7 @@ const CodeBlockRenderer: React.FC<{
 
       <div
         data-code-id={block.data.id}
-        className={`relative group/codecard rounded-xl overflow-hidden bg-[#111114]/85 transition-all ${
+        className={`relative group/codecard rounded-xl overflow-hidden code-card-surface transition-all ${
         isSelected
           ? 'ring-1 ring-white/40 border border-white/40 shadow-md'
           : isAllSelected

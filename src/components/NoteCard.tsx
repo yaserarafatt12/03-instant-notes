@@ -402,11 +402,11 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               loading="lazy"
               className="w-full h-full object-cover opacity-75 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[#101013]/50 to-[#0b0b0e]/95" />
+            <div className="absolute inset-0 note-card-scrim" />
           </>
         ) : (
           <div className="w-full h-full relative" style={{ background: softPalette }}>
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#101013]/45 to-[#0b0b0e]/95" />
+            <div className="absolute inset-0 note-card-scrim" />
           </div>
         )}
       </div>
@@ -423,7 +423,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all shrink-0 ${
                 isMultiSelected
                   ? 'bg-white border-white text-[#09090b]'
-                  : 'border-white/35 bg-black/45 backdrop-blur-md group-hover:border-white/60'
+                  : 'glass-control group-hover:border-white/60'
               }`}
             >
               {isMultiSelected && <Check className="w-3 h-3" />}
@@ -433,15 +433,15 @@ export const NoteCard: React.FC<NoteCardProps> = ({
 
         <div className="flex items-center gap-1">
           {note.isFavorite && (
-            <div className="w-6 h-6 rounded-full bg-black/45 backdrop-blur-md border border-white/15 flex items-center justify-center">
-              <Star className="w-3 h-3 text-white fill-current" />
+            <div className="w-6 h-6 rounded-full glass-control flex items-center justify-center">
+              <Star className="w-3 h-3 q-text-primary fill-current" />
             </div>
           )}
           {!isSelectionMode && (
             <div className="relative" ref={menuRef} onClick={(e) => e.stopPropagation()}>
               <button
                 onClick={() => openMenuWithSmartSide(!isMenuOpen)}
-                className="w-6 h-6 rounded-full bg-black/45 backdrop-blur-md border border-white/15 q-text-muted hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                className="w-6 h-6 rounded-full glass-control q-text-muted hover:q-text-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                 title="Opsi Catatan"
               >
                 <MoreHorizontal className="w-3.5 h-3.5" />

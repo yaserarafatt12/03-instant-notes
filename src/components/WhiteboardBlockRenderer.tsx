@@ -27,10 +27,24 @@ const WhiteboardBlockRendererInner: React.FC<WhiteboardBlockRendererProps> = ({
   const [title, setTitle] = useState(initialTitle || 'Whiteboard');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
+  const [isLightMode, setIsLightMode] = useState<boolean>(() =>
+    typeof document !== 'undefined' && document.documentElement.classList.contains('light')
+  );
   const saveTimerRef = useRef<number | null>(null);
   const latestSceneRef = useRef<string>(initialSceneJson || '');
   const onSaveRef = useRef(onSaveScene);
   onSaveRef.current = onSaveScene;
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const syncTheme = () => {
+      setIsLightMode(document.documentElement.classList.contains('light'));
+    };
+    syncTheme();
+    const observer = new MutationObserver(syncTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
 
   // Ensure mounted canvas never keeps an inverted opaque background (#0e1320 or #ffffff)
   useEffect(() => {
@@ -209,7 +223,7 @@ const WhiteboardBlockRendererInner: React.FC<WhiteboardBlockRendererProps> = ({
       >
         <Excalidraw
           excalidrawAPI={(api) => setExcalidrawAPI(api)}
-          theme="dark"
+          theme={isLightMode ? 'light' : 'dark'}
           initialData={parsedInitialData}
           onChange={handleChange}
           UIOptions={{

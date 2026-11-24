@@ -94,3 +94,66 @@
 .seenote-excalidraw .excalidraw canvas {
   background: transparent !important;
 }
+
+/* ============================================================================
+ * Light Mode Frosted Alabaster Tempered Glass for Excalidraw Whiteboard
+ * ============================================================================ */
+.light .seenote-excalidraw {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.7), transparent 45%),
+    radial-gradient(rgba(15, 23, 42, 0.10) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(248, 250, 252, 0.94) 0%, rgba(241, 245, 249, 0.96) 100%);
+  background-size: 100% 100%, 22px 22px, 100% 100%;
+}
+
+.light .seenote-excalidraw .excalidraw {
+  --color-primary: #334155;
+  --color-primary-darker: #1e293b;
+  --color-primary-darkest: #0f172a;
+  --color-primary-light: rgba(15, 23, 42, 0.08);
+  --color-primary-light-darker: rgba(15, 23, 42, 0.14);
+  --color-primary-hover: #1e293b;
+  --color-brand-hover: #1e293b;
+  --color-brand-active: #0f172a;
+  --default-bg-color: transparent;
+  --color-surface-lowest: transparent;
+  --color-surface-low: rgba(15, 23, 42, 0.04);
+  --color-surface-mid: rgba(255, 255, 255, 0.86);
+  --color-surface-high: rgba(15, 23, 42, 0.08);
+  --color-surface-primary-container: rgba(15, 23, 42, 0.10);
+  --color-on-primary-container: #0f172a;
+  --island-bg-color: rgba(255, 255, 255, 0.80);
+  --popup-bg-color: rgba(255, 255, 255, 0.94);
+  --popup-secondary-bg-color: rgba(15, 23, 42, 0.04);
+  --default-border-color: rgba(15, 23, 42, 0.10);
+  --dialog-border-color: rgba(15, 23, 42, 0.12);
+  --icon-fill-color: rgba(15, 23, 42, 0.82);
+  --text-primary-color: rgba(15, 23, 42, 0.90);
+  background: transparent !important;
+}
+
+.light .seenote-excalidraw .excalidraw .Island,
+.light .seenote-excalidraw .excalidraw .App-bottom-bar > .Island,
+.light .seenote-excalidraw .excalidraw .dropdown-menu-container,
+.light .seenote-excalidraw .excalidraw .App-menu_top__left .dropdown-menu-button,
+.light .seenote-excalidraw .excalidraw .ToolIcon_type_floating,
+.light .seenote-excalidraw .excalidraw .undo-redo-buttons,
+.light .seenote-excalidraw .excalidraw .zoom-actions,
+.light .seenote-excalidraw .excalidraw .help-icon {
+  background: rgba(255, 255, 255, 0.80) !important;
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid rgba(15, 23, 42, 0.10) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+}
+
+.light .seenote-excalidraw .excalidraw .ToolIcon_type_radio:checked + .ToolIcon__icon,
+.light .seenote-excalidraw .excalidraw .ToolIcon_type_checkbox:checked + .ToolIcon__icon {
+  background: rgba(15, 23, 42, 0.10) !important;
+  border: 1px solid rgba(15, 23, 42, 0.18) !important;
+}
+
+.light .seenote-excalidraw .excalidraw .ToolIcon_type_radio:checked + .ToolIcon__icon svg,
+.light .seenote-excalidraw .excalidraw .ToolIcon_type_checkbox:checked + .ToolIcon__icon svg {
+  color: #0f172a !important;
+}
