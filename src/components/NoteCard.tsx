@@ -20,15 +20,24 @@ import {
   Circle,
   CheckCircle2,
   Sparkles,
+  Image as ImageIcon,
+  Upload,
 } from 'lucide-react';
 import type { Note } from '../types/note';
 import { HighlightText } from './HighlightText';
 import { formatRelativeTime } from '../lib/dateUtils';
 import {
+  compressImageToWebP,
   getCachedAttachmentUrl,
   isIdbAttachmentUrl,
   resolveAttachmentUrl,
+  saveAttachmentBlob,
 } from '../lib/storage/attachmentStore';
+import {
+  CARD_WALLPAPER_PRESETS,
+  getDefaultWallpaperForNote,
+  resolvePresetWallpaperUrl,
+} from '../lib/cardWallpapers';
 
 interface NoteCardProps {
   note: Note;
@@ -41,6 +50,7 @@ interface NoteCardProps {
   onDeletePermanently?: (id: string) => void;
   onDuplicateNote?: (note: Note) => void;
   onMoveNote?: (note: Note, newSubject: string) => void;
+  onUpdateCover?: (note: Note, coverImage: string | undefined) => void;
   allExistingFolders?: string[];
   isSelectionMode?: boolean;
   isMultiSelected?: boolean;
@@ -264,6 +274,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   onDeletePermanently,
   onDuplicateNote,
   onMoveNote,
+  onUpdateCover,
   allExistingFolders = ['Umum'],
   isSelectionMode = false,
   isMultiSelected = false,
@@ -271,13 +282,16 @@ export const NoteCard: React.FC<NoteCardProps> = ({
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMovePopoverOpen, setIsMovePopoverOpen] = useState(false);
+  const [isCoverPopoverOpen, setIsCoverPopoverOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const coverUploadRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setIsMenuOpen(false);
         setIsMovePopoverOpen(false);
+        setIsCoverPopoverOpen(false);
       }
     };
     window.addEventListener('mousedown', handleClickOutside);
@@ -296,30 +310,38 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   const preview = useMemo(() => parseNoteToMiniBlocks(note.content), [note.content]);
   const miniBlocks = preview.blocks;
 
+  // Priority: minimal (off) > explicit note.coverImage (preset or custom) > first inline photo > curated soft landscape wallpaper
+  const rawCoverSource = useMemo(() => {
+    if (note.coverImage === 'minimal') return null;
+    if (note.coverImage) {
+      return resolvePresetWallpaperUrl(note.coverImage) || note.coverImage;
+    }
+    if (preview.coverImageUrl) return preview.coverImageUrl;
+    return getDefaultWallpaperForNote(note.id || note.title || 'note').url;
+  }, [note.coverImage, note.id, note.title, preview.coverImageUrl]);
+
   const [resolvedCoverUrl, setResolvedCoverUrl] = useState<string | null>(() => {
-    const raw = preview.coverImageUrl;
-    if (!raw) return null;
-    if (!isIdbAttachmentUrl(raw)) return raw;
-    return getCachedAttachmentUrl(raw) || null;
+    if (!rawCoverSource) return null;
+    if (!isIdbAttachmentUrl(rawCoverSource)) return rawCoverSource;
+    return getCachedAttachmentUrl(rawCoverSource) || null;
   });
 
   useEffect(() => {
-    const raw = preview.coverImageUrl;
-    if (!raw) {
+    if (!rawCoverSource) {
       setResolvedCoverUrl(null);
       return;
     }
-    if (!isIdbAttachmentUrl(raw)) {
-      setResolvedCoverUrl(raw);
+    if (!isIdbAttachmentUrl(rawCoverSource)) {
+      setResolvedCoverUrl(rawCoverSource);
       return;
     }
-    const cached = getCachedAttachmentUrl(raw);
+    const cached = getCachedAttachmentUrl(rawCoverSource);
     if (cached) {
       setResolvedCoverUrl(cached);
       return;
     }
     let cancelled = false;
-    resolveAttachmentUrl(raw).then((resolved) => {
+    resolveAttachmentUrl(rawCoverSource).then((resolved) => {
       if (!cancelled && resolved) {
         setResolvedCoverUrl(resolved);
       }
@@ -327,7 +349,28 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [preview.coverImageUrl]);
+  }, [rawCoverSource]);
+
+  const handleCustomCoverFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !onUpdateCover) return;
+    try {
+      const compressed = await compressImageToWebP(file);
+      const blobId = `cover-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      const idbUrl = await saveAttachmentBlob(
+        blobId,
+        compressed.blob,
+        file.name,
+        compressed.mime || file.type || 'image/webp'
+      );
+      onUpdateCover(note, idbUrl);
+      setIsCoverPopoverOpen(false);
+      setIsMenuOpen(false);
+    } catch {
+      // ignore upload failures
+    }
+  };
 
   const softPalette = useMemo(() => getSoftPaletteForNote(note.id || note.title), [note.id, note.title]);
 
@@ -473,7 +516,10 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                       {onMoveNote && (
                         <div className="relative">
                           <button
-                            onClick={() => setIsMovePopoverOpen(!isMovePopoverOpen)}
+                            onClick={() => {
+                              setIsCoverPopoverOpen(false);
+                              setIsMovePopoverOpen(!isMovePopoverOpen);
+                            }}
                             className="w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-semibold q-text-secondary hover:q-text-primary hover:bg-white/10 rounded-xl transition-colors"
                           >
                             <div className="flex items-center gap-2">
@@ -498,6 +544,93 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                                   {f}
                                 </button>
                               ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {onUpdateCover && (
+                        <div className="relative">
+                          <input
+                            ref={coverUploadRef}
+                            type="file"
+                            accept="image/png, image/jpeg, image/webp, image/gif"
+                            onChange={handleCustomCoverFile}
+                            className="hidden"
+                          />
+                          <button
+                            onClick={() => {
+                              setIsMovePopoverOpen(false);
+                              setIsCoverPopoverOpen(!isCoverPopoverOpen);
+                            }}
+                            className="w-full flex items-center justify-between px-2.5 py-1.5 text-xs font-semibold q-text-secondary hover:q-text-primary hover:bg-white/10 rounded-xl transition-colors"
+                          >
+                            <div className="flex items-center gap-2">
+                              <ImageIcon className="w-3.5 h-3.5 q-text-muted" />
+                              <span>Wallpaper Card</span>
+                            </div>
+                            <ChevronRight className="w-3.5 h-3.5 q-text-muted" />
+                          </button>
+
+                          {isCoverPopoverOpen && (
+                            <div className="absolute right-full top-0 mr-1.5 w-52 glass-popover rounded-2xl p-2 z-50 space-y-2 font-sans">
+                              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45 px-1">
+                                Pilih Wallpaper
+                              </p>
+                              <div className="grid grid-cols-3 gap-1.5">
+                                {CARD_WALLPAPER_PRESETS.map((wp) => {
+                                  const active = note.coverImage === `preset:${wp.id}`;
+                                  return (
+                                    <button
+                                      key={wp.id}
+                                      type="button"
+                                      onClick={() => {
+                                        onUpdateCover(note, `preset:${wp.id}`);
+                                        setIsCoverPopoverOpen(false);
+                                        setIsMenuOpen(false);
+                                      }}
+                                      className={`relative h-10 rounded-lg overflow-hidden border transition-all ${
+                                        active ? 'border-white ring-1 ring-white/40' : 'border-white/15 hover:border-white/40'
+                                      }`}
+                                      title={wp.name}
+                                    >
+                                      <img src={wp.url} alt={wp.name} className="w-full h-full object-cover" />
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              <div className="flex items-center gap-1 pt-1 border-t border-white/[0.08]">
+                                <button
+                                  type="button"
+                                  onClick={() => coverUploadRef.current?.click()}
+                                  className="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-white/[0.07] hover:bg-white/[0.14] text-[11px] font-semibold text-white/85 transition-colors"
+                                >
+                                  <Upload className="w-3 h-3" />
+                                  <span>Foto</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onUpdateCover(note, 'minimal');
+                                    setIsCoverPopoverOpen(false);
+                                    setIsMenuOpen(false);
+                                  }}
+                                  className="py-1.5 px-2 rounded-lg hover:bg-white/10 text-[11px] font-medium text-white/55 hover:text-white transition-colors"
+                                >
+                                  Minimal
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onUpdateCover(note, undefined);
+                                    setIsCoverPopoverOpen(false);
+                                    setIsMenuOpen(false);
+                                  }}
+                                  className="py-1.5 px-2 rounded-lg hover:bg-white/10 text-[11px] font-medium text-white/55 hover:text-white transition-colors"
+                                >
+                                  Auto
+                                </button>
+                              </div>
                             </div>
                           )}
                         </div>

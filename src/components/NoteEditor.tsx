@@ -88,6 +88,7 @@ import {
   compressImageToWebP,
   formatFileSize,
 } from '../lib/storage/attachmentStore';
+import { CARD_WALLPAPER_PRESETS } from '../lib/cardWallpapers';
 export { NOTION_COLORS };
 
 mermaid.initialize({
@@ -1883,6 +1884,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
   const canvasScrollRef = useRef<HTMLDivElement>(null);
   const fileAttachmentInputRef = useRef<HTMLInputElement>(null);
   const imageBlockInputRef = useRef<HTMLInputElement>(null);
+  const editorCoverInputRef = useRef<HTMLInputElement>(null);
 
   // Floating text selection toolbar
   const [selectionToolbar, setSelectionToolbar] = useState<{
@@ -6884,12 +6886,108 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
 
               {/* TAB 3: STYLE PANEL */}
               {activeRightTab === 'style' && (
-                <div className="space-y-4">
-                  <p className="text-[10px] q-text-muted font-semibold px-1">Tipografi Dokumen</p>
-                  <div className="p-3 bg-white/[0.05] border border-white/[0.12] rounded-xl space-y-1">
-                    <p className="text-xs font-semibold q-text-primary">Font Utama</p>
-                    <p className="text-xs q-text-muted">Inter — Clean Sans</p>
+                <div className="space-y-5">
+                  <div className="space-y-2">
+                    <p className="text-[10px] q-text-muted font-semibold uppercase tracking-wider px-1">
+                      Tipografi Dokumen
+                    </p>
+                    <div className="p-3 bg-white/[0.05] border border-white/[0.12] rounded-xl space-y-1">
+                      <p className="text-xs font-semibold q-text-primary">Font Utama</p>
+                      <p className="text-xs q-text-muted">Inter — Clean Sans</p>
+                    </div>
                   </div>
+
+                  {note && (
+                    <div className="space-y-2.5 pt-2 border-t q-border">
+                      <div className="flex items-center justify-between px-1">
+                        <p className="text-[10px] q-text-muted font-semibold uppercase tracking-wider">
+                          Wallpaper Card
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => onSave({ ...note, coverImage: undefined, updatedAt: Date.now() })}
+                          className={`text-[10px] font-semibold px-1.5 py-0.5 rounded transition-colors ${
+                            !note.coverImage ? 'text-white bg-white/10' : 'text-white/45 hover:text-white'
+                          }`}
+                        >
+                          Auto
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        {CARD_WALLPAPER_PRESETS.map((wp) => {
+                          const isSelectedCover = note.coverImage === `preset:${wp.id}`;
+                          return (
+                            <button
+                              key={wp.id}
+                              type="button"
+                              onClick={() =>
+                                onSave({ ...note, coverImage: `preset:${wp.id}`, updatedAt: Date.now() })
+                              }
+                              className={`group relative h-14 rounded-xl overflow-hidden border transition-all text-left ${
+                                isSelectedCover
+                                  ? 'border-white ring-1 ring-white/40'
+                                  : 'border-white/[0.12] hover:border-white/35'
+                              }`}
+                              title={wp.name}
+                            >
+                              <img src={wp.url} alt={wp.name} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                              <span className="absolute left-2 bottom-1.5 text-[10px] font-medium text-white/90 truncate right-2">
+                                {wp.name}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          ref={editorCoverInputRef}
+                          type="file"
+                          accept="image/png, image/jpeg, image/webp, image/gif"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            e.target.value = '';
+                            if (!file) return;
+                            try {
+                              const compressed = await compressImageToWebP(file);
+                              const blobId = `cover-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+                              const idbUrl = await saveAttachmentBlob(
+                                blobId,
+                                compressed.blob,
+                                file.name,
+                                compressed.mime || file.type || 'image/webp'
+                              );
+                              onSave({ ...note, coverImage: idbUrl, updatedAt: Date.now() });
+                            } catch {
+                              // ignore upload errors
+                            }
+                          }}
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => editorCoverInputRef.current?.click()}
+                          className="flex-1 py-2 px-3 rounded-xl glass-control text-xs font-semibold q-text-primary flex items-center justify-center gap-1.5"
+                        >
+                          <ImageIcon className="w-3.5 h-3.5 q-text-muted" />
+                          <span>Foto Sendiri</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onSave({ ...note, coverImage: 'minimal', updatedAt: Date.now() })}
+                          className={`py-2 px-3 rounded-xl border text-xs font-semibold transition-colors ${
+                            note.coverImage === 'minimal'
+                              ? 'liquid-lens-active text-white'
+                              : 'glass-control q-text-secondary'
+                          }`}
+                        >
+                          Minimal
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

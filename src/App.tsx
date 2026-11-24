@@ -354,6 +354,7 @@ export function App() {
       content: sourceNote.content,
       subject: sourceNote.subject,
       tags: [...sourceNote.tags],
+      coverImage: sourceNote.coverImage,
       isFavorite: false,
       isTrash: false,
       createdAt: Date.now(),
@@ -368,6 +369,12 @@ export function App() {
 
   const handleMoveNote = async (targetNote: Note, newSubject: string) => {
     const updated = { ...targetNote, subject: newSubject, updatedAt: Date.now() };
+    await saveNote(updated);
+    setNotes((prev) => prev.map((n) => (n.id === targetNote.id ? updated : n)));
+  };
+
+  const handleUpdateCover = async (targetNote: Note, coverImage: string | undefined) => {
+    const updated = { ...targetNote, coverImage, updatedAt: Date.now() };
     await saveNote(updated);
     setNotes((prev) => prev.map((n) => (n.id === targetNote.id ? updated : n)));
   };
@@ -940,6 +947,7 @@ export function App() {
                     onDeletePermanently={handleDeletePermanently}
                     onDuplicateNote={handleDuplicateNote}
                     onMoveNote={handleMoveNote}
+                    onUpdateCover={handleUpdateCover}
                     allExistingFolders={allFolderNames}
                     isSelectionMode={isSelectionMode}
                     isMultiSelected={selectedNoteIds.includes(note.id)}

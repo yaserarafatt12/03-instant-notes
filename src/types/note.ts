@@ -4,6 +4,7 @@ export interface Note {
   content: string;
   subject: string; // e.g., 'Fisika', 'Matematika', 'Programming', 'Umum'
   tags: string[];
+  coverImage?: string; // 'preset:<id>', 'minimal', 'idb-att://...', or data URL
   isFavorite: boolean;
   isTrash: boolean;
   createdAt: number; // Unix timestamp in ms
