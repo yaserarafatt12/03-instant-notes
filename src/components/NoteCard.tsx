@@ -341,7 +341,9 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           setIsMenuOpen(true);
         }
       }}
-      className={`group relative rounded-[22px] overflow-hidden transition-all duration-300 cursor-pointer select-none font-sans flex flex-col justify-between min-h-[272px] glass-card ${
+      className={`group relative rounded-[22px] transition-all duration-300 cursor-pointer select-none font-sans flex flex-col justify-between min-h-[272px] glass-card ${
+        isMenuOpen ? 'z-40' : ''
+      } ${
         isMultiSelected
           ? '!border-white/45 ring-2 ring-white/25'
           : isSelected
@@ -350,48 +352,50 @@ export const NoteCard: React.FC<NoteCardProps> = ({
       }`}
     >
       {/* Top Soft Visual Cover Banner (Real Image Soft-Fade OR Atmospheric Tempered Mesh) */}
-      <div className="relative h-20 w-full shrink-0 overflow-hidden border-b border-white/[0.06]">
-        {resolvedCoverUrl ? (
-          <>
-            <img
-              src={resolvedCoverUrl}
-              alt=""
-              loading="lazy"
-              className="w-full h-full object-cover opacity-65 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-[#121215]/45 to-[#141417]/95" />
-          </>
-        ) : (
-          <div
-            className="w-full h-full relative"
-            style={{ background: softPalette }}
-          >
-            {preview.hasWhiteboard && (
-              <div
-                className="absolute inset-0 opacity-35"
-                style={{
-                  backgroundImage: 'radial-gradient(rgba(255,255,255,0.22) 1px, transparent 1px)',
-                  backgroundSize: '14px 14px',
-                }}
+      <div className="relative h-20 w-full shrink-0 border-b border-white/[0.06]">
+        <div className="absolute inset-0 rounded-t-[21px] overflow-hidden pointer-events-none">
+          {resolvedCoverUrl ? (
+            <>
+              <img
+                src={resolvedCoverUrl}
+                alt=""
+                loading="lazy"
+                className="w-full h-full object-cover opacity-65 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
               />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#141417]/80" />
-            <div className="absolute left-4 bottom-2.5 flex items-center gap-1.5 text-white/40 group-hover:text-white/65 transition-colors">
-              {preview.hasWhiteboard ? (
-                <PenTool className="w-3.5 h-3.5" />
-              ) : preview.hasTable ? (
-                <Table2 className="w-3.5 h-3.5" />
-              ) : preview.hasCode ? (
-                <Code2 className="w-3.5 h-3.5" />
-              ) : (
-                <Sparkles className="w-3.5 h-3.5 opacity-70" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-[#121215]/45 to-[#141417]/95" />
+            </>
+          ) : (
+            <div
+              className="w-full h-full relative"
+              style={{ background: softPalette }}
+            >
+              {preview.hasWhiteboard && (
+                <div
+                  className="absolute inset-0 opacity-35"
+                  style={{
+                    backgroundImage: 'radial-gradient(rgba(255,255,255,0.22) 1px, transparent 1px)',
+                    backgroundSize: '14px 14px',
+                  }}
+                />
               )}
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#141417]/80" />
+              <div className="absolute left-4 bottom-2.5 flex items-center gap-1.5 text-white/40 group-hover:text-white/65 transition-colors">
+                {preview.hasWhiteboard ? (
+                  <PenTool className="w-3.5 h-3.5" />
+                ) : preview.hasTable ? (
+                  <Table2 className="w-3.5 h-3.5" />
+                ) : preview.hasCode ? (
+                  <Code2 className="w-3.5 h-3.5" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5 opacity-70" />
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Top Right Overlay: Star & Context Menu Trigger */}
-        <div className="absolute top-2.5 right-2.5 flex items-center gap-1 z-20">
+        {/* Top Right Overlay: Star & Context Menu Trigger (outside overflow-hidden so popover never clips) */}
+        <div className="absolute top-2.5 right-2.5 flex items-center gap-1 z-30">
           {note.isFavorite && (
             <div className="w-6 h-6 rounded-full bg-black/45 backdrop-blur-md border border-white/15 flex items-center justify-center">
               <Star className="w-3 h-3 text-white fill-current" />
