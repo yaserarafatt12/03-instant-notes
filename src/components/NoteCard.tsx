@@ -10,16 +10,6 @@ import {
   ChevronRight,
   Check,
   Undo2,
-  FileText,
-  FileUp,
-  Code2,
-  GitGraph,
-  PenTool,
-  Table2,
-  Sigma,
-  Circle,
-  CheckCircle2,
-  Sparkles,
   Image as ImageIcon,
   Upload,
 } from 'lucide-react';
@@ -315,9 +305,8 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     }
   };
 
-  // Parse chronological mini blocks + soft cover image URL
+  // Parse soft cover image URL from note content
   const preview = useMemo(() => parseNoteToMiniBlocks(note.content), [note.content]);
-  const miniBlocks = preview.blocks;
 
   // Priority: minimal (off) > explicit note.coverImage (preset or custom) > first inline photo > curated soft landscape wallpaper
   const rawCoverSource = useMemo(() => {
@@ -393,7 +382,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           openMenuWithSmartSide(true);
         }
       }}
-      className={`group relative rounded-[22px] transition-all duration-300 cursor-pointer select-none font-sans flex flex-col justify-between min-h-[272px] glass-card ${
+      className={`group relative rounded-[22px] transition-all duration-300 cursor-pointer select-none font-sans flex flex-col justify-between h-[236px] glass-card ${
         isMenuOpen ? 'z-40' : ''
       } ${
         isMultiSelected
@@ -403,51 +392,46 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           : 'hover:-translate-y-1'
       }`}
     >
-      {/* Top Soft Visual Cover Banner (Real Image Soft-Fade OR Atmospheric Tempered Mesh) */}
-      <div className="relative h-20 w-full shrink-0 border-b border-white/[0.06]">
-        <div className="absolute inset-0 rounded-t-[21px] overflow-hidden pointer-events-none">
-          {resolvedCoverUrl ? (
-            <>
-              <img
-                src={resolvedCoverUrl}
-                alt=""
-                loading="lazy"
-                className="w-full h-full object-cover opacity-65 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-[#121215]/45 to-[#141417]/95" />
-            </>
-          ) : (
+      {/* Full-Bleed Soft Wallpaper Background (Zero Mid-Card Clutter) */}
+      <div className="absolute inset-0 rounded-[21px] overflow-hidden pointer-events-none">
+        {resolvedCoverUrl ? (
+          <>
+            <img
+              src={resolvedCoverUrl}
+              alt=""
+              loading="lazy"
+              className="w-full h-full object-cover opacity-75 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[#101013]/50 to-[#0b0b0e]/95" />
+          </>
+        ) : (
+          <div className="w-full h-full relative" style={{ background: softPalette }}>
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#101013]/45 to-[#0b0b0e]/95" />
+          </div>
+        )}
+      </div>
+
+      {/* Top Row: Multi-select Checkbox & Context Menu Trigger */}
+      <div className="relative z-30 flex items-center justify-between p-3">
+        <div>
+          {isSelectionMode && (
             <div
-              className="w-full h-full relative"
-              style={{ background: softPalette }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleMultiSelect(note.id);
+              }}
+              className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all shrink-0 ${
+                isMultiSelected
+                  ? 'bg-white border-white text-[#09090b]'
+                  : 'border-white/35 bg-black/45 backdrop-blur-md group-hover:border-white/60'
+              }`}
             >
-              {preview.hasWhiteboard && (
-                <div
-                  className="absolute inset-0 opacity-35"
-                  style={{
-                    backgroundImage: 'radial-gradient(rgba(255,255,255,0.22) 1px, transparent 1px)',
-                    backgroundSize: '14px 14px',
-                  }}
-                />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#141417]/80" />
-              <div className="absolute left-4 bottom-2.5 flex items-center gap-1.5 text-white/40 group-hover:text-white/65 transition-colors">
-                {preview.hasWhiteboard ? (
-                  <PenTool className="w-3.5 h-3.5" />
-                ) : preview.hasTable ? (
-                  <Table2 className="w-3.5 h-3.5" />
-                ) : preview.hasCode ? (
-                  <Code2 className="w-3.5 h-3.5" />
-                ) : (
-                  <Sparkles className="w-3.5 h-3.5 opacity-70" />
-                )}
-              </div>
+              {isMultiSelected && <Check className="w-3 h-3" />}
             </div>
           )}
         </div>
 
-        {/* Top Right Overlay: Star & Context Menu Trigger (outside overflow-hidden so popover never clips) */}
-        <div className="absolute top-2.5 right-2.5 flex items-center gap-1 z-30">
+        <div className="flex items-center gap-1">
           {note.isFavorite && (
             <div className="w-6 h-6 rounded-full bg-black/45 backdrop-blur-md border border-white/15 flex items-center justify-center">
               <Star className="w-3 h-3 text-white fill-current" />
@@ -661,155 +645,39 @@ export const NoteCard: React.FC<NoteCardProps> = ({
             </div>
           )}
         </div>
-
-        {/* Multi-selection Checkbox Indicator (top-left of cover) */}
-        {isSelectionMode && (
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleMultiSelect(note.id);
-            }}
-            className={`absolute top-2.5 left-2.5 z-20 w-4 h-4 rounded-md border flex items-center justify-center transition-all shrink-0 ${
-              isMultiSelected
-                ? 'bg-white border-white text-[#09090b]'
-                : 'border-white/35 bg-black/45 backdrop-blur-md group-hover:border-white/60'
-            }`}
-          >
-            {isMultiSelected && <Check className="w-3 h-3" />}
-          </div>
-        )}
       </div>
 
-      {/* Main Card Body */}
-      <div className="p-4 pt-3 flex-1 flex flex-col justify-between">
-        {/* Title & Metadata */}
-        <div className="space-y-1.5">
-          <h3 className="font-semibold text-[15px] text-white line-clamp-1 transition-colors tracking-tight">
+      {/* Bottom Card Footer: Clean Title, Metadata & Tags */}
+      <div className="relative z-10 mt-auto p-4 pt-2 space-y-2.5">
+        <div className="space-y-1">
+          <h3 className="font-semibold text-[15.5px] text-white line-clamp-2 leading-snug tracking-tight drop-shadow-sm">
             <HighlightText text={note.title || 'Catatan Tanpa Judul'} query={searchQuery} />
           </h3>
 
-          <div className="flex items-center gap-1.5 text-[11px] text-white/50 font-medium">
-            <FolderOpen className="w-3 h-3 text-white/45 shrink-0" />
-            <span className="truncate text-white/65">{note.subject || 'Umum'}</span>
-            <span className="opacity-40">•</span>
-            <Clock className="w-3 h-3 text-white/45 shrink-0" />
+          <div className="flex items-center gap-1.5 text-[11px] text-white/60 font-medium">
+            <FolderOpen className="w-3 h-3 text-white/50 shrink-0" />
+            <span className="truncate text-white/75">{note.subject || 'Umum'}</span>
+            <span className="opacity-45">•</span>
+            <Clock className="w-3 h-3 text-white/50 shrink-0" />
             <span>{formatRelativeTime(note.updatedAt)}</span>
           </div>
         </div>
 
-        {/* Middle Document Preview (Clean Pills & Rich Text Snippets) */}
-        <div className="flex-1 my-3 overflow-hidden text-left flex flex-col justify-start gap-1.5">
-          {miniBlocks.length === 0 ? (
-            <p className="text-[12px] text-white/30 select-none">
-              Catatan kosong — klik untuk menulis
-            </p>
-          ) : (
-            miniBlocks.slice(0, 3).map((b, i) => {
-              if (b.type === 'text') {
-                return (
-                  <p key={i} className="text-[12.5px] text-white/70 font-normal leading-relaxed line-clamp-2 select-none">
-                    <HighlightText text={b.text} query={searchQuery} />
-                  </p>
-                );
-              }
-
-              if (b.type === 'checklist') {
-                return (
-                  <div key={i} className="flex items-center gap-1.5 text-[12px] text-white/65 select-none">
-                    {b.checked ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400/90 shrink-0" />
-                    ) : (
-                      <Circle className="w-3.5 h-3.5 text-white/35 shrink-0" />
-                    )}
-                    <span className={`truncate ${b.checked ? 'line-through text-white/35' : ''}`}>
-                      {b.text}
-                    </span>
-                  </div>
-                );
-              }
-
-              if (b.type === 'whiteboard') {
-                return (
-                  <div key={i} className="px-2.5 py-1.5 bg-white/[0.045] border border-white/[0.09] rounded-xl flex items-center gap-2 select-none shrink-0">
-                    <PenTool className="w-3.5 h-3.5 text-white/65 shrink-0" />
-                    <span className="text-[11px] font-medium text-white/80 truncate">{b.title}</span>
-                  </div>
-                );
-              }
-
-              if (b.type === 'collection') {
-                return (
-                  <div key={i} className="px-2.5 py-1.5 bg-white/[0.045] border border-white/[0.09] rounded-xl flex items-center gap-2 select-none shrink-0">
-                    <Table2 className="w-3.5 h-3.5 text-white/65 shrink-0" />
-                    <span className="text-[11px] font-medium text-white/80 truncate">{b.title}</span>
-                  </div>
-                );
-              }
-
-              if (b.type === 'formula') {
-                return (
-                  <div key={i} className="px-2.5 py-1.5 bg-white/[0.045] border border-white/[0.09] rounded-xl flex items-center gap-2 font-mono select-none shrink-0">
-                    <Sigma className="w-3.5 h-3.5 text-white/65 shrink-0" />
-                    <span className="text-[10.5px] text-white/70 truncate">{b.expr}</span>
-                  </div>
-                );
-              }
-
-              if (b.type === 'mermaid') {
-                return (
-                  <div key={i} className="px-2.5 py-1.5 bg-white/[0.045] border border-white/[0.09] rounded-xl flex items-center gap-2 select-none shrink-0">
-                    <GitGraph className="w-3.5 h-3.5 text-white/65 shrink-0" />
-                    <span className="text-[11px] font-medium text-white/80 truncate">Diagram Mermaid</span>
-                  </div>
-                );
-              }
-
-              if (b.type === 'attachment') {
-                return (
-                  <div key={i} className="px-2.5 py-1.5 bg-white/[0.045] border border-white/[0.09] rounded-xl flex items-center gap-2 select-none shrink-0">
-                    <FileUp className="w-3.5 h-3.5 text-white/65 shrink-0" />
-                    <div className="overflow-hidden flex-1 flex items-center justify-between gap-2 leading-tight">
-                      <span className="text-[11px] font-medium text-white/80 truncate">{b.name}</span>
-                      {b.size && <span className="text-[9.5px] text-white/40 shrink-0">{b.size}</span>}
-                    </div>
-                  </div>
-                );
-              }
-
-              if (b.type === 'subpage') {
-                return (
-                  <div key={i} className="px-2.5 py-1.5 bg-white/[0.045] border border-white/[0.09] rounded-xl flex items-center gap-2 select-none shrink-0">
-                    <FileText className="w-3.5 h-3.5 text-white/65 shrink-0" />
-                    <span className="text-[11px] font-medium text-white/80 truncate">{b.title}</span>
-                  </div>
-                );
-              }
-
-              if (b.type === 'code') {
-                return (
-                  <div key={i} className="px-2.5 py-1.5 bg-white/[0.045] border border-white/[0.09] rounded-xl flex items-center gap-2 font-mono select-none shrink-0">
-                    <Code2 className="w-3.5 h-3.5 text-white/65 shrink-0" />
-                    <span className="text-[10px] text-white/70 truncate font-mono">{b.code.slice(0, 42) || 'Code Block'}</span>
-                  </div>
-                );
-              }
-
-              return null;
-            })
-          )}
-        </div>
-
-        {/* Bottom Inline Tags */}
-        <div className="flex items-center gap-1.5 text-[10px] font-medium overflow-hidden pt-1">
-          {note.tags.slice(0, 3).map((t, i) => (
-            <span key={i} className="px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-white/60">
-              #{t}
-            </span>
-          ))}
-          {note.tags.length > 3 && (
-            <span className="text-white/40">+{note.tags.length - 3}</span>
-          )}
-        </div>
+        {note.tags.length > 0 && (
+          <div className="flex items-center gap-1.5 text-[10px] font-medium overflow-hidden">
+            {note.tags.slice(0, 3).map((t, i) => (
+              <span
+                key={i}
+                className="px-2 py-0.5 rounded-full bg-white/[0.08] backdrop-blur-md border border-white/[0.10] text-white/75"
+              >
+                #{t}
+              </span>
+            ))}
+            {note.tags.length > 3 && (
+              <span className="text-white/50">+{note.tags.length - 3}</span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
